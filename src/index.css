@@ -1,6 +1,71 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Poppins:wght@400;600&display=swap');
 @import "tailwindcss";
 
+:root {
+  --color-primary-600: rgb(79, 70, 229);
+  --color-primary-700: rgb(67, 56, 202);
+  --color-primary-800: rgb(55, 48, 163);
+  --color-primary-900: rgb(49, 46, 129);
+  --color-secondary-200: rgb(199, 210, 254);
+  --color-secondary-500: rgb(99, 102, 241);
+  --color-neutral-300: rgb(209, 213, 219);
+  --color-neutral-400: rgb(156, 163, 175);
+  --color-neutral-700: rgb(55, 65, 81);
+  --color-neutral-800: rgb(31, 41, 55);
+  --color-background-light: #f8fafc;
+  --color-background-subtle: #f3f4f6;
+  --color-background-warm: #f5f5f4;
+  --color-background: #ffffff;
+}
+
 body {
   font-family: 'Inter', sans-serif;
 }
+
+@layer base {
+  .bg-primary-600 { background-color: var(--color-primary-600); }
+  .bg-primary-700 { background-color: var(--color-primary-700); }
+  .bg-primary-800 { background-color: var(--color-primary-800); }
+  .bg-primary-900 { background-color: var(--color-primary-900); }
+  .bg-secondary-200 { background-color: var(--color-secondary-200); }
+  .bg-secondary-500 { background-color: var(--color-secondary-500); }
+  .bg-neutral-300 { background-color: var(--color-neutral-300); }
+  .bg-neutral-400 { background-color: var(--color-neutral-400); }
+  .bg-neutral-700 { background-color: var(--color-neutral-700); }
+  .bg-neutral-800 { background-color: var(--color-neutral-800); }
+  .bg-background-light { background-color: var(--color-background-light); }
+  .bg-background-subtle { background-color: var(--color-background-subtle); }
+  .bg-background-warm { background-color: var(--color-background-warm); }
+  .bg-background { background-color: var(--color-background); }
+  
+  .text-primary-600 { color: var(--color-primary-600); }
+  .text-primary-700 { color: var(--color-primary-700); }
+  .text-primary-800 { color: var(--color-primary-800); }
+  .text-primary-900 { color: var(--color-primary-900); }
+  .text-secondary-200 { color: var(--color-secondary-200); }
+  .text-secondary-500 { color: var(--color-secondary-500); }
+  .text-neutral-300 { color: var(--color-neutral-300); }
+  .text-neutral-400 { color: var(--color-neutral-400); }
+  .text-neutral-700 { color: var(--color-neutral-700); }
+  .text-neutral-800 { color: var(--color-neutral-800); }
+  
+  .border-primary-600 { border-color: var(--color-primary-600); }
+  .border-primary-700 { border-color: var(--color-primary-700); }
+  .border-primary-800 { border-color: var(--color-primary-800); }
+  .border-primary-900 { border-color: var(--color-primary-900); }
+  .border-secondary-200 { border-color: var(--color-secondary-200); }
+  .border-secondary-500 { border-color: var(--color-secondary-500); }
+  .border-neutral-300 { border-color: var(--color-neutral-300); }
+  .border-neutral-400 { border-color: var(--color-neutral-400); }
+  .border-neutral-700 { border-color: var(--color-neutral-700); }
+  .border-neutral-800 { border-color: var(--color-neutral-800); }
+  
+  .focus\:ring-primary-500:focus { --tw-ring-color: var(--color-primary-500); }
+  
+  .hover\:bg-primary-700:hover { background-color: var(--color-primary-700); }
+  .hover\:bg-secondary-600:hover { background-color: color-mix(in srgb, var(--color-secondary-500) 90%, black); }
+}
+
+.font-inter { font-family: 'Inter', sans-serif; }
+.font-poppins { font-family: 'Poppins', sans-serif; }
+
