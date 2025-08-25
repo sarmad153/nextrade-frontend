@@ -158,14 +158,6 @@ const CategoryManagement = () => {
             <FaShoppingBasket className="mr-3 text-3xl" />
             <h1 className="text-2xl font-bold">NexTrade Admin</h1>
           </div>
-          <div className="flex items-center space-x-4">
-            <button 
-              onClick={() => setCurrentView('create')}
-              className="flex items-center px-4 py-2 font-medium transition duration-300 rounded-lg text-primary-600 bg-background"
-            >
-              <FaPlus className="mr-2" /> Create Category
-            </button>
-          </div>
         </div>
       </div>
 
