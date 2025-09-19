@@ -179,7 +179,7 @@ const AddProduct = () => {
               </div>
 
               {/* Stock Quantity */}
-              <div>
+              <div className='md:col-span-2'>
                 <label className="block mb-2 text-sm font-medium text-neutral-700" htmlFor="stock">
                   Stock Quantity
                 </label>
