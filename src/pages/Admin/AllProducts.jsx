@@ -455,7 +455,7 @@ const AllProducts = () => {
       <div className="fixed inset-0 z-40 lg:hidden">
         {/* Semi-transparent overlay */}
         <div 
-          className="absolute inset-0 bg-black bg-opacity-30"
+          className="absolute inset-0 bg-[#000000c7]"
           onClick={() => setMobileFiltersOpen(false)}
         ></div>
         
@@ -546,7 +546,7 @@ const AllProducts = () => {
     if (!product) return null;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#000000c7]">
         <div className="bg-background-light rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-neutral-300">
           <div className="flex items-center justify-between p-6 border-b border-neutral-300">
             <h2 className="text-xl font-bold text-neutral-800">Product Details</h2>
