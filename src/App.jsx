@@ -9,6 +9,7 @@ import SellerOrders from './pages/Seller/SellerOrders'
 import SellerDashboard from './pages/Seller/SellerDashboard'
 import AllProducts from './pages/Admin/AllProducts'
 import ManageUser from './pages/Admin/ManageUsers'
+import ManageOrders from './pages/Admin/ManageOrders'
 
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
       <Route path='/seller-dashboard' element={<SellerDashboard/>} />
       <Route path='/all-products' element={<AllProducts/>} />
       <Route path='/manage-users' element={<ManageUser/>} />
+      <Route path='/manage-orders' element={<ManageOrders/>} />
     </Routes>
   )
 }

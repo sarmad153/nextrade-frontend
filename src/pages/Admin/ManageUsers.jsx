@@ -258,7 +258,7 @@ const ManageUsers = () => {
   const MobileFilters = () => (
     <div className="fixed inset-0 z-40 lg:hidden">
       <div 
-        className="absolute inset-0 bg-black bg-opacity-30"
+        className="absolute inset-0 bg-[#000000c7]"
         onClick={() => setShowMobileFilters(false)}
       ></div>
       
@@ -328,7 +328,7 @@ const ManageUsers = () => {
     if (!actionUser) return null;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#000000c7]">
         <div className="w-full max-w-md mx-4 bg-white border shadow-2xl rounded-xl border-neutral-300">
           <div className="p-6">
             <h3 className="mb-4 text-lg font-semibold text-neutral-800">
@@ -408,8 +408,8 @@ const ManageUsers = () => {
     if (!viewUser) return null;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-        <div className="bg-white rounded-xl shadow-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-neutral-300">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#000000c7]">
+        <div className="bg-white rounded-xl shadow-2xl w-4/5 mx-4 max-h-[90vh] overflow-y-auto border border-neutral-300">
           <div className="flex items-center justify-between p-4 border-b border-neutral-300 md:p-6">
             <h2 className="text-lg font-semibold text-neutral-800 md:text-xl">User Profile - {viewUser.name}</h2>
             <button 
