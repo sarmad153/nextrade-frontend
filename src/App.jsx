@@ -8,6 +8,7 @@ import ManageProducts from './pages/Seller/ManageProducts'
 import SellerOrders from './pages/Seller/SellerOrders'
 import SellerDashboard from './pages/Seller/SellerDashboard'
 import AllProducts from './pages/Admin/AllProducts'
+import ManageUser from './pages/Admin/ManageUsers'
 
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
       <Route path='/seller-orders' element={<SellerOrders/>} />
       <Route path='/seller-dashboard' element={<SellerDashboard/>} />
       <Route path='/all-products' element={<AllProducts/>} />
+      <Route path='/manage-users' element={<ManageUser/>} />
     </Routes>
   )
 }
