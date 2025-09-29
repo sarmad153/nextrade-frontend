@@ -566,7 +566,7 @@ const ManageOrders = () => {
     if (!order) return null;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#000000c7]">
         <div className="bg-background-light rounded-xl shadow-2xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-neutral-300">
           <div className="flex items-center justify-between p-4 border-b md:p-6 border-neutral-300">
             <h2 className="text-lg font-bold md:text-xl text-neutral-800">Order Details - {order.id}</h2>
