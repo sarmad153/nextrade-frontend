@@ -10,6 +10,8 @@ import SellerDashboard from './pages/Seller/SellerDashboard'
 import AllProducts from './pages/Admin/AllProducts'
 import ManageUser from './pages/Admin/ManageUsers'
 import ManageOrders from './pages/Admin/ManageOrders'
+import Sidebar from './pages/layout/Sidebar'
+import SellerLayout from './pages/layout/SellerLayout'
 
 
 function App() {
@@ -25,6 +27,7 @@ function App() {
       <Route path='/all-products' element={<AllProducts/>} />
       <Route path='/manage-users' element={<ManageUser/>} />
       <Route path='/manage-orders' element={<ManageOrders/>} />
+      <Route path='/Seller-layout' element={<SellerLayout/>} />
     </Routes>
   )
 }
