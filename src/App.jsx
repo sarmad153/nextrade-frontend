@@ -12,6 +12,8 @@ import ManageUser from './pages/Admin/ManageUsers'
 import ManageOrders from './pages/Admin/ManageOrders'
 import Sidebar from './pages/layout/Sidebar'
 import SellerLayout from './pages/layout/SellerLayout'
+import SellerProfile from './pages/Seller/SellerProfile'
+import AdminProfile from './pages/Admin/AdminProfile'
 
 
 function App() {
@@ -27,7 +29,9 @@ function App() {
       <Route path='/all-products' element={<AllProducts/>} />
       <Route path='/manage-users' element={<ManageUser/>} />
       <Route path='/manage-orders' element={<ManageOrders/>} />
-      <Route path='/Seller-layout' element={<SellerLayout/>} />
+      <Route path='/seller-layout' element={<SellerLayout/>} />
+      <Route path="/seller-profile" element={<SellerProfile/>} />
+      <Route path='/admin-profile' element={<AdminProfile/>} />
     </Routes>
   )
 }
