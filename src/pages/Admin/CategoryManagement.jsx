@@ -151,15 +151,6 @@ const CategoryManagement = () => {
 
   return (
     <div className="min-h-screen bg-background-light font-inter">
-      {/* Header */}
-      <div className="p-6 text-white shadow-md bg-primary-700">
-        <div className="container flex items-center justify-between mx-auto">
-          <div className="flex items-center">
-            <FaShoppingBasket className="mr-3 text-3xl" />
-            <h1 className="text-2xl font-bold">NexTrade Admin</h1>
-          </div>
-        </div>
-      </div>
 
       <div className="container p-6 mx-auto">
         {/* Alerts */}

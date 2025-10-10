@@ -10,8 +10,8 @@ import SellerDashboard from './pages/Seller/SellerDashboard'
 import AllProducts from './pages/Admin/AllProducts'
 import ManageUser from './pages/Admin/ManageUsers'
 import ManageOrders from './pages/Admin/ManageOrders'
-import Sidebar from './pages/layout/Sidebar'
-import SellerLayout from './pages/layout/SellerLayout'
+import AdminLayout from './pages/layout/Adminlayout/AdminLayout'
+import SellerLayout from './pages/layout/Sellerlayout/SellerLayout'
 import SellerProfile from './pages/Seller/SellerProfile'
 import AdminProfile from './pages/Admin/AdminProfile'
 
@@ -22,12 +22,15 @@ function App() {
       <Route path="/register" element={<Register/>} />
       <Route path='/login' element={<Login/>} />
       
-      {/* Admin Routes */}
-      <Route path='/category-management' element={<CategoryManagement/>} />
-      <Route path='/all-products' element={<AllProducts/>} />
-      <Route path='/manage-users' element={<ManageUser/>} />
-      <Route path='/manage-orders' element={<ManageOrders/>} />
-      <Route path='/admin-profile' element={<AdminProfile/>} />
+      {/* Admin Routes with Layout */}
+      <Route path="/admin" element={<AdminLayout />}>
+        {/* <Route path="dashboard" element={<AdminDashboard />} /> */}
+        <Route path="category-management" element={<CategoryManagement />} />
+        <Route path="all-products" element={<AllProducts />} />
+        <Route path="manage-users" element={<ManageUser />} />
+        <Route path="manage-orders" element={<ManageOrders />} />
+        <Route path="profile" element={<AdminProfile />} />
+      </Route>
       
       {/* Seller Routes with Layout */}
       <Route path="/seller" element={<SellerLayout />}>

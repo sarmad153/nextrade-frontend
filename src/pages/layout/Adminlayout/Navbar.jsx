@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { FaBars, FaTimes, FaSearch, FaBell, FaUserCircle, FaCog, FaSignOutAlt, FaShoppingBasket } from 'react-icons/fa';
 
-export default function AdminNavbar({ showSidebar, setShowSidebar }) {
+export default function Navbar({ showSidebar, setShowSidebar }) {
     const location = useLocation().pathname;
 
     return (
@@ -42,22 +42,22 @@ export default function AdminNavbar({ showSidebar, setShowSidebar }) {
                             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-secondary-500">
                                 <FaUserCircle className="text-lg text-white" />
                             </div>
-                            <span className="hidden text-sm font-medium text-neutral-700 lg:block">Seller</span>
+                            <span className="hidden text-sm font-medium text-neutral-700 lg:block">Admin</span>
                         </button>
 
                         {/* Dropdown Menu */}
                         <div className="absolute right-0 z-50 invisible w-48 py-2 mt-2 transition-all duration-200 bg-white rounded-lg shadow-xl opacity-0 group-hover:opacity-100 group-hover:visible">
                             <div className="px-4 py-2 border-b border-neutral-200">
-                                <p className="text-sm font-medium text-neutral-800">Seller Account</p>
-                                <p className="text-xs text-neutral-500">seller@nextrade.com</p>
+                                <p className="text-sm font-medium text-neutral-800">Admin Account</p>
+                                <p className="text-xs text-neutral-500">admin@brconstruction.com</p>
                             </div>
                             
                             <a
-                                href="/seller/profile"
+                                href="/admin/profile"
                                 className="flex items-center px-4 py-2 text-sm transition-colors duration-200 text-neutral-700 hover:bg-background-subtle"
                             >
                                 <FaUserCircle className="mr-3 text-neutral-500" />
-                                My Profile
+                                Admin Profile
                             </a>
                             
                         </div>
