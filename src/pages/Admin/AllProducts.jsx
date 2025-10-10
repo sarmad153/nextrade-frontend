@@ -585,7 +585,7 @@ const AllProducts = () => {
                   <div>
                     <label className="block text-sm font-medium text-neutral-700">Price</label>
                     <p className="mt-1 text-lg font-semibold text-neutral-800">
-                      ${product.price} 
+                      Rs {product.price} 
                       {isOnSale(product) && (
                         <span className="ml-2 text-sm text-green-600">Sale: ${product.salePrice}</span>
                       )}
@@ -691,12 +691,6 @@ const AllProducts = () => {
   return (
     <div className="min-h-screen bg-background-light font-inter">
       <div className="p-4 md:p-6">
-        {/* Simplified Header */}
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl font-bold text-neutral-800 md:text-3xl">Product Management</h1>
-          <p className="text-neutral-600">Manage your product inventory efficiently</p>
-        </div>
-
         {/* Bulk Actions */}
         {selectedProducts.length > 0 && (
           <div className="p-4 mb-6 border border-primary-600 bg-secondary-200 rounded-xl">
@@ -938,10 +932,10 @@ const AllProducts = () => {
                         </td>
                         <td className="px-4 py-3 text-sm text-neutral-800 whitespace-nowrap md:px-6 md:py-4">
                           <div className="flex flex-col space-y-1 md:flex-row md:items-center md:space-y-0 md:space-x-2">
-                            <span className="font-semibold">${product.price}</span>
+                            <span className="font-semibold">Rs {product.price}</span>
                             {isOnSale(product) && (
                               <span className="px-1 py-0.5 text-xs text-green-600 bg-green-100 rounded md:px-2 md:py-1">
-                                Sale: ${product.salePrice}
+                                Sale: Rs {product.salePrice}
                               </span>
                             )}
                           </div>

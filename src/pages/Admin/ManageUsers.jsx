@@ -473,18 +473,14 @@ const ManageUsers = () => {
                 {viewUser.role === 'buyer' ? (
                   <div className="mt-6">
                     <h4 className="mb-4 text-base font-medium text-neutral-800 md:text-lg">Purchase History</h4>
-                    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-4">
                       <div className="p-3 rounded-lg bg-background-subtle md:p-4">
                         <p className="text-xs text-neutral-600 md:text-sm">Total Orders</p>
                         <p className="text-lg font-semibold text-neutral-800 md:text-xl">{viewUser.totalOrders}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-background-subtle md:p-4">
                         <p className="text-xs text-neutral-600 md:text-sm">Total Spent</p>
-                        <p className="text-lg font-semibold text-neutral-800 md:text-xl">${viewUser.totalSpent?.toLocaleString()}</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-background-subtle md:p-4">
-                        <p className="text-xs text-neutral-600 md:text-sm">Loyalty Points</p>
-                        <p className="text-lg font-semibold text-neutral-800 md:text-xl">{viewUser.loyaltyPoints}</p>
+                        <p className="text-lg font-semibold text-neutral-800 md:text-xl">Rs {viewUser.totalSpent?.toLocaleString()}</p>
                       </div>
                     </div>
                   </div>
@@ -507,7 +503,7 @@ const ManageUsers = () => {
                         </div>
                         <div className="p-3 rounded-lg bg-background-subtle">
                           <p className="text-xs text-neutral-600 md:text-sm">Revenue</p>
-                          <p className="text-base font-semibold text-neutral-800 md:text-lg">${viewUser.totalRevenue?.toLocaleString()}</p>
+                          <p className="text-base font-semibold text-neutral-800 md:text-lg">Rs {viewUser.totalRevenue?.toLocaleString()}</p>
                         </div>
                       </div>
                     </div>
@@ -588,12 +584,6 @@ const ManageUsers = () => {
   return (
     <div className="min-h-screen bg-background-light font-inter">
       <div className="p-4 md:p-6">
-        {/* Header */}
-        <div className="mb-4 md:mb-6">
-          <h1 className="text-xl font-bold text-neutral-800 md:text-2xl">User Management</h1>
-          <p className="text-neutral-600">Manage all user accounts and permissions</p>
-        </div>
-
         {/* Bulk Actions */}
         {selectedUsers.length > 0 && (
           <div className="p-3 mb-4 border border-primary-600 rounded-xl bg-secondary-200 md:p-4 md:mb-6">

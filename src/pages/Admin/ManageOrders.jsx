@@ -530,7 +530,7 @@ const ManageOrders = () => {
         </div>
         <div className="flex justify-between">
           <span className="text-neutral-600">Amount:</span>
-          <span className="font-semibold text-primary-600">${order.totalAmount}</span>
+          <span className="font-semibold text-primary-600">Rs {order.totalAmount}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-neutral-600">Date:</span>
@@ -672,9 +672,9 @@ const ManageOrders = () => {
                           <p className="text-sm text-neutral-600">Qty: {product.quantity}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-neutral-800">${product.price}</p>
+                          <p className="font-semibold text-neutral-800">Rs {product.price}</p>
                           <p className="text-sm text-neutral-600">
-                            Total: ${(product.price * product.quantity).toFixed(2)}
+                            Total: Rs {(product.price * product.quantity).toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -684,7 +684,7 @@ const ManageOrders = () => {
                   <div className="p-4 mt-4 border-t border-neutral-300">
                     <div className="flex items-center justify-between text-lg font-semibold">
                       <span className="text-neutral-700">Total Amount:</span>
-                      <span className="text-primary-600">${order.totalAmount}</span>
+                      <span className="text-primary-600">Rs {order.totalAmount}</span>
                     </div>
                   </div>
                 </div>
@@ -730,12 +730,6 @@ const ManageOrders = () => {
   return (
     <div className="min-h-screen bg-background-light font-inter">
       <div className="p-4 md:p-6">
-        {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl font-bold text-neutral-800 md:text-3xl">Manage Orders</h1>
-          <p className="text-neutral-600">View and manage customer orders</p>
-        </div>
-
         {/* Bulk Actions */}
         {selectedOrders.length > 0 && (
           <div className="p-4 mb-6 border border-primary-600 bg-secondary-200 rounded-xl">
@@ -955,7 +949,7 @@ const ManageOrders = () => {
                           {order.products.length} item(s)
                         </td>
                         <td className="px-4 py-3 text-sm font-semibold text-neutral-800 whitespace-nowrap md:px-6 md:py-4">
-                          ${order.totalAmount}
+                          Rs {order.totalAmount}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap md:px-6 md:py-4">
                           {getStatusBadge(order.status)}

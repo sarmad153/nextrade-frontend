@@ -187,13 +187,6 @@ const SellerOrders = () => {
   return (
     <div className="min-h-screen p-4 bg-background-light md:p-6">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl font-bold text-neutral-800 md:text-3xl">Order Management</h1>
-          <p className="text-neutral-600">View and manage orders for your products</p>
-          
-        </div>
-
         {/* Mobile Filter Section - Always Visible */}
         <div className="p-4 mb-4 bg-white rounded-lg shadow md:hidden">
           <div className="relative mb-3">
@@ -365,7 +358,7 @@ const SellerOrders = () => {
                       <div className="text-sm text-neutral-500">{order.date}</div>
                     </td>
                     <td className="hidden px-4 py-4 whitespace-nowrap md:px-6 md:table-cell">
-                      <div className="text-sm font-medium text-neutral-900">${order.total.toFixed(2)}</div>
+                      <div className="text-sm font-medium text-neutral-900">Rs {order.total.toFixed(2)}</div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap md:px-6">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
@@ -469,15 +462,15 @@ const SellerOrders = () => {
                       <div key={index} className="flex justify-between py-2">
                         <div>
                           <p className="font-medium text-neutral-900">{item.name}</p>
-                          <p className="text-sm text-neutral-600">Qty: {item.quantity} × ${item.price.toFixed(2)}</p>
+                          <p className="text-sm text-neutral-600">Qty: {item.quantity} × Rs {item.price.toFixed(2)}</p>
                         </div>
-                        <p className="font-medium text-neutral-900">${(item.price * item.quantity).toFixed(2)}</p>
+                        <p className="font-medium text-neutral-900">Rs {(item.price * item.quantity).toFixed(2)}</p>
                       </div>
                     ))}
                     <div className="pt-2 mt-2 border-t border-neutral-200">
                       <div className="flex justify-between font-bold text-neutral-900">
                         <p>Total</p>
-                        <p>${selectedOrder.total.toFixed(2)}</p>
+                        <p>Rs {selectedOrder.total.toFixed(2)}</p>
                       </div>
                     </div>
                   </div>

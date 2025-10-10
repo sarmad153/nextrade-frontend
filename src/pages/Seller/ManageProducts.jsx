@@ -129,14 +129,6 @@ const ManageProducts = () => {
   return (
     <div className="min-h-screen p-4 bg-background-light md:p-6">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <div className="flex items-center mb-2">
-            <h1 className="text-2xl font-bold text-neutral-800 md:text-3xl">Manage My Products</h1>
-          </div>
-          <p className="text-neutral-600">View, edit, and manage your product listings</p>
-        </div>
-
         {/* Mobile Filter Section - Always Visible */}
         <div className="p-4 mb-4 bg-white rounded-lg shadow md:hidden">
           <div className="relative mb-3">
@@ -327,7 +319,7 @@ const ManageProducts = () => {
                         <div className="ml-4">
                           <div className="text-sm font-medium text-neutral-900">{product.name}</div>
                           <div className="text-xs text-neutral-500 md:hidden">{product.category}</div>
-                          <div className="text-xs text-neutral-500 md:hidden">${product.price.toFixed(2)} | Stock: {product.stock}</div>
+                          <div className="text-xs text-neutral-500 md:hidden">Rs {product.price.toFixed(2)} | Stock: {product.stock}</div>
                         </div>
                       </div>
                     </td>
@@ -335,7 +327,7 @@ const ManageProducts = () => {
                       <div className="text-sm text-neutral-500">{product.category}</div>
                     </td>
                     <td className="hidden px-4 py-4 whitespace-nowrap md:px-6 md:table-cell">
-                      <div className="text-sm text-neutral-900">${product.price.toFixed(2)}</div>
+                      <div className="text-sm text-neutral-900">Rs {product.price.toFixed(2)}</div>
                     </td>
                     <td className="hidden px-4 py-4 whitespace-nowrap md:px-6 md:table-cell">
                       <div className="text-sm text-neutral-900">{product.stock}</div>

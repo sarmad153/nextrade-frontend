@@ -97,14 +97,8 @@ const SellerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen p-4 bg-background-light md:p-4">
+    <div className="min-h-screen p-4 bg-background-light md:p-6">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl font-bold text-neutral-800 md:text-3xl">Seller Dashboard</h1>
-          <p className="text-neutral-600">Welcome back! Here's your business overview.</p>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-3 mb-6 md:grid-cols-2 lg:grid-cols-4 md:gap-4 md:mb-8">
           <div className="p-3 bg-white rounded-lg shadow md:p-4">
@@ -117,9 +111,6 @@ const SellerDashboard = () => {
                 <p className="text-lg font-bold text-neutral-800 md:text-xl lg:text-2xl">{stats.totalProducts}</p>
               </div>
             </div>
-            <Link to="/manage-products" className="flex items-center mt-2 text-xs text-primary-600 hover:text-primary-700 md:text-sm md:mt-3">
-              Manage products <FaArrowRight className="ml-1 text-xs" />
-            </Link>
           </div>
 
           <div className="p-3 bg-white rounded-lg shadow md:p-4">
@@ -132,9 +123,6 @@ const SellerDashboard = () => {
                 <p className="text-lg font-bold text-neutral-800 md:text-xl lg:text-2xl">{stats.totalOrders}</p>
               </div>
             </div>
-            <Link to="/seller-orders" className="flex items-center mt-2 text-xs text-primary-600 hover:text-primary-700 md:text-sm md:mt-3">
-              View orders <FaArrowRight className="ml-1 text-xs" />
-            </Link>
           </div>
 
           <div className="p-3 bg-white rounded-lg shadow md:p-4">
@@ -144,10 +132,9 @@ const SellerDashboard = () => {
               </div>
               <div className="ml-2 md:ml-3">
                 <h3 className="text-xs font-medium text-neutral-600 md:text-sm">Total Revenue</h3>
-                <p className="text-lg font-bold text-neutral-800 md:text-xl lg:text-2xl">${stats.totalRevenue.toLocaleString()}</p>
+                <p className="text-lg font-bold text-neutral-800 md:text-xl lg:text-2xl">Rs {stats.totalRevenue.toLocaleString()}</p>
               </div>
             </div>
-            <div className="mt-2 text-xs text-neutral-500 md:text-sm md:mt-3">Lifetime earnings</div>
           </div>
 
           <div className="p-3 bg-white rounded-lg shadow md:p-4">
@@ -160,9 +147,6 @@ const SellerDashboard = () => {
                 <p className="text-lg font-bold text-neutral-800 md:text-xl lg:text-2xl">{stats.pendingOrders}</p>
               </div>
             </div>
-            <Link to="/seller-orders?status=processing" className="flex items-center mt-2 text-xs text-primary-600 hover:text-primary-700 md:text-sm md:mt-3">
-              Process orders <FaArrowRight className="ml-1 text-xs" />
-            </Link>
           </div>
         </div>
 
@@ -184,7 +168,7 @@ const SellerDashboard = () => {
                       <p className="text-sm text-neutral-600">{order.customer} - {order.product}</p>
                     </div>
                     <div className="text-left md:text-right">
-                      <p className="font-semibold text-neutral-900">${order.amount}</p>
+                      <p className="font-semibold text-neutral-900">Rs {order.amount}</p>
                       <span className={`inline-block px-2 py-1 mt-1 text-xs rounded-full ${
                         order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
                         order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
@@ -198,7 +182,7 @@ const SellerDashboard = () => {
               ))}
             </div>
             <div className="p-4 border-t border-neutral-200 md:p-6">
-              <Link to="/seller-orders" className="flex items-center justify-center text-primary-600 hover:text-primary-700">
+              <Link to="/seller/orders" className="flex items-center justify-center text-primary-600 hover:text-primary-700">
                 View all orders <FaArrowRight className="ml-2" />
               </Link>
             </div>
@@ -234,7 +218,7 @@ const SellerDashboard = () => {
               ))}
             </div>
             <div className="p-4 border-t border-neutral-200 md:p-6">
-              <Link to="/manage-products?status=Low Stock" className="flex items-center justify-center text-primary-600 hover:text-primary-700">
+              <Link to="/seller/manage-products?status=Low Stock" className="flex items-center justify-center text-primary-600 hover:text-primary-700">
                 Manage inventory <FaArrowRight className="ml-2" />
               </Link>
             </div>
@@ -249,7 +233,7 @@ const SellerDashboard = () => {
           </h2>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
             <Link 
-              to="/add-product" 
+              to="/seller/add-product" 
               className="p-3 transition-colors border rounded-lg border-neutral-200 hover:border-primary-300 hover:bg-primary-50 md:p-4"
             >
               <div className="flex items-center">
@@ -264,7 +248,7 @@ const SellerDashboard = () => {
             </Link>
             
             <Link 
-              to="/manage-products" 
+              to="/seller/manage-products" 
               className="p-3 transition-colors border rounded-lg border-neutral-200 hover:border-primary-300 hover:bg-primary-50 md:p-4"
             >
               <div className="flex items-center">
@@ -279,7 +263,7 @@ const SellerDashboard = () => {
             </Link>
             
             <Link 
-              to="/seller-orders?status=processing" 
+              to="/seller/orders?status=processing" 
               className="p-3 transition-colors border rounded-lg border-neutral-200 hover:border-primary-300 hover:bg-primary-50 md:p-4"
             >
               <div className="flex items-center">

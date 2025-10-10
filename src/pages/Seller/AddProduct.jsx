@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaPlus, FaArrowLeft, FaUpload, FaImage, FaDollarSign, FaBox, FaTag, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaArrowLeft, FaUpload, FaImage, FaBox, FaTag, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const AddProduct = () => {
@@ -161,7 +161,7 @@ const AddProduct = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <FaDollarSign className="text-neutral-400" />
+                    <span className="text-neutral-400">Rs</span>
                   </div>
                   <input
                     id="price"
