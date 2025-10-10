@@ -15,23 +15,28 @@ import SellerLayout from './pages/layout/SellerLayout'
 import SellerProfile from './pages/Seller/SellerProfile'
 import AdminProfile from './pages/Admin/AdminProfile'
 
-
 function App() {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/register" element={<Register/>} />
       <Route path='/login' element={<Login/>} />
+      
+      {/* Admin Routes */}
       <Route path='/category-management' element={<CategoryManagement/>} />
-      <Route path='/add-product' element={<AddProduct/>} />
-      <Route path='/manage-products' element={<ManageProducts />} />
-      <Route path='/seller-orders' element={<SellerOrders/>} />
-      <Route path='/seller-dashboard' element={<SellerDashboard/>} />
       <Route path='/all-products' element={<AllProducts/>} />
       <Route path='/manage-users' element={<ManageUser/>} />
       <Route path='/manage-orders' element={<ManageOrders/>} />
-      <Route path='/seller-layout' element={<SellerLayout/>} />
-      <Route path="/seller-profile" element={<SellerProfile/>} />
       <Route path='/admin-profile' element={<AdminProfile/>} />
+      
+      {/* Seller Routes with Layout */}
+      <Route path="/seller" element={<SellerLayout />}>
+        <Route path="dashboard" element={<SellerDashboard />} />
+        <Route path="add-product" element={<AddProduct />} />
+        <Route path="manage-products" element={<ManageProducts />} />
+        <Route path="orders" element={<SellerOrders />} />
+        <Route path="profile" element={<SellerProfile />} />
+      </Route>
     </Routes>
   )
 }

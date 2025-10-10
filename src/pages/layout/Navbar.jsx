@@ -10,11 +10,6 @@ export default function AdminNavbar({ showSidebar, setShowSidebar }) {
             <div className="flex items-center justify-between w-full">
                 {/* Left Side - Logo and Mobile Menu */}
                 <div className="flex items-center space-x-4">
-                    {/* Logo - Hidden on mobile */}
-                    <div className="items-center hidden md:flex">
-                        <FaShoppingBasket className="mr-2 text-3xl text-primary-600" />
-                        <span className="text-xl font-bold text-primary-900">NexTrade Seller</span>
-                    </div>
 
                     {/* Mobile Menu Button */}
                     <div className="md:hidden">
@@ -27,7 +22,7 @@ export default function AdminNavbar({ showSidebar, setShowSidebar }) {
                         
                         {/* Close Button that appears when sidebar is open */}
                         {showSidebar === 'left-0' && (
-                            <div className="absolute z-50 transition-all duration-300 top-3 left-50 md:hidden">
+                            <div className="absolute z-50 transition-all duration-300 top-2 left-55 md:hidden">
                                 <button
                                     className="p-2 text-1.5xl text-black transition-colors duration-200 rounded-full hover:bg-neutral-100"
                                     onClick={() => setShowSidebar('-left-64')}
@@ -58,7 +53,7 @@ export default function AdminNavbar({ showSidebar, setShowSidebar }) {
                             </div>
                             
                             <a
-                                href="#"
+                                href="/seller/profile"
                                 className="flex items-center px-4 py-2 text-sm transition-colors duration-200 text-neutral-700 hover:bg-background-subtle"
                             >
                                 <FaUserCircle className="mr-3 text-neutral-500" />

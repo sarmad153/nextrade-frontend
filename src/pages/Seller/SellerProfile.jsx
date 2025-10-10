@@ -117,7 +117,7 @@ export default function SellerProfile() {
 
     return (
         <div className="min-h-screen bg-background-light">
-            <div className="max-w-6xl p-6 mx-auto">
+            <div className="max-w-6xl pt-4 mx-auto">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-neutral-800">Seller Profile</h1>

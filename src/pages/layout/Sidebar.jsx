@@ -14,17 +14,17 @@ export default function Sidebar({ showSidebar, setShowSidebar }) {
     
     return (
         <div
-            className={`h-screen fixed top-0 md:left-0 ${showSidebar} overflow-y-auto flex-row flex-nowrap overflow-hidden shadow-xs bg-white w-64 py-10 px-6 transition-all duration-300 md:py-25`}
+            className={`h-screen fixed top-0 md:left-0 ${showSidebar} overflow-y-auto flex-row flex-nowrap overflow-hidden shadow-xs bg-white w-64 py-10 px-6 transition-all duration-300 md:py-8`}
         >
             <div className="relative flex-col items-stretch min-h-full px-0 flex-nowrap">
-                {/* Logo - Only visible on mobile */}
-                <div className="flex items-center justify-center pt-5 md:hidden ">
+                {/* Logo - Visible on both desktop and mobile */}
+                <div className="flex items-center justify-center">
                     <FaShoppingBasket className="mr-2 text-3xl text-primary-600" />
                     <span className="text-xl font-bold text-primary-900">NexTrade Seller</span>
                 </div>
 
                 <div className="flex flex-col">
-                    <hr className="my-4 border-neutral-300 md:hidden" />
+                    <hr className="my-4 border-neutral-300" />
 
                     <ul className="flex flex-col min-w-full space-y-1 list-none">
                         {/* Seller Dashboard */}
@@ -55,7 +55,7 @@ export default function Sidebar({ showSidebar, setShowSidebar }) {
                         {/* Manage Products */}
                         <li className="rounded-lg">
                             <NavLink
-                                to="/seller/products"
+                                to="/seller/manage-products"
                                 className="flex items-center gap-4 px-4 py-3 text-sm font-medium transition-colors duration-200 rounded-lg text-neutral-700 hover:bg-background-subtle hover:text-primary-600"
                                 activeClassName="bg-primary-600 text-white shadow-md hover:bg-primary-700"
                             >

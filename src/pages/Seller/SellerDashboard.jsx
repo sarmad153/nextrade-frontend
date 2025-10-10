@@ -97,7 +97,7 @@ const SellerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen p-4 bg-background-light md:p-6">
+    <div className="min-h-screen p-4 bg-background-light md:p-4">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-6 md:mb-8">

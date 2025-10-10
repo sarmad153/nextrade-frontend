@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
+import { Outlet } from 'react-router-dom';
 
-const SellerLayout = ({ children }) => {
+const SellerLayout = () => {
     const [showSidebar, setShowSidebar] = useState('-left-64');
 
     return (
@@ -14,16 +15,16 @@ const SellerLayout = ({ children }) => {
             />
             
             {/* Main Content Area */}
-            <div className="flex flex-col flex-1 overflow-hidden">
+            <div className="flex flex-col flex-1 overflow-hidden md:ml-64">
                 {/* Navbar */}
                 <Navbar 
                     showSidebar={showSidebar} 
                     setShowSidebar={setShowSidebar} 
                 />
                 
-                {/* Page Content */}
-                <main className="flex-1 p-6 overflow-auto">
-                    {children}
+                {/* Page Content - Nested routes will render here */}
+                <main className="flex-1 p-1 overflow-auto">
+                    <Outlet />
                 </main>
             </div>
         </div>
