@@ -13,13 +13,9 @@ export default defineConfig({
         format: 'es',
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]',
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom']
-        }
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
-    // Ensure proper module format
     target: 'es2020',
     minify: 'terser'
   },
@@ -28,9 +24,5 @@ export default defineConfig({
       '@': resolve(__dirname, 'src')
     },
     extensions: ['.js', '.jsx', '.ts', '.tsx']
-  },
-  server: {
-    port: 3000,
-    open: true
   }
 })
