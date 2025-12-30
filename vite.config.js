@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [
-    tailwindcss(),
+    tailwindcss(), react()
   ],
   base: '/',
   build: {
@@ -21,7 +21,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src')
+      '@': path.resolve(__dirname, 'src')
     },
     extensions: ['.js', '.jsx', '.ts', '.tsx']
   }
