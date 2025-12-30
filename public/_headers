@@ -1,0 +1,11 @@
+# Create headers file
+echo "/*.js
+  Content-Type: application/javascript
+  X-Content-Type-Options: nosniff
+
+/*.mjs
+  Content-Type: application/javascript
+  X-Content-Type-Options: nosniff
+
+/assets/*
+  Cache-Control: public, max-age=31536000" > public/_headers

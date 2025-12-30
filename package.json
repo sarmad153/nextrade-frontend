@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "netlify-build": "npm run build && cp public/_headers dist/_headers"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
