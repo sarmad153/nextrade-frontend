@@ -7,7 +7,7 @@ import {
   FaLinkedin,
   FaInstagram,
 } from "react-icons/fa";
-import MainLogo from "../../../assets/white Logo.png";
+import MainLogo from "../../../assets/White Logo.png";
 
 const BuyerFooter = () => {
   return (
