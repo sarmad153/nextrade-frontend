@@ -17,7 +17,7 @@ import { toast } from "react-toastify";
 import API from "../../../api/axiosInstance";
 
 // Import extracted components
-import UserDetailModal from "./userDetailModel";
+import UserDetailModal from "./UserDetailModel";
 import UserActionsModal from "./UseractionModel";
 import UserAvatar from "./UserAvatar";
 import { getStatusBadge, getRoleBadge, formatDate } from "./utils";
