@@ -14,7 +14,7 @@ import Unauthorized from "./pages/Auth/Unauth";
 
 // Buyer
 import { CategoryListingSkeleton } from "./pages/Buyer/LoadingSkeleton/loadingSkeletons";
-import BuyerLayout from "./pages/layout/BuyerLayout/Buyerlayout.jsx";
+import BuyerLayout from "./pages/layout/BuyerLayout/BuyerLayout.jsx";
 import BuyerHome from "./pages/Buyer/BuyerHome";
 import ProductListing from "./pages/Buyer/Product screens/ProductListing";
 import ProductDetail from "./pages/Buyer/Product screens/ProductDetail";
@@ -165,6 +165,3 @@ function App() {
 }
 
 export default App;
-
-
-
