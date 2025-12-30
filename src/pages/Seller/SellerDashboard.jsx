@@ -1,95 +1,252 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  FaBox, 
-  FaMoneyBillWave, 
-  FaShoppingCart, 
-  FaTruck, 
-  FaExclamationTriangle, 
-  FaArrowRight, 
-  FaPlus, 
-  FaEdit, 
-  FaChartLine 
-} from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import {
+  FaBox,
+  FaMoneyBillWave,
+  FaShoppingCart,
+  FaTruck,
+  FaExclamationTriangle,
+  FaArrowRight,
+  FaPlus,
+  FaEdit,
+  FaChartLine,
+  FaUserClock,
+  FaCheckCircle,
+  FaSpinner,
+} from "react-icons/fa";
+import { Link } from "react-router-dom";
+import API from "../../api/axiosInstance";
+import { toast } from "react-toastify";
 
 const SellerDashboard = () => {
-  const [userRole, setUserRole] = useState('');
+  const [userRole, setUserRole] = useState("");
+  const [approvalStatus, setApprovalStatus] = useState("");
+  const [profileComplete, setProfileComplete] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalOrders: 0,
     totalRevenue: 0,
-    pendingOrders: 0
+    pendingOrders: 0,
+    activeProducts: 0,
+    lowStockProducts: 0,
+    outOfStockProducts: 0,
   });
 
-  // Sample data - in a real app, this would come from API
-  const sampleStats = {
-    totalProducts: 24,
-    totalOrders: 156,
-    totalRevenue: 12540.75,
-    pendingOrders: 12
-  };
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [lowStockProducts, setLowStockProducts] = useState([]);
 
-  const recentOrders = [
-    { id: 'ORD-12345', customer: 'John Smith', product: 'Premium T-Shirt', amount: 59.98, status: 'Processing' },
-    { id: 'ORD-12346', customer: 'Sarah Johnson', product: 'Wireless Headphones', amount: 79.99, status: 'Shipped' },
-    { id: 'ORD-12347', customer: 'Michael Brown', product: 'Leather Wallet', amount: 49.99, status: 'Delivered' },
-    { id: 'ORD-12348', customer: 'Emily Davis', product: 'Running Shoes', amount: 89.99, status: 'Processing' }
-  ];
-
-  const lowStockProducts = [
-    { name: 'Sports Running Shoes', stock: 8, threshold: 10 },
-    { name: 'Designer Handbag', stock: 3, threshold: 5 },
-    { name: 'Wireless Earbuds', stock: 12, threshold: 15 }
-  ];
-
-  // Check user role on component mount
   useEffect(() => {
-    // Simulate API call to check user role
-    const checkUserRole = () => {
-      setTimeout(() => {
-        // In a real app, this would come from authentication context or API
-        const role = localStorage.getItem('userRole') || 'seller';
-        
-        if (role !== 'seller') {
-          // Redirect or show error if not a seller
-          console.log('Access denied. Seller role required.');
+    const fetchSellerData = async () => {
+      try {
+        setLoading(true);
+
+        const user = JSON.parse(localStorage.getItem("user"));
+        const currentRole = user?.role;
+        setUserRole(currentRole);
+
+        try {
+          const profileResponse = await API.get("/profile/me");
+          const profileData = profileResponse.data;
+
+          if (currentRole === "seller_approved") {
+            setApprovalStatus("approved");
+          } else if (currentRole === "seller_pending") {
+            setApprovalStatus("pending");
+          } else {
+            setApprovalStatus("");
+          }
+
+          if (["seller_pending", "seller_approved"].includes(currentRole)) {
+            setProfileComplete(profileData.isProfileComplete || false);
+          }
+        } catch (profileError) {
+          console.error("Profile fetch error:", profileError);
         }
-        
-        setUserRole(role);
-        setStats(sampleStats);
+
+        if (currentRole !== "seller_approved" || !profileComplete) {
+          setLoading(false);
+          return;
+        }
+
+        await Promise.allSettled([
+          fetchStats(),
+          fetchRecentOrders(),
+          fetchLowStockProducts(),
+        ]);
+      } catch (error) {
+        console.error("Dashboard fetch error:", error);
+        toast.error("Failed to load dashboard data");
+      } finally {
         setLoading(false);
-      }, 500);
+      }
     };
 
-    checkUserRole();
-  }, []);
+    const fetchStats = async () => {
+      try {
+        const statsResponse = await API.get("/admin/seller/stats");
+        if (statsResponse.data) {
+          setStats(statsResponse.data);
+        }
+      } catch (statsError) {
+        console.error("Stats fetch error:", statsError);
+        toast.error("Failed to load statistics");
+      }
+    };
 
-  // Show loading state while checking role
+    const fetchRecentOrders = async () => {
+      try {
+        const ordersResponse = await API.get("/orders/seller/orders");
+        if (ordersResponse.data) {
+          const orders = Array.isArray(ordersResponse.data)
+            ? ordersResponse.data
+            : ordersResponse.data.orders || [];
+          setRecentOrders(orders.slice(0, 4));
+        }
+      } catch (ordersError) {
+        console.error("Orders fetch error:", ordersError);
+      }
+    };
+
+    const fetchLowStockProducts = async () => {
+      try {
+        const productsResponse = await API.get("/products/seller/products");
+        if (productsResponse.data) {
+          const products = Array.isArray(productsResponse.data)
+            ? productsResponse.data
+            : productsResponse.data.products || [];
+
+          const lowStock = products
+            .filter((product) => product.stock > 0 && product.stock < 10)
+            .slice(0, 3);
+          setLowStockProducts(lowStock);
+        }
+      } catch (productsError) {
+        console.error("Products fetch error:", productsError);
+      }
+    };
+
+    fetchSellerData();
+  }, [profileComplete]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+        toast.error("Dashboard loading timeout. Please check your connection.");
+      }
+    }, 15000);
+
+    return () => clearTimeout(timeout);
+  }, [loading]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background-light">
         <div className="text-center">
           <div className="w-12 h-12 mx-auto border-b-2 rounded-full animate-spin border-primary-600"></div>
-          <p className="mt-4 text-neutral-600">Checking permissions...</p>
+          <p className="mt-4 text-neutral-600">Loading seller dashboard...</p>
         </div>
       </div>
     );
   }
 
-  // Show access denied if not a seller
-  if (userRole !== 'seller') {
+  if (userRole === "seller_pending") {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background-light">
-        <div className="max-w-md p-4 text-center bg-white rounded-lg shadow-md md:p-6">
-          <FaExclamationTriangle className="mx-auto mb-4 text-4xl text-red-500 md:text-5xl" />
-          <h2 className="mb-2 text-xl font-bold text-neutral-800 md:text-2xl">Access Denied</h2>
-          <p className="mb-4 text-neutral-600 md:mb-6">You need seller privileges to access this dashboard.</p>
-          <Link 
-            to="/" 
-            className="inline-flex items-center px-4 py-2 text-white rounded-lg bg-primary-600 hover:bg-primary-700"
+        <div className="max-w-md p-6 text-center bg-white rounded-lg shadow-lg md:p-8">
+          <div className="flex items-center justify-center w-20 h-20 mx-auto mb-4 bg-blue-100 rounded-full">
+            <FaUserClock className="text-3xl text-blue-600" />
+          </div>
+          <h2 className="mb-3 text-2xl font-bold text-neutral-800">
+            Approval Pending
+          </h2>
+          <p className="mb-5 text-neutral-600">
+            Your seller application is under review. Our admin team will verify
+            your business details and approve your account soon.
+          </p>
+          <div className="p-4 mb-5 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-700">
+              <strong>Status:</strong> Pending Review
+            </p>
+            {!profileComplete && (
+              <p className="mt-2 text-sm text-orange-700">
+                <strong>Note:</strong> Complete your business profile for faster
+                approval
+              </p>
+            )}
+          </div>
+          <div className="flex flex-col gap-3">
+            <Link
+              to="/seller/profile"
+              className="inline-flex items-center justify-center px-5 py-2.5 text-white rounded-lg bg-primary-600 hover:bg-primary-700 transition-colors"
+            >
+              {profileComplete
+                ? "View Business Profile"
+                : "Complete Business Profile"}
+            </Link>
+            {profileComplete && (
+              <button
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center justify-center px-5 py-2.5 text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
+              >
+                Check Approval Status
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole === "seller_approved" && !profileComplete) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background-light">
+        <div className="max-w-md p-6 text-center bg-white rounded-lg shadow-lg md:p-8">
+          <div className="flex items-center justify-center w-20 h-20 mx-auto mb-4 bg-orange-100 rounded-full">
+            <FaExclamationTriangle className="text-3xl text-orange-500" />
+          </div>
+          <h2 className="mb-3 text-2xl font-bold text-neutral-800">
+            Complete Your Business Profile
+          </h2>
+          <p className="mb-5 text-neutral-600">
+            Your seller account is approved! Please complete your business
+            profile to start selling and access all seller features.
+          </p>
+          <div className="p-4 mb-5 bg-orange-50 rounded-lg">
+            <p className="text-sm text-orange-700">
+              <strong>Required:</strong> Business details, CNIC verification,
+              and contact information
+            </p>
+          </div>
+          <Link
+            to="/profile"
+            className="inline-flex items-center justify-center px-5 py-2.5 text-white rounded-lg bg-primary-600 hover:bg-primary-700 transition-colors"
           >
-            Return to Home
+            Complete Business Profile
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole !== "seller_approved") {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background-light">
+        <div className="max-w-md p-6 text-center bg-white rounded-lg shadow-lg md:p-8">
+          <div className="flex items-center justify-center w-20 h-20 mx-auto mb-4 bg-red-100 rounded-full">
+            <FaExclamationTriangle className="text-3xl text-red-500" />
+          </div>
+          <h2 className="mb-3 text-2xl font-bold text-neutral-800">
+            Access Denied
+          </h2>
+          <p className="mb-5 text-neutral-600">
+            You need approved seller privileges to access this dashboard.
+          </p>
+          <Link
+            to="/profile"
+            className="inline-flex items-center justify-center px-5 py-2.5 text-white rounded-lg bg-primary-600 hover:bg-primary-700 transition-colors"
+          >
+            Apply as Seller
           </Link>
         </div>
       </div>
@@ -99,183 +256,360 @@ const SellerDashboard = () => {
   return (
     <div className="min-h-screen p-4 bg-background-light md:p-6">
       <div className="mx-auto max-w-7xl">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-3 mb-6 md:grid-cols-2 lg:grid-cols-4 md:gap-4 md:mb-8">
-          <div className="p-3 bg-white rounded-lg shadow md:p-4">
-            <div className="flex items-center">
-              <div className="p-2 rounded-full bg-secondary-200 text-primary-600 md:p-3">
-                <FaBox className="text-sm md:text-lg" />
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-neutral-800 md:text-3xl">
+            Seller Dashboard
+          </h1>
+          <p className="text-neutral-600">
+            Welcome back! Here's what's happening with your store today.
+          </p>
+        </div>
+
+        <div className="mb-8">
+          {/* First Row - Main Stats */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="p-6 text-center bg-white rounded-lg shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full">
+                <FaBox className="text-2xl text-blue-600" />
               </div>
-              <div className="ml-2 md:ml-3">
-                <h3 className="text-xs font-medium text-neutral-600 md:text-sm">Total Products</h3>
-                <p className="text-lg font-bold text-neutral-800 md:text-xl lg:text-2xl">{stats.totalProducts}</p>
+              <div className="text-3xl font-bold text-blue-600">
+                {stats.totalProducts?.toLocaleString() || "0"}
+              </div>
+              <div className="mt-2 text-sm font-medium text-neutral-700">
+                Total Products
+              </div>
+              <div className="mt-1 text-xs text-neutral-500">
+                Across all categories
+              </div>
+            </div>
+
+            <div className="p-6 text-center bg-white rounded-lg shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full">
+                <FaShoppingCart className="text-2xl text-green-600" />
+              </div>
+              <div className="text-3xl font-bold text-green-600">
+                {stats.totalOrders?.toLocaleString() || "0"}
+              </div>
+              <div className="mt-2 text-sm font-medium text-neutral-700">
+                Total Orders
+              </div>
+              <div className="mt-1 text-xs text-neutral-500">
+                All time orders
+              </div>
+            </div>
+
+            <div className="p-6 text-center bg-white rounded-lg shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full">
+                <FaMoneyBillWave className="text-2xl text-purple-600" />
+              </div>
+              <div className="text-3xl font-bold text-purple-600">
+                Rs {stats.totalRevenue?.toLocaleString() || "0"}
+              </div>
+              <div className="mt-2 text-sm font-medium text-neutral-700">
+                Total Revenue
+              </div>
+              <div className="mt-1 text-xs text-neutral-500">
+                Lifetime earnings
+              </div>
+            </div>
+
+            <div className="p-6 text-center bg-white rounded-lg shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-yellow-100 rounded-full">
+                <FaTruck className="text-2xl text-yellow-600" />
+              </div>
+              <div className="text-3xl font-bold text-yellow-600">
+                {stats.pendingOrders?.toLocaleString() || "0"}
+              </div>
+              <div className="mt-2 text-sm font-medium text-neutral-700">
+                Pending Orders
+              </div>
+              <div className="mt-1 text-xs text-neutral-500">
+                Require attention
               </div>
             </div>
           </div>
 
-          <div className="p-3 bg-white rounded-lg shadow md:p-4">
-            <div className="flex items-center">
-              <div className="p-2 text-green-600 bg-green-100 rounded-full md:p-3">
-                <FaShoppingCart className="text-sm md:text-lg" />
-              </div>
-              <div className="ml-2 md:ml-3">
-                <h3 className="text-xs font-medium text-neutral-600 md:text-sm">Total Orders</h3>
-                <p className="text-lg font-bold text-neutral-800 md:text-xl lg:text-2xl">{stats.totalOrders}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-3 bg-white rounded-lg shadow md:p-4">
-            <div className="flex items-center">
-              <div className="p-2 text-blue-600 bg-blue-100 rounded-full md:p-3">
-                <FaMoneyBillWave className="text-sm md:text-lg" />
-              </div>
-              <div className="ml-2 md:ml-3">
-                <h3 className="text-xs font-medium text-neutral-600 md:text-sm">Total Revenue</h3>
-                <p className="text-lg font-bold text-neutral-800 md:text-xl lg:text-2xl">Rs {stats.totalRevenue.toLocaleString()}</p>
+          {/* Second Row - Product Status Stats */}
+          <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-3 lg:gap-6">
+            <div className="p-6 bg-white rounded-lg shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
+              <div className="flex items-center justify-center md:justify-start">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-100">
+                  <FaCheckCircle className="text-2xl text-green-600" />
+                </div>
+                <div className="ml-4 text-center md:text-left">
+                  <div className="text-3xl font-bold text-green-600">
+                    {stats.activeProducts?.toLocaleString() || "0"}
+                  </div>
+                  <div className="mt-1 text-sm font-medium text-neutral-700">
+                    Active Products
+                  </div>
+                  <div className="text-xs text-neutral-500">
+                    Available for purchase
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="p-3 bg-white rounded-lg shadow md:p-4">
-            <div className="flex items-center">
-              <div className="p-2 text-yellow-600 bg-yellow-100 rounded-full md:p-3">
-                <FaTruck className="text-sm md:text-lg" />
+            <div className="p-6 bg-white rounded-lg shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
+              <div className="flex items-center justify-center md:justify-start">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100">
+                  <FaExclamationTriangle className="text-2xl text-yellow-600" />
+                </div>
+                <div className="ml-4 text-center md:text-left">
+                  <div className="text-3xl font-bold text-yellow-600">
+                    {stats.lowStockProducts?.toLocaleString() || "0"}
+                  </div>
+                  <div className="mt-1 text-sm font-medium text-neutral-700">
+                    Low Stock Items
+                  </div>
+                  <div className="text-xs text-neutral-500">
+                    Need replenishment
+                  </div>
+                </div>
               </div>
-              <div className="ml-2 md:ml-3">
-                <h3 className="text-xs font-medium text-neutral-600 md:text-sm">Pending Orders</h3>
-                <p className="text-lg font-bold text-neutral-800 md:text-xl lg:text-2xl">{stats.pendingOrders}</p>
+            </div>
+
+            <div className="p-6 bg-white rounded-lg shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
+              <div className="flex items-center justify-center md:justify-start">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
+                  <FaBox className="text-2xl text-red-600" />
+                </div>
+                <div className="ml-4 text-center md:text-left">
+                  <div className="text-3xl font-bold text-red-600">
+                    {stats.outOfStockProducts?.toLocaleString() || "0"}
+                  </div>
+                  <div className="mt-1 text-sm font-medium text-neutral-700">
+                    Out of Stock
+                  </div>
+                  <div className="text-xs text-neutral-500">
+                    Require restocking
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 mb-6 lg:grid-cols-2 lg:gap-6 lg:mb-8">
-          {/* Recent Orders */}
-          <div className="overflow-hidden bg-white rounded-lg shadow">
-            <div className="p-4 border-b border-neutral-200 md:p-6">
-              <h2 className="flex items-center text-lg font-bold text-neutral-800 md:text-xl">
-                <FaShoppingCart className="mr-2 text-primary-600" />
-                Recent Orders
-              </h2>
+        <div className="grid grid-cols-1 gap-6 mb-8 lg:grid-cols-2">
+          {/* Recent Orders Card */}
+          <div className="overflow-hidden bg-white rounded-lg shadow-lg">
+            <div className="p-6 border-b border-neutral-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="p-2 rounded-full bg-primary-100 text-primary-600">
+                    <FaShoppingCart className="text-lg" />
+                  </div>
+                  <div className="ml-3">
+                    <h2 className="text-lg font-bold text-neutral-800">
+                      Recent Orders
+                    </h2>
+                    <p className="text-sm text-neutral-600">
+                      Latest customer orders
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  to="/seller/orders"
+                  className="flex items-center text-sm text-primary-600 hover:text-primary-700"
+                >
+                  View All <FaArrowRight className="ml-1" />
+                </Link>
+              </div>
             </div>
+
             <div className="divide-y divide-neutral-200">
-              {recentOrders.map((order, index) => (
-                <div key={index} className="p-4 md:p-6">
-                  <div className="flex flex-col justify-between md:flex-row md:items-start">
-                    <div className="mb-2 md:mb-0">
-                      <h3 className="font-medium text-neutral-900">{order.id}</h3>
-                      <p className="text-sm text-neutral-600">{order.customer} - {order.product}</p>
+              {recentOrders.length > 0 ? (
+                recentOrders.map((order) => (
+                  <div
+                    key={order._id}
+                    className="p-4 hover:bg-neutral-50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium text-neutral-900">
+                          ORD-{order._id?.slice(-6).toUpperCase() || "N/A"}
+                        </h3>
+                        <p className="text-sm text-neutral-600">
+                          {order.user?.name || "Customer"} •{" "}
+                          {order.items?.length || 0} items
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-neutral-900">
+                          Rs {order.totalAmount || 0}
+                        </p>
+                        <span
+                          className={`inline-block px-2 py-1 mt-1 text-xs rounded-full font-medium ${
+                            order.status === "Delivered"
+                              ? "bg-green-100 text-green-800"
+                              : order.status === "Shipped"
+                              ? "bg-blue-100 text-blue-800"
+                              : order.status === "Processing"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-neutral-100 text-neutral-800"
+                          }`}
+                        >
+                          {order.status || "Pending"}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-left md:text-right">
-                      <p className="font-semibold text-neutral-900">Rs {order.amount}</p>
-                      <span className={`inline-block px-2 py-1 mt-1 text-xs rounded-full ${
-                        order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                        order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {order.status}
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center text-neutral-500">
+                  <FaShoppingCart className="w-12 h-12 mx-auto mb-3 text-neutral-400" />
+                  <p>No recent orders found</p>
+                  <p className="text-sm mt-1">
+                    Start selling to see orders here
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Low Stock Alert Card */}
+          <div className="overflow-hidden bg-white rounded-lg shadow-lg">
+            <div className="p-6 border-b border-neutral-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="p-2 rounded-full bg-yellow-100 text-yellow-600">
+                    <FaExclamationTriangle className="text-lg" />
+                  </div>
+                  <div className="ml-3">
+                    <h2 className="text-lg font-bold text-neutral-800">
+                      Low Stock Alert
+                    </h2>
+                    <p className="text-sm text-neutral-600">
+                      Products running low
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  to="/seller/manage-products?status=Low Stock"
+                  className="flex items-center text-sm text-primary-600 hover:text-primary-700"
+                >
+                  Manage <FaArrowRight className="ml-1" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="divide-y divide-neutral-200">
+              {lowStockProducts.length > 0 ? (
+                lowStockProducts.map((product) => (
+                  <div
+                    key={product._id}
+                    className="p-4 hover:bg-neutral-50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-neutral-900">
+                          {product.name}
+                        </h3>
+                        <p className="text-sm text-neutral-600">
+                          Only {product.stock} left in stock
+                        </p>
+                      </div>
+                      <span className="px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full">
+                        Restock needed
                       </span>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="p-4 border-t border-neutral-200 md:p-6">
-              <Link to="/seller/orders" className="flex items-center justify-center text-primary-600 hover:text-primary-700">
-                View all orders <FaArrowRight className="ml-2" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Low Stock Alerts */}
-          <div className="overflow-hidden bg-white rounded-lg shadow">
-            <div className="p-4 border-b border-neutral-200 md:p-6">
-              <h2 className="flex items-center text-lg font-bold text-neutral-800 md:text-xl">
-                <FaExclamationTriangle className="mr-2 text-yellow-600" />
-                Low Stock Alert
-              </h2>
-            </div>
-            <div className="divide-y divide-neutral-200">
-              {lowStockProducts.map((product, index) => (
-                <div key={index} className="p-4 md:p-6">
-                  <div className="flex flex-col justify-between md:flex-row md:items-center">
-                    <div className="mb-2 md:mb-0">
-                      <h3 className="font-medium text-neutral-900">{product.name}</h3>
-                      <p className="text-sm text-neutral-600">Only {product.stock} left in stock</p>
-                    </div>
-                    <div className="px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full md:text-sm md:px-3">
-                      Restock needed
+                    <div className="w-full h-2 rounded-full bg-neutral-200">
+                      <div
+                        className="h-2 bg-red-500 rounded-full"
+                        style={{ width: `${(product.stock / 10) * 100}%` }}
+                      ></div>
                     </div>
                   </div>
-                  <div className="w-full h-2 mt-2 rounded-full bg-neutral-200">
-                    <div 
-                      className="h-2 bg-red-500 rounded-full" 
-                      style={{ width: `${(product.stock / product.threshold) * 100}%` }}
-                    ></div>
-                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center text-neutral-500">
+                  <FaCheckCircle className="w-12 h-12 mx-auto mb-3 text-green-400" />
+                  <p>All products are well stocked</p>
+                  <p className="text-sm mt-1">Great inventory management!</p>
                 </div>
-              ))}
-            </div>
-            <div className="p-4 border-t border-neutral-200 md:p-6">
-              <Link to="/seller/manage-products?status=Low Stock" className="flex items-center justify-center text-primary-600 hover:text-primary-700">
-                Manage inventory <FaArrowRight className="ml-2" />
-              </Link>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="p-4 bg-white rounded-lg shadow md:p-6 md:mb-8">
-          <h2 className="flex items-center mb-4 text-lg font-bold text-neutral-800 md:text-xl">
-            <FaChartLine className="mr-2 text-primary-600" />
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
-            <Link 
-              to="/seller/add-product" 
-              className="p-3 transition-colors border rounded-lg border-neutral-200 hover:border-primary-300 hover:bg-primary-50 md:p-4"
-            >
-              <div className="flex items-center">
-                <div className="p-1 rounded-full bg-secondary-200 text-primary-600 md:p-2">
-                  <FaPlus className="text-sm md:text-base" />
-                </div>
-                <div className="ml-2 md:ml-3">
-                  <h3 className="text-sm font-medium text-neutral-900 md:text-base">Add New Product</h3>
-                  <p className="text-xs text-neutral-600 md:text-sm">Create a new listing</p>
-                </div>
+        {/* Quick Actions Section */}
+        <div className="bg-white rounded-lg shadow-lg">
+          <div className="p-6 border-b border-neutral-200">
+            <div className="flex items-center">
+              <div className="p-2 rounded-full bg-primary-100 text-primary-600">
+                <FaChartLine className="text-lg" />
               </div>
-            </Link>
-            
-            <Link 
-              to="/seller/manage-products" 
-              className="p-3 transition-colors border rounded-lg border-neutral-200 hover:border-primary-300 hover:bg-primary-50 md:p-4"
-            >
-              <div className="flex items-center">
-                <div className="p-1 rounded-full bg-secondary-200 text-primary-600 md:p-2">
-                  <FaEdit className="text-sm md:text-base" />
-                </div>
-                <div className="ml-2 md:ml-3">
-                  <h3 className="text-sm font-medium text-neutral-900 md:text-base">Manage Products</h3>
-                  <p className="text-xs text-neutral-600 md:text-sm">Edit existing listings</p>
-                </div>
+              <div className="ml-3">
+                <h2 className="text-lg font-bold text-neutral-800">
+                  Quick Actions
+                </h2>
+                <p className="text-sm text-neutral-600">
+                  Manage your store efficiently
+                </p>
               </div>
-            </Link>
-            
-            <Link 
-              to="/seller/orders?status=processing" 
-              className="p-3 transition-colors border rounded-lg border-neutral-200 hover:border-primary-300 hover:bg-primary-50 md:p-4"
-            >
-              <div className="flex items-center">
-                <div className="p-1 rounded-full bg-secondary-200 text-primary-600 md:p-2">
-                  <FaTruck className="text-sm md:text-base" />
+            </div>
+          </div>
+
+          <div className="p-6">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <Link
+                to="/seller/add-product"
+                className="group p-5 transition-all duration-200 border rounded-lg border-neutral-200 hover:border-primary-300 hover:bg-primary-50 hover:shadow-md"
+              >
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-secondary-100 text-primary-600 group-hover:bg-secondary-200 transition-colors">
+                    <FaPlus className="text-xl" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-bold text-neutral-900 group-hover:text-primary-600">
+                      Add New Product
+                    </h3>
+                    <p className="text-sm text-neutral-600 group-hover:text-primary-500">
+                      Create a new listing
+                    </p>
+                  </div>
                 </div>
-                <div className="ml-2 md:ml-3">
-                  <h3 className="text-sm font-medium text-neutral-900 md:text-base">Process Orders</h3>
-                  <p className="text-xs text-neutral-600 md:text-sm">Manage pending orders</p>
+              </Link>
+
+              <Link
+                to="/seller/manage-products"
+                className="group p-5 transition-all duration-200 border rounded-lg border-neutral-200 hover:border-primary-300 hover:bg-primary-50 hover:shadow-md"
+              >
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-secondary-100 text-primary-600 group-hover:bg-secondary-200 transition-colors">
+                    <FaEdit className="text-xl" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-bold text-neutral-900 group-hover:text-primary-600">
+                      Manage Products
+                    </h3>
+                    <p className="text-sm text-neutral-600 group-hover:text-primary-500">
+                      Edit existing listings
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+
+              <Link
+                to="/seller/orders?status=pending"
+                className="group p-5 transition-all duration-200 border rounded-lg border-neutral-200 hover:border-primary-300 hover:bg-primary-50 hover:shadow-md"
+              >
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-secondary-100 text-primary-600 group-hover:bg-secondary-200 transition-colors">
+                    <FaTruck className="text-xl" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-bold text-neutral-900 group-hover:text-primary-600">
+                      Process Orders
+                    </h3>
+                    <p className="text-sm text-neutral-600 group-hover:text-primary-500">
+                      Manage pending orders
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

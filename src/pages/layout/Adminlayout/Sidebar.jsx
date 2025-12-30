@@ -1,112 +1,90 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { 
+import React from "react";
+import { NavLink } from "react-router-dom";
+import {
   FaTachometerAlt,
-  FaPlus,
   FaBox,
   FaShoppingCart,
   FaAd,
   FaSignOutAlt,
-  FaShoppingBasket,
   FaUsers,
-  FaList
-} from 'react-icons/fa';
+  FaList,
+} from "react-icons/fa";
+import MainLogo from "../../../assets/Main Logo.png";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function Sidebar({ showSidebar, setShowSidebar }) {
-    
-    return (
-        <div
-            className={`h-screen fixed top-0 md:left-0 ${showSidebar} overflow-y-auto flex-row flex-nowrap overflow-hidden shadow-xs bg-white w-64 py-10 px-6 transition-all duration-300 md:py-8`}
-        >
-            <div className="relative flex-col items-stretch min-h-full px-0 flex-nowrap">
-                {/* Logo - Visible on both desktop and mobile */}
-                <div className="flex items-center justify-center">
-                    <FaShoppingBasket className="mr-2 text-3xl text-primary-600" />
-                    <span className="text-xl font-bold text-primary-900">Admin Panel</span>
-                </div>
+  const { logout } = useAuth();
 
-                <div className="flex flex-col">
-                    <hr className="my-4 border-neutral-300" />
+  const handleLogout = () => {
+    logout();
+  };
 
-                    <ul className="flex flex-col min-w-full space-y-1 list-none">
-                        {/* Admin Dashboard */}
-                        <li className="rounded-lg">
-                            <NavLink
-                                to="/admin/dashboard"
-                                exact
-                                className="flex items-center gap-4 px-4 py-3 text-sm font-medium transition-colors duration-200 rounded-lg text-neutral-700 hover:bg-background-subtle hover:text-primary-600"
-                                activeClassName="bg-primary-600 text-white shadow-md hover:bg-primary-700"
-                            >
-                                <FaTachometerAlt className="text-lg" />
-                                Admin Dashboard
-                            </NavLink>
-                        </li>
+  const navLinkClass = ({ isActive }) =>
+    `flex items-center gap-4 px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
+      isActive
+        ? "bg-primary-600 text-white shadow-md"
+        : "text-neutral-700 hover:bg-background-subtle hover:text-primary-600"
+    }`;
 
-                        {/* Category Management */}
-                        <li className="rounded-lg">
-                            <NavLink
-                                to="/admin/category-management"
-                                className="flex items-center gap-4 px-4 py-3 text-sm font-medium transition-colors duration-200 rounded-lg text-neutral-700 hover:bg-background-subtle hover:text-primary-600"
-                                activeClassName="bg-primary-600 text-white shadow-md hover:bg-primary-700"
-                            >
-                                <FaList className="text-lg" />
-                                All Categories
-                            </NavLink>
-                        </li>
+  const menuItems = [
+    { to: "/admin/dashboard", icon: FaTachometerAlt, label: "Admin Dashboard" },
+    { to: "/admin/category-management", icon: FaList, label: "All Categories" },
+    { to: "/admin/all-products", icon: FaBox, label: "All Products" },
+    { to: "/admin/manage-users", icon: FaUsers, label: "Manage Users" },
+    {
+      to: "/admin/manage-orders",
+      icon: FaShoppingCart,
+      label: "Manage Orders",
+    },
+    { to: "/admin/ads-management", icon: FaAd, label: "Manage Advertisement" },
+  ];
 
-                        {/* All Products */}
-                        <li className="rounded-lg">
-                            <NavLink
-                                to="/admin/all-products"
-                                className="flex items-center gap-4 px-4 py-3 text-sm font-medium transition-colors duration-200 rounded-lg text-neutral-700 hover:bg-background-subtle hover:text-primary-600"
-                                activeClassName="bg-primary-600 text-white shadow-md hover:bg-primary-700"
-                            >
-                                <FaBox className="text-lg" />
-                                All Products
-                            </NavLink>
-                        </li>
+  return (
+    <div
+      className={`fixed top-0 h-screen 
+        ${showSidebar === "left-0" ? "z-50" : "z-0"} 
+        md:z-20 md:left-0 ${showSidebar} 
+        overflow-y-auto flex flex-col bg-white w-64 shadow-xl py-10 px-6 
+        transition-all duration-300 md:py-8
+        ${
+          showSidebar === "-left-64"
+            ? "pointer-events-none md:pointer-events-auto"
+            : ""
+        }`}
+    >
+      {/* Logo */}
+      <div className="flex items-center justify-center">
+        <img src={MainLogo} alt="NexTrade Logo" className="h-10 mr-2" />
+        <span className="text-xl font-bold text-primary-900">
+          NexTrade Admin
+        </span>
+      </div>
 
-                        {/* Manage Users */}
-                        <li className="rounded-lg">
-                            <NavLink
-                                to="/admin/manage-users"
-                                className="flex items-center gap-4 px-4 py-3 text-sm font-medium transition-colors duration-200 rounded-lg text-neutral-700 hover:bg-background-subtle hover:text-primary-600"
-                                activeClassName="bg-primary-600 text-white shadow-md hover:bg-primary-700"
-                            >
-                                <FaUsers className="text-lg" />
-                                Manage Users
-                            </NavLink>
-                        </li>
+      <hr className="my-4 border-neutral-300" />
 
-                        {/* Manage Orders */}
-                        <li className="rounded-lg">
-                            <NavLink
-                                to="/admin/manage-orders"
-                                className="flex items-center gap-4 px-4 py-3 text-sm font-medium transition-colors duration-200 rounded-lg text-neutral-700 hover:bg-background-subtle hover:text-primary-600"
-                                activeClassName="bg-primary-600 text-white shadow-md hover:bg-primary-700"
-                            >
-                                <FaShoppingCart className="text-lg" />
-                                Manage Orders
-                            </NavLink>
-                        </li>
+      {/* Menu Links */}
+      <ul className="flex flex-col space-y-1">
+        {menuItems.map((item) => (
+          <li key={item.to}>
+            <NavLink to={item.to} end className={navLinkClass}>
+              <item.icon className="text-lg" />
+              {item.label}
+            </NavLink>
+          </li>
+        ))}
 
-                        {/* Logout Button - As part of sidebar menu */}
-                        <li className="mt-auto rounded-lg">
-                            <button
-                                onClick={() => {
-                                    // Add logout logic here
-                                    console.log('Logging out...');
-                                    // In real app: handle logout (clear tokens, redirect, etc.)
-                                }}
-                                className="flex items-center w-full gap-4 px-4 py-3 text-sm font-medium transition-colors duration-200 rounded-lg text-neutral-700 hover:bg-red-50 hover:text-red-600"
-                            >
-                                <FaSignOutAlt className="text-lg" />
-                                Logout
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    );
+        {/* Logout Button */}
+        <li className="mt-auto">
+          <button
+            onClick={handleLogout}
+            className="flex items-center w-full gap-4 px-4 py-3 text-sm font-medium rounded-lg 
+              text-neutral-700 hover:bg-red-50 hover:text-red-600 transition-colors duration-200"
+          >
+            <FaSignOutAlt className="text-lg" />
+            Logout
+          </button>
+        </li>
+      </ul>
+    </div>
+  );
 }

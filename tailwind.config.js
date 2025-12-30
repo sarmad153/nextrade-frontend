@@ -5,28 +5,40 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          600: "rgb(79, 70, 229)", // indigo-600
-          700: "rgb(67, 56, 202)", // indigo-700
-          800: "rgb(55, 48, 163)", // indigo-800
-          900: "rgb(49, 46, 129)", // indigo-900
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
         },
         secondary: {
-          200: "rgb(199, 210, 254)", // indigo-200
-          500: "rgb(99, 102, 241)", // indigo-500
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
+          600: '#475569',
+          700: '#334155',
+          800: '#1e293b',
+          900: '#0f172a',
         },
         neutral: {
-          300: "rgb(209, 213, 219)", // gray-300
-          400: "rgb(156, 163, 175)", // gray-400
-          700: "rgb(55, 65, 81)", // gray-700
-          800: "rgb(31, 41, 55)", // gray-800
-        },
-        // New background colors (soft light options)
-        background: {
-          light: "#f8fafc",   // slate-50 (soft blue-white, best for screens)
-          subtle: "#f3f4f6",  // gray-100 (very light gray)
-          warm: "#f5f5f4",    // stone-50 (slightly warm white)
-          DEFAULT: "#ffffff", // pure white (fallback)
-        },
+          50: '#fafafa',
+          100: '#f4f4f5',
+          200: '#e4e4e7',
+          300: '#d4d4d8',
+          400: '#a1a1aa',
+          500: '#71717a',
+          600: '#52525b',
+          700: '#3f3f46',
+          900: '#18181b',
+        }
       },
       fontFamily: {
         inter: ["Inter", "sans-serif"],
