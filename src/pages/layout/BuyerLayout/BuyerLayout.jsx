@@ -1,6 +1,6 @@
 import React from "react";
-import BuyerNavbar from "./BuyerNavbar";
-import BuyerFooter from "./BuyerFooter";
+import BuyerNavbar from "./BuyerNavbar.jsx";
+import BuyerFooter from "./BuyerFooter.jsx";
 import { Outlet } from "react-router-dom";
 
 const BuyerLayout = () => {
@@ -21,3 +21,4 @@ const BuyerLayout = () => {
 };
 
 export default BuyerLayout;
+
