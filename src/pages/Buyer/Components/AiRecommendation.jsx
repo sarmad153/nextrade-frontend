@@ -301,7 +301,10 @@ const AIRecommendations = ({
                         product.images && product.images.length > 0
                           ? product.images[0].startsWith("http")
                             ? product.images[0]
-                            : `http://localhost:5000${product.images[0]}`
+                            : `${import.meta.env.VITE_API_URL.replace(
+                                "/api",
+                                ""
+                              )}${product.images[0]}`
                           : "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"
                       }
                       alt={product.name}
