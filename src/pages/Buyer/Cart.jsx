@@ -582,7 +582,10 @@ const Cart = () => {
                           src={
                             item.product.images[0].startsWith("http")
                               ? item.product.images[0]
-                              : `http://localhost:5000${item.product.images[0]}`
+                              : `${import.meta.env.VITE_API_URL.replace(
+                                  "/api",
+                                  ""
+                                )}${item.product.images[0]}`
                           }
                           alt={item.product.name}
                           className="object-cover w-full h-full rounded-lg"
