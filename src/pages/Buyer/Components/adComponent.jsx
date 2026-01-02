@@ -42,6 +42,7 @@ const BuyerAdCarousel = () => {
           if (response.data?.recommendedAds?.length > 0) {
             setAds(response.data.recommendedAds);
             setRecommendationSource(response.data.source);
+            console.log("Ai picked");
             return;
           }
         } catch (aiError) {
@@ -260,10 +261,10 @@ const BuyerAdCarousel = () => {
       display: -webkit-box;
       overflow: hidden;
       text-overflow: ellipsis;
-      -webkit-line-clamp: ${expandedDescription ? 'unset' : '2'};
+      -webkit-line-clamp: ${expandedDescription ? "unset" : "2"};
       -webkit-box-orient: vertical;
       line-height: 1.5;
-      max-height: ${expandedDescription ? 'none' : '3em'};
+      max-height: ${expandedDescription ? "none" : "3em"};
       transition: max-height 0.3s ease;
     }
     
@@ -443,34 +444,35 @@ const BuyerAdCarousel = () => {
 
                 {/* Enhanced Description Section */}
                 <div className="mb-3 md:mb-6">
-                  <p 
+                  <p
                     className="text-white/90 text-sm md:text-base lg:text-lg leading-relaxed description-container"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {currentAd.description}
                   </p>
-                  
-                  {currentAd.description && currentAd.description.length > 100 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleDescription();
-                      }}
-                      className="read-more-btn text-blue-300 hover:text-blue-200"
-                    >
-                      {expandedDescription ? (
-                        <>
-                          <FaChevronUp className="mr-1" />
-                          Read Less
-                        </>
-                      ) : (
-                        <>
-                          <FaChevronDown className="mr-1" />
-                          Read More
-                        </>
-                      )}
-                    </button>
-                  )}
+
+                  {currentAd.description &&
+                    currentAd.description.length > 100 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleDescription();
+                        }}
+                        className="read-more-btn text-blue-300 hover:text-blue-200"
+                      >
+                        {expandedDescription ? (
+                          <>
+                            <FaChevronUp className="mr-1" />
+                            Read Less
+                          </>
+                        ) : (
+                          <>
+                            <FaChevronDown className="mr-1" />
+                            Read More
+                          </>
+                        )}
+                      </button>
+                    )}
                 </div>
 
                 <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
