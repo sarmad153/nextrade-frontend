@@ -304,7 +304,9 @@ const AIRecommendations = ({
                             : `${import.meta.env.VITE_API_URL.replace(
                                 "/api",
                                 ""
-                              )}${product.images[0]}`
+                              )}${
+                                product.images[0].startsWith("/") ? "" : "/"
+                              }${product.images[0]}`
                           : "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"
                       }
                       alt={product.name}
