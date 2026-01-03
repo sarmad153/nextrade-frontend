@@ -48,19 +48,34 @@ const CategoryManagement = () => {
     { value: "FaCar", label: "Car" },
   ];
 
+  const extractImageFromResponse = (data) => {
+    if (data.image?.url) {
+      return data.image.url;
+    }
+    return data.image || "";
+  };
+
   // Fetch categories
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
       const response = await API.get("/categories/with-counts");
-      setCategories(response.data);
-      setFilteredCategories(response.data);
+
+      // Format categories to ensure consistent image structure
+      const formattedCategories = response.data.map((category) => ({
+        ...category,
+        image: extractImageFromResponse(category),
+      }));
+
+      setCategories(formattedCategories);
+      setFilteredCategories(formattedCategories);
     } catch (err) {
       // Fallback to basic categories without counts
       try {
         const basicResponse = await API.get("/categories");
         const categoriesWithDefaultCounts = basicResponse.data.map((cat) => ({
           ...cat,
+          image: extractImageFromResponse(cat),
           productCount: 0,
         }));
         setCategories(categoriesWithDefaultCounts);
@@ -129,21 +144,23 @@ const CategoryManagement = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      let imageUrl = "";
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("description", description);
+      formData.append("icon", icon);
+      formData.append("isFeatured", isFeatured);
+
+      // Append image if selected
       if (selectedFile) {
-        imageUrl = await uploadImage();
-        if (!imageUrl) {
-          toast.error("Image upload failed");
-          return;
-        }
+        formData.append("image", selectedFile);
       }
 
-      await API.post("/categories", {
-        name,
-        description,
-        icon,
-        isFeatured,
-        image: imageUrl,
+      setUploading(true);
+
+      await API.post("/categories", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       await fetchCategories();
@@ -152,6 +169,8 @@ const CategoryManagement = () => {
       setCurrentView("list");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create category");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -159,21 +178,23 @@ const CategoryManagement = () => {
   const handleEdit = async (e) => {
     e.preventDefault();
     try {
-      let imageUrl = currentCategory.image;
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("description", description);
+      formData.append("icon", icon);
+      formData.append("isFeatured", isFeatured);
+
+      // Append new image if selected
       if (selectedFile) {
-        imageUrl = await uploadImage();
-        if (!imageUrl && selectedFile) {
-          toast.error("Image upload failed");
-          return;
-        }
+        formData.append("image", selectedFile);
       }
 
-      await API.put(`/categories/${currentCategory._id}`, {
-        name,
-        description,
-        icon,
-        isFeatured,
-        image: imageUrl,
+      setUploading(true);
+
+      await API.put(`/categories/${currentCategory._id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       await fetchCategories();
@@ -182,6 +203,8 @@ const CategoryManagement = () => {
       setCurrentView("list");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to update category");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -608,7 +631,7 @@ const CategoryManagement = () => {
                             src={
                               imagePreview ||
                               getImageUrl(
-                                currentCategory.image,
+                                currentCategory?.image,
                                 "/placeholder-category.jpg"
                               )
                             }

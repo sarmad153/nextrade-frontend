@@ -1,16 +1,30 @@
-export const getImageUrl = (imagePath, type = 'category') => {
-    if (!imagePath || imagePath.trim() === '') {
-        const text = type === 'category' ? 'Category' : 'Product';
-        return `https://via.placeholder.com/150/cccccc/969696?text=${text}+Image`;
+export const getCategoryImage = (category) => {
+    if (!category) return "/placeholder-category.jpg";
+
+    // Handle both old and new structures
+    if (typeof category.image === 'object' && category.image.url) {
+        return category.image.url;
     }
 
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-        return imagePath;
+    if (typeof category.image === 'string' && category.image) {
+        return category.image;
     }
 
-    if (imagePath.startsWith('/uploads/') || imagePath.includes('localhost')) {
-        return `https://via.placeholder.com/150/cccccc/969696?text=Image+Coming+Soon`;
+    return "/placeholder-category.jpg";
+};
+
+export const getImageUrl = (image, fallback = "/placeholder-category.jpg") => {
+    if (!image) return fallback;
+
+    // Handle new structure { url, publicId, ... }
+    if (typeof image === 'object' && image.url) {
+        return image.url;
     }
 
-    return imagePath;
+    // Handle old structure (string URL)
+    if (typeof image === 'string') {
+        return image;
+    }
+
+    return fallback;
 };
