@@ -49,10 +49,11 @@ const CategoryManagement = () => {
   ];
 
   const extractImageFromResponse = (data) => {
-    if (data.image?.url) {
-      return data.image.url;
-    }
-    return data.image || "";
+    if (!data) return "";
+    if (typeof data === "string") return data;
+    if (data.url) return data.url;
+    if (data.image?.url) return data.image.url;
+    return "";
   };
 
   // Fetch categories
@@ -124,9 +125,14 @@ const CategoryManagement = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      if (!response.data.imageUrl) {
+      const imageUrl =
+        response.data.imageUrl || response.data.image?.url || response.data.url;
+
+      if (!imageUrl) {
         throw new Error("No image URL returned from server");
       }
+
+      return imageUrl;
 
       toast.success("Image uploaded successfully!");
       return response.data.imageUrl;
@@ -296,7 +302,6 @@ const CategoryManagement = () => {
         description: category.description,
         icon: category.icon,
         isFeatured: !category.isFeatured,
-        image: category.image,
       });
 
       await fetchCategories();
