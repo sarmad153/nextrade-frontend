@@ -384,8 +384,7 @@ const CategoryManagement = () => {
                               alt={category.name}
                               className="object-cover w-10 h-10 rounded-lg md:w-12 md:h-12"
                               onError={(e) => {
-                                e.target.style.display =
-                                  "/placeholder-category.jpg";
+                                e.target.src = "/placeholder-category.jpg";
                               }}
                             />
                           ) : (
