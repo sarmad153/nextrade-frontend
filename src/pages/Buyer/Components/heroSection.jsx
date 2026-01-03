@@ -32,7 +32,7 @@ const HeroSection = () => {
     {
       icon: FaShippingFast,
       title: "Free Shipping",
-      description: "Free delivery on orders over ₹499",
+      description: "Free delivery on orders",
     },
     {
       icon: FaShieldAlt,

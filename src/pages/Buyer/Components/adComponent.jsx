@@ -357,6 +357,7 @@ const BuyerAdCarousel = () => {
               </div>
             </div>
           </div>
+
           <div
             className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 bg-gradient-to-br from-blue-900 to-purple-900 overflow-hidden cursor-pointer group"
             onMouseEnter={() => setIsHovered(true)}
@@ -410,9 +411,9 @@ const BuyerAdCarousel = () => {
               </div>
             </div>
 
-            {/* Bottom Overlay */}
+            {/* Bottom Overlay - Desktop (hidden on mobile) */}
             <div
-              className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-3 md:p-6 transition-transform duration-500 ${
+              className={`hidden md:block absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-3 md:p-6 transition-transform duration-500 ${
                 isHovered ? "translate-y-0" : "translate-y-full"
               }`}
             >
@@ -506,7 +507,7 @@ const BuyerAdCarousel = () => {
                     e.stopPropagation();
                     prevAd();
                   }}
-                  className="absolute left-1 md:left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-2xl hover:bg-white/30 transition-all duration-300 hover:scale-110 border border-white/30"
+                  className="hidden md:flex absolute left-1 md:left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-white/20 backdrop-blur-md rounded-full items-center justify-center shadow-2xl hover:bg-white/30 transition-all duration-300 hover:scale-110 border border-white/30"
                 >
                   <FaChevronLeft className="text-white text-sm md:text-base" />
                 </button>
@@ -515,12 +516,112 @@ const BuyerAdCarousel = () => {
                     e.stopPropagation();
                     nextAd();
                   }}
-                  className="absolute right-1 md:right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-2xl hover:bg-white/30 transition-all duration-300 hover:scale-110 border border-white/30"
+                  className="hidden md:flex absolute right-1 md:right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-white/20 backdrop-blur-md rounded-full items-center justify-center shadow-2xl hover:bg-white/30 transition-all duration-300 hover:scale-110 border border-white/30"
                 >
                   <FaChevronRight className="text-white text-sm md:text-base" />
                 </button>
               </>
             )}
+          </div>
+
+          {/* Mobile Details Section (Always visible on mobile) */}
+          <div className="md:hidden bg-gradient-to-t from-gray-900 via-gray-800 to-gray-900 p-4 text-white">
+            <div className="flex flex-col space-y-3">
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="bg-gradient-to-r from-blue-400 to-purple-500 text-white px-3 py-1 rounded-full font-semibold text-xs shadow-lg">
+                  {currentAd.targetCategory?.name || "PREMIUM"}
+                </span>
+                <div className="flex items-center text-white/90 text-xs">
+                  <FaStore className="mr-2 text-blue-300" />
+                  <span className="font-semibold truncate max-w-[100px]">
+                    {sellerName}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-1 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                  <FaClock className="text-yellow-300 text-xs" />
+                  <span className="text-white font-bold text-xs">
+                    {remainingDays} DAYS LEFT
+                  </span>
+                </div>
+              </div>
+
+              <h2 className="text-lg font-black text-white leading-tight">
+                {currentAd.title}
+              </h2>
+
+              <div className="mb-2">
+                <p className="text-white/90 text-sm leading-relaxed description-container">
+                  {currentAd.description}
+                </p>
+
+                {currentAd.description &&
+                  currentAd.description.length > 100 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDescription();
+                      }}
+                      className="text-blue-300 hover:text-blue-200 font-semibold text-sm mt-1 flex items-center"
+                    >
+                      {expandedDescription ? (
+                        <>
+                          <FaChevronUp className="mr-1" />
+                          Read Less
+                        </>
+                      ) : (
+                        <>
+                          <FaChevronDown className="mr-1" />
+                          Read More
+                        </>
+                      )}
+                    </button>
+                  )}
+              </div>
+
+              <div className="flex flex-col space-y-3">
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                    <FaFire className="text-green-300" />
+                    <span className="text-green-300 font-bold text-xs">
+                      {engagement.engagementLevel}
+                    </span>
+                    <span className="text-white/80 text-xs">Engagement</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      prevAd();
+                    }}
+                    className="flex-1 bg-white/20 backdrop-blur-md rounded-full py-2 flex items-center justify-center shadow-lg border border-white/30"
+                  >
+                    <FaChevronLeft className="text-white" />
+                  </button>
+
+                  <button
+                    onClick={() => handleAdClick(currentAd)}
+                    className="flex-3 bg-gradient-primary-vertical px-4 py-3 rounded-xl shadow-2xl flex items-center justify-center space-x-2"
+                  >
+                    <FaExternalLinkAlt className="text-white" />
+                    <span className="text-white font-bold text-sm">
+                      Shop Now
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      nextAd();
+                    }}
+                    className="flex-1 bg-white/20 backdrop-blur-md rounded-full py-2 flex items-center justify-center shadow-lg border border-white/30"
+                  >
+                    <FaChevronRight className="text-white" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Dots Indicator */}
