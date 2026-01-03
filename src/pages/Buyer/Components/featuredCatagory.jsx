@@ -93,7 +93,11 @@ const FeaturedCategories = () => {
         >
           <div className="relative h-48 bg-neutral-100 overflow-hidden flex-shrink-0">
             <img
-              src={category.image}
+              src={
+                category.image?.startsWith("http")
+                  ? category.image
+                  : `http://localhost:5000${category.image}`
+              }
               alt={category.name}
               loading="lazy"
               decoding="async"
