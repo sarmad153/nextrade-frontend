@@ -30,6 +30,7 @@ const AIRecommendations = ({
   const [refreshing, setRefreshing] = useState(false);
   const [hoveredProduct, setHoveredProduct] = useState(null);
   const [user, setUser] = useState(null);
+  const backendBaseURL = import.meta.env.VITE_API_URL.replace("/api", "");
 
   // data mapping
   const mapProductData = (apiProduct) => {
@@ -301,10 +302,7 @@ const AIRecommendations = ({
                         product.images && product.images.length > 0
                           ? product.images[0].startsWith("http")
                             ? product.images[0]
-                            : `${import.meta.env.VITE_API_URL.replace(
-                                "/api",
-                                ""
-                              )}${
+                            : `${backendBaseURL}${
                                 product.images[0].startsWith("/") ? "" : "/"
                               }${product.images[0]}`
                           : "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"
