@@ -15,7 +15,7 @@ import {
   FaPercentage,
   FaTags,
 } from "react-icons/fa";
-import API from "../../../api/axiosInstance";
+import API, { SERVER_URL } from "../../../api/axiosInstance";
 
 const iconMap = {
   Electronics: FaMobile,
@@ -96,9 +96,7 @@ const FeaturedCategories = () => {
               src={
                 category.image?.startsWith("http")
                   ? category.image
-                  : `${import.meta.env.VITE_API_URL.replace("/api", "")}${
-                      category.image
-                    }`
+                  : `${SERVER_URL}/${category.image?.replace(/^\/+/, "")}`
               }
               alt={category.name}
               loading="lazy"
