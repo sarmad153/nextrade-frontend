@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import API from "../../api/axiosInstance";
 import { toast } from "react-toastify";
+import { getImageUrl } from "../../../utils/imageHelper";
 
 const CategoryManagement = () => {
   const [categories, setCategories] = useState([]);
@@ -376,11 +377,15 @@ const CategoryManagement = () => {
                         <div className="relative w-10 h-10 md:w-12 md:h-12">
                           {category.image ? (
                             <img
-                              src={category.image}
+                              src={getImageUrl(
+                                category.image,
+                                "/placeholder-category.jpg"
+                              )}
                               alt={category.name}
                               className="object-cover w-10 h-10 rounded-lg md:w-12 md:h-12"
                               onError={(e) => {
-                                e.target.style.display = "none";
+                                e.target.style.display =
+                                  "/placeholder-category.jpg";
                               }}
                             />
                           ) : (
@@ -601,8 +606,17 @@ const CategoryManagement = () => {
                         </label>
                         <div className="p-4 bg-neutral-100 rounded-lg">
                           <img
-                            src={imagePreview || currentCategory.image}
+                            src={
+                              imagePreview ||
+                              getImageUrl(
+                                currentCategory.image,
+                                "/placeholder-category.jpg"
+                              )
+                            }
                             alt="Preview"
+                            onError={(e) => {
+                              e.target.src = "/placeholder-category.jpg";
+                            }}
                             className="object-cover w-full h-32 rounded"
                           />
                         </div>
