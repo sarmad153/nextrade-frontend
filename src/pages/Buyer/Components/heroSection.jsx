@@ -202,7 +202,7 @@ const HeroSection = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:gap-6 pt-2 lg:pt-4">
+            <div className="hidden md:grid grid-cols-2 sm:grid-cols-4 gap-3 lg:gap-6 pt-2 lg:pt-4">
               {featuredStats.map((stat, index) => (
                 <div key={index} className="text-center">
                   <div className="flex items-center justify-center w-8 h-8 lg:w-12 lg:h-12 bg-white/60 rounded-lg lg:rounded-xl mx-auto mb-1 lg:mb-2">
@@ -214,6 +214,18 @@ const HeroSection = () => {
                   <div className="text-gray-300 text-xs lg:text-sm">
                     {stat.label}
                   </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="md:hidden flex flex-wrap gap-4 pt-4 justify-center">
+              {featuredStats.slice(0, 2).map((stat, index) => (
+                <div key={index} className="text-center flex-1 min-w-[120px]">
+                  <div className="flex items-center justify-center w-10 h-10 bg-white/60 rounded-lg mx-auto mb-2">
+                    <stat.icon className="text-xl text-secondary-500" />
+                  </div>
+                  <div className="text-xl font-bold">{stat.number}</div>
+                  <div className="text-gray-300 text-xs">{stat.label}</div>
                 </div>
               ))}
             </div>
