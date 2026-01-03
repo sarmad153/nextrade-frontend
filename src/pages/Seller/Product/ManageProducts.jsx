@@ -698,7 +698,7 @@ const ManageProducts = () => {
                           {product.images && product.images.length > 0 ? (
                             <img
                               className="object-cover w-12 h-12 rounded-lg"
-                              src={`http://localhost:5000${product.images[0]}`}
+                              src={`https://nextrade-backend-production-a486.up.railway.app/${product.images[0]}`}
                               alt={product.name}
                             />
                           ) : (
@@ -1059,7 +1059,7 @@ const ManageProducts = () => {
                       {selectedProduct.images.map((image, index) => (
                         <div key={index} className="overflow-hidden rounded-lg">
                           <img
-                            src={`http://localhost:5000${image}`}
+                            src={`https://nextrade-backend-production-a486.up.railway.app/${image}`}
                             alt={`${selectedProduct.name} - ${index + 1}`}
                             className="object-cover w-full h-48 transition-transform duration-300 hover:scale-105"
                           />
@@ -1221,7 +1221,7 @@ const ManageProducts = () => {
                     {editingProduct.images?.map((image, index) => (
                       <div key={index} className="relative">
                         <img
-                          src={`http://localhost:5000${image}`}
+                          src={`https://nextrade-backend-production-a486.up.railway.app/${image}`}
                           alt={`Product ${index + 1}`}
                           className="w-full h-24 object-cover rounded-lg"
                         />

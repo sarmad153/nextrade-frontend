@@ -1018,7 +1018,7 @@ const AddProduct = () => {
                   {mainImage ? (
                     <div className="relative w-full text-center">
                       <img
-                        src={`http://localhost:5000${mainImage}`}
+                        src={`https://nextrade-backend-production-a486.up.railway.app/${mainImage}`}
                         alt="Main product"
                         className="object-cover w-32 h-32 mx-auto rounded-lg"
                       />
@@ -1123,7 +1123,7 @@ const AddProduct = () => {
                       {galleryImages.map((imageUrl, index) => (
                         <div key={index} className="relative group">
                           <img
-                            src={`http://localhost:5000${imageUrl}`}
+                            src={`https://nextrade-backend-production-a486.up.railway.app/${imageUrl}`}
                             alt={`Gallery ${index + 1}`}
                             className="object-cover w-full h-24 rounded-lg"
                           />

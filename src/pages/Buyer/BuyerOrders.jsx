@@ -255,7 +255,7 @@ const BuyerOrders = () => {
     if (!imagePath) return null;
     return imagePath.startsWith("http")
       ? imagePath
-      : `http://localhost:5000${imagePath}`;
+      : `https://nextrade-backend-production-a486.up.railway.app/${imagePath}`;
   };
 
   const OrderDetailsModal = ({ order, onClose }) => {

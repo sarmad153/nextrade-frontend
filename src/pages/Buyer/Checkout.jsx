@@ -868,7 +868,7 @@ const Checkout = () => {
                             src={
                               item.product.images[0].startsWith("http")
                                 ? item.product.images[0]
-                                : `http://localhost:5000${item.product.images[0]}`
+                                : `https://nextrade-backend-production-a486.up.railway.app/${item.product.images[0]}`
                             }
                             alt={item.product?.name || "Product"}
                             className="object-cover w-full h-full rounded"

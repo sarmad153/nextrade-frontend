@@ -54,9 +54,9 @@ export default function AdminProfile() {
     if (!imagePath) return null;
     if (imagePath.startsWith("http")) return imagePath;
     if (imagePath.startsWith("/uploads")) {
-      return `http://localhost:5000${imagePath}`;
+      return `https://nextrade-backend-production-a486.up.railway.app/${imagePath}`;
     }
-    return `http://localhost:5000/uploads/profiles/${imagePath}`;
+    return `https://nextrade-backend-production-a486.up.railway.app//uploads/profiles/${imagePath}`;
   };
 
   const formatJoinDate = () => {

@@ -73,9 +73,9 @@ const SellerInfo = React.memo(({ product }) => {
     if (imageUrl.startsWith("http")) {
       return imageUrl;
     } else if (imageUrl.startsWith("/uploads")) {
-      return `http://localhost:5000${imageUrl}`;
+      return `https://nextrade-backend-production-a486.up.railway.app/${imageUrl}`;
     } else {
-      return `http://localhost:5000/uploads/profiles/${imageUrl}`;
+      return `https://nextrade-backend-production-a486.up.railway.app//uploads/profiles/${imageUrl}`;
     }
   };
 
@@ -779,7 +779,7 @@ const ProductDetail = () => {
                     src={
                       product.images[selectedImage]?.startsWith("http")
                         ? product.images[selectedImage]
-                        : `http://localhost:5000${product.images[selectedImage]}`
+                        : `https://nextrade-backend-production-a486.up.railway.app/${product.images[selectedImage]}`
                     }
                     alt={product.name}
                     className="object-cover w-full h-full"
@@ -829,7 +829,7 @@ const ProductDetail = () => {
                       src={
                         image.startsWith("http")
                           ? image
-                          : `http://localhost:5000${image}`
+                          : `https://nextrade-backend-production-a486.up.railway.app/${image}`
                       }
                       alt={`${product.name} ${index + 1}`}
                       className="object-cover w-full h-full rounded"
@@ -1275,7 +1275,7 @@ const ProductDetail = () => {
                         src={
                           recommendedProduct.images[0]?.startsWith("http")
                             ? recommendedProduct.images[0]
-                            : `http://localhost:5000${recommendedProduct.images[0]}`
+                            : `https://nextrade-backend-production-a486.up.railway.app/${recommendedProduct.images[0]}`
                         }
                         alt={recommendedProduct.name}
                         className="object-cover w-full h-full"

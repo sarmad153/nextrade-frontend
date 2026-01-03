@@ -185,8 +185,8 @@ const AdminAdsManagement = () => {
     if (!imagePath) return null;
     if (imagePath.startsWith("http")) return imagePath;
     if (imagePath.startsWith("/uploads/"))
-      return `http://localhost:5000${imagePath}`;
-    return `http://localhost:5000/uploads/${imagePath}`;
+      return `https://nextrade-backend-production-a486.up.railway.app/${imagePath}`;
+    return `https://nextrade-backend-production-a486.up.railway.app//uploads/${imagePath}`;
   };
 
   // Filter ads
@@ -594,8 +594,8 @@ const AdminAdsManagement = () => {
       if (selectedPayment.proofImage.startsWith("http"))
         return selectedPayment.proofImage;
       if (selectedPayment.proofImage.startsWith("/"))
-        return `http://localhost:5000${selectedPayment.proofImage}`;
-      return `http://localhost:5000/uploads/${selectedPayment.proofImage}`;
+        return `https://nextrade-backend-production-a486.up.railway.app/${selectedPayment.proofImage}`;
+      return `https://nextrade-backend-production-a486.up.railway.app//uploads/${selectedPayment.proofImage}`;
     };
 
     const paymentProofUrl = getPaymentProofUrl();

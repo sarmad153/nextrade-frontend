@@ -195,7 +195,7 @@ const EditProductModal = ({
                           src={
                             image.startsWith("http")
                               ? image
-                              : `http://localhost:5000${image}`
+                              : `https://nextrade-backend-production-a486.up.railway.app/${image}`
                           }
                           alt={`Product ${index + 1}`}
                           className="object-cover w-20 h-20 rounded-lg"

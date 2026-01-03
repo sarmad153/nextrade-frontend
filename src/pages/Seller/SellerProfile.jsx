@@ -77,11 +77,11 @@ export default function SellerProfile() {
 
     // If it starts with /uploads, construct full URL
     if (imagePath.startsWith("/uploads")) {
-      return `http://localhost:5000${imagePath}`;
+      return `https://nextrade-backend-production-a486.up.railway.app/${imagePath}`;
     }
 
     // If it's just a filename, construct the full path
-    return `http://localhost:5000/uploads/profiles/${imagePath}`;
+    return `https://nextrade-backend-production-a486.up.railway.app//uploads/profiles/${imagePath}`;
   };
 
   const formatJoinDate = () => {

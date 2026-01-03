@@ -64,10 +64,10 @@ const BuyerProfile = () => {
     if (imagePath.startsWith("http")) {
       return imagePath;
     } else if (imagePath.startsWith("/uploads")) {
-      return `http://localhost:5000${imagePath}`;
+      return `https://nextrade-backend-production-a486.up.railway.app/${imagePath}`;
     } else {
       // Default case
-      return `http://localhost:5000/uploads/profiles/${imagePath}`;
+      return `https://nextrade-backend-production-a486.up.railway.app//uploads/profiles/${imagePath}`;
     }
   }, []);
 

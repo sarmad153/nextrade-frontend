@@ -1081,7 +1081,7 @@ const ManageUsers = () => {
                       <div className="space-y-2">
                         {selectedSeller.cnicFront && (
                           <a
-                            href={`http://localhost:5000${selectedSeller.cnicFront}`}
+                            href={`https://nextrade-backend-production-a486.up.railway.app/${selectedSeller.cnicFront}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center text-sm text-primary-600 hover:text-primary-700"
@@ -1092,7 +1092,7 @@ const ManageUsers = () => {
                         )}
                         {selectedSeller.cnicBack && (
                           <a
-                            href={`http://localhost:5000${selectedSeller.cnicBack}`}
+                            href={`https://nextrade-backend-production-a486.up.railway.app/${selectedSeller.cnicBack}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center text-sm text-primary-600 hover:text-primary-700"
@@ -1103,7 +1103,7 @@ const ManageUsers = () => {
                         )}
                         {selectedSeller.businessRegistration && (
                           <a
-                            href={`http://localhost:5000${selectedSeller.businessRegistration}`}
+                            href={`https://nextrade-backend-production-a486.up.railway.app/${selectedSeller.businessRegistration}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center text-sm text-primary-600 hover:text-primary-700"

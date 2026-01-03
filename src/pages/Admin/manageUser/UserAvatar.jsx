@@ -13,7 +13,7 @@ const UserAvatar = ({ user, size = "md" }) => {
   if (user.profileImage && !imageError) {
     return (
       <img
-        src={`http://localhost:5000${user.profileImage}`}
+        src={`https://nextrade-backend-production-a486.up.railway.app/${user.profileImage}`}
         alt={user.name}
         className={`${sizeClasses[size]} rounded-full object-cover border-2 border-gray-200`}
         onError={() => setImageError(true)}

@@ -182,7 +182,7 @@ const SellerInfoModal = ({
                   {sellerProfile?.profileImage ? (
                     <div className="relative">
                       <img
-                        src={`http://localhost:5000${sellerProfile.profileImage}`}
+                        src={`https://nextrade-backend-production-a486.up.railway.app/${sellerProfile.profileImage}`}
                         alt={sellerProfile.name}
                         className="w-16 h-16 rounded-full object-cover border-2 border-blue-200"
                         onError={handleImageError}

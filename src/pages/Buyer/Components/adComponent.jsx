@@ -241,9 +241,9 @@ const BuyerAdCarousel = () => {
     if (image.startsWith("http")) {
       return image;
     } else if (image.startsWith("/uploads")) {
-      return `http://localhost:5000${image}`;
+      return `https://nextrade-backend-production-a486.up.railway.app/${image}`;
     } else {
-      return `http://localhost:5000/uploads/ads/${image}`;
+      return `https://nextrade-backend-production-a486.up.railway.app//uploads/ads/${image}`;
     }
   };
 

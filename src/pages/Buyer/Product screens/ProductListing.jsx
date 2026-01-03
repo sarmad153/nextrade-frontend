@@ -223,7 +223,7 @@ const ProductsGrid = ({
                     product.images && product.images.length > 0
                       ? product.images[0].startsWith("http")
                         ? product.images[0]
-                        : `http://localhost:5000${product.images[0]}`
+                        : `https://nextrade-backend-production-a486.up.railway.app/${product.images[0]}`
                       : "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop"
                   }
                   alt={product.name}

@@ -376,7 +376,7 @@ const CategoryManagement = () => {
                         <div className="relative w-10 h-10 md:w-12 md:h-12">
                           {category.image ? (
                             <img
-                              src={`http://localhost:5000${category.image}`}
+                              src={`https://nextrade-backend-production-a486.up.railway.app/${category.image}`}
                               alt={category.name}
                               className="object-cover w-10 h-10 rounded-lg md:w-12 md:h-12"
                               onError={(e) => {
@@ -603,7 +603,7 @@ const CategoryManagement = () => {
                           <img
                             src={
                               imagePreview ||
-                              `http://localhost:5000${currentCategory.image}`
+                              `https://nextrade-backend-production-a486.up.railway.app/${currentCategory.image}`
                             }
                             alt="Preview"
                             className="object-cover w-full h-32 rounded"

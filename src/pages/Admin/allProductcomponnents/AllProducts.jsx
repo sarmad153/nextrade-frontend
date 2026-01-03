@@ -396,7 +396,7 @@ const AllProducts = () => {
             src={
               imageUrl.startsWith("http")
                 ? imageUrl
-                : `http://localhost:5000${imageUrl}`
+                : `https://nextrade-backend-production-a486.up.railway.app/${imageUrl}`
             }
             alt={product.name}
             className="object-cover w-full h-full"

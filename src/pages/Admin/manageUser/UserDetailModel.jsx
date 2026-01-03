@@ -310,7 +310,7 @@ const UserDetailModal = ({
                       <div className="space-y-2">
                         {profileData.cnicFront && (
                           <a
-                            href={`http://localhost:5000${profileData.cnicFront}`}
+                            href={`https://nextrade-backend-production-a486.up.railway.app/${profileData.cnicFront}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center text-sm text-primary-600 hover:text-primary-700"
@@ -321,7 +321,7 @@ const UserDetailModal = ({
                         )}
                         {profileData.cnicBack && (
                           <a
-                            href={`http://localhost:5000${profileData.cnicBack}`}
+                            href={`https://nextrade-backend-production-a486.up.railway.app/${profileData.cnicBack}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center text-sm text-primary-600 hover:text-primary-700"
@@ -332,7 +332,7 @@ const UserDetailModal = ({
                         )}
                         {profileData.businessRegistration && (
                           <a
-                            href={`http://localhost:5000${profileData.businessRegistration}`}
+                            href={`https://nextrade-backend-production-a486.up.railway.app/${profileData.businessRegistration}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center text-sm text-primary-600 hover:text-primary-700"
