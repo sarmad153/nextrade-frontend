@@ -96,7 +96,9 @@ const FeaturedCategories = () => {
               src={
                 category.image?.startsWith("http")
                   ? category.image
-                  : `http://localhost:5000${category.image}`
+                  : `${import.meta.env.VITE_API_URL.replace("/api", "")}${
+                      category.image
+                    }`
               }
               alt={category.name}
               loading="lazy"
