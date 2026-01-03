@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaArrowRight,
   FaShoppingBag,
@@ -34,6 +34,7 @@ const cache = new Map();
 const FeaturedCategories = () => {
   const [categories, setCategories] = useState([]);
   const [hoveredCard, setHoveredCard] = useState(null);
+  const navigate = useNavigate();
 
   const handleMouseEnter = useCallback((index) => {
     setHoveredCard(index);
@@ -47,7 +48,6 @@ const FeaturedCategories = () => {
     const fetchCategories = async () => {
       const cacheKey = "featured-categories";
 
-      // Check cache first
       if (cache.has(cacheKey)) {
         setCategories(cache.get(cacheKey));
         return;
@@ -67,6 +67,14 @@ const FeaturedCategories = () => {
     fetchCategories();
   }, []);
 
+  const handleCategoryClick = (e, categoryId) => {
+    e.preventDefault();
+    navigate(`/products?category=${categoryId}`, {
+      state: { scrollToTop: true },
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const CategoryCard = memo(({ category, index }) => {
     const IconComponent = getCategoryIcon(category.name);
     const isHovered = hoveredCard === index;
@@ -80,6 +88,7 @@ const FeaturedCategories = () => {
       >
         <Link
           to={`/products?category=${category._id}`}
+          onClick={(e) => handleCategoryClick(e, category._id)}
           className="bg-white rounded-2xl shadow-lg hover:shadow-2xl border border-neutral-200 hover:border-primary-300 transition-all duration-500 overflow-hidden h-full flex flex-col"
         >
           <div className="relative h-48 bg-neutral-100 overflow-hidden flex-shrink-0">
@@ -88,13 +97,15 @@ const FeaturedCategories = () => {
               alt={category.name}
               loading="lazy"
               decoding="async"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               onError={(e) => {
+                e.target.onerror = null;
                 e.target.src =
                   "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop";
               }}
             />
 
-            <div className="absolute top-4 left-4 transform group-hover:scale-110 transition-transform duration-300">
+            <div className="absolute top-4 left-4 transform transition-transform duration-300">
               <div className="p-3 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg">
                 <IconComponent className="text-primary-600 text-xl" />
               </div>
@@ -170,7 +181,7 @@ const FeaturedCategories = () => {
               <span className="text-primary-600 font-semibold group-hover:text-primary-700 transition-colors text-sm">
                 Explore Category
               </span>
-              <div className="w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center transform group-hover:scale-110 group-hover:bg-primary-700 transition-all duration-300">
+              <div className="w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center transform transition-all duration-300">
                 <FaArrowRight className="text-sm" />
               </div>
             </div>
@@ -178,7 +189,7 @@ const FeaturedCategories = () => {
         </Link>
 
         {isHovered && (
-          <div className="absolute -top-2 -right-2 bg-white text-primary-600 px-3 py-1 rounded-full shadow-lg border border-primary-200 text-sm font-semibold z-20 animate-bounce">
+          <div className="absolute -top-2 -right-2 bg-white text-primary-600 px-3 py-1 rounded-full shadow-lg border border-primary-200 text-sm font-semibold z-20">
             <FaStar className="inline mr-1 text-yellow-500" />
             Featured
           </div>
@@ -188,6 +199,18 @@ const FeaturedCategories = () => {
   });
 
   CategoryCard.displayName = "CategoryCard";
+
+  const handleViewAllClick = (e) => {
+    e.preventDefault();
+    navigate("/categories", { state: { scrollToTop: true } });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleNoCategoriesClick = (e) => {
+    e.preventDefault();
+    navigate("/categories", { state: { scrollToTop: true } });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <section className="py-16 bg-gradient-to-br from-background-light via-white to-primary-50">
@@ -221,6 +244,7 @@ const FeaturedCategories = () => {
               </p>
               <Link
                 to="/categories"
+                onClick={handleNoCategoriesClick}
                 className="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
               >
                 View All Categories
@@ -250,6 +274,7 @@ const FeaturedCategories = () => {
                 </p>
                 <Link
                   to="/categories"
+                  onClick={handleViewAllClick}
                   className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-primary text-white rounded-xl font-semibold text-base sm:text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 shadow-lg"
                 >
                   <FaLayerGroup className="mr-3" />
