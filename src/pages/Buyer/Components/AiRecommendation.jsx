@@ -30,7 +30,6 @@ const AIRecommendations = ({
   const [refreshing, setRefreshing] = useState(false);
   const [hoveredProduct, setHoveredProduct] = useState(null);
   const [user, setUser] = useState(null);
-  const serverURL = import.meta.env.VITE_API_URL.replace("/api", "");
 
   // data mapping
   const mapProductData = (apiProduct) => {
