@@ -562,10 +562,12 @@ const AddProduct = () => {
             });
 
             // create bulk tiers
-            await Promise.all(
-              bulkTiers.map((tier) =>
-                API.post(`/bulk-pricing/products/${productId}`, tier)
-              )
+            const tierPromises = bulkTiers.map((tier) =>
+              API.post(`/bulk-pricing/products/${productId}`, {
+                minQuantity: tier.minQuantity,
+                discountType: tier.discountType,
+                discountValue: parseFloat(tier.discountValue),
+              })
             );
 
             toast.success("Product and bulk pricing tiers added successfully!");
