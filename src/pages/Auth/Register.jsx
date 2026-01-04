@@ -7,6 +7,7 @@ import {
   FaStore,
   FaShoppingCart,
   FaChevronDown,
+  FaInfoCircle,
 } from "react-icons/fa";
 import API from "../../api/axiosInstance";
 import { toast } from "react-toastify";
@@ -169,17 +170,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Seller info message */}
-            {formData.role === "seller" && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-700 md:text-sm">
-                  <strong>Note for Sellers:</strong> After registration, you'll
-                  need to complete your business profile with shop details,
-                  business type, and verification documents to start selling.
-                </p>
-              </div>
-            )}
-
             {/* Submit */}
             <button
               type="submit"
@@ -234,67 +224,59 @@ const Register = () => {
                     ? "Become a Wholesale Seller"
                     : "Join as a Buyer"}
                 </h2>
-                <p className="text-sm md:text-base opacity-90">
+                <p className="text-sm md:text-base opacity-90 mb-3">
                   {formData.role === "seller"
                     ? "Reach thousands of buyers across Pakistan. Start your wholesale business today."
                     : "Access thousands of wholesale products at best prices from verified sellers."}
                 </p>
+
+                {/* Seller Note in Overlay */}
+                {formData.role === "seller" && (
+                  <div className="mt-3 p-3 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                    <div className="flex items-start">
+                      <FaInfoCircle className="text-yellow-300 mt-0.5 mr-2 flex-shrink-0" />
+                      <p className="text-xs md:text-sm opacity-95">
+                        <span className="font-semibold">Note:</span> After
+                        registration, you'll need to complete your business
+                        profile with shop details, business type, and
+                        verification documents to start selling.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Mobile Image - Only for buyer role, hidden for seller */}
-        {formData.role === "buyer" && (
-          <div className="mt-6 md:hidden">
-            <div className="relative rounded-lg overflow-hidden shadow-md">
-              <img
-                src="./Images/RegisterImg.png"
-                alt="NexTrade Registration"
-                className="w-full h-48 object-cover"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                  e.target.nextElementSibling.style.display = "flex";
-                }}
-              />
-              {/* Fallback for mobile */}
-              <div className="hidden bg-gradient-to-r from-primary-500 to-primary-600 h-48 w-full flex-col items-center justify-center text-white p-4">
-                <h2 className="text-xl font-bold mb-2">Welcome to NexTrade</h2>
-                <p className="text-center text-sm">
-                  Discover amazing wholesale products
-                </p>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                <p className="text-white text-sm font-medium">
-                  Join thousands of buyers finding wholesale deals
-                </p>
-              </div>
+        {/* Mobile Image */}
+        <div className="mt-6 md:hidden">
+          <div className="relative rounded-lg overflow-hidden shadow-md">
+            <img
+              src="./Images/RegisterImg.png"
+              alt="NexTrade Registration"
+              className="w-full h-48 object-cover"
+              onError={(e) => {
+                e.target.style.display = "none";
+                e.target.nextElementSibling.style.display = "flex";
+              }}
+            />
+            {/* Fallback for mobile */}
+            <div className="hidden bg-gradient-to-r from-primary-500 to-primary-600 h-48 w-full flex-col items-center justify-center text-white p-4">
+              <h2 className="text-xl font-bold mb-2">Welcome to NexTrade</h2>
+              <p className="text-center text-sm">
+                Discover amazing wholesale products
+              </p>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+              <p className="text-white text-sm font-medium">
+                {formData.role === "seller"
+                  ? "Become a wholesale seller"
+                  : "Join thousands of buyers finding wholesale deals"}
+              </p>
             </div>
           </div>
-        )}
-
-        {/* Mobile seller info card */}
-        {formData.role === "seller" && (
-          <div className="mt-6 md:hidden">
-            <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-sm">
-              <div className="flex items-start">
-                <div className="flex-shrink-0 mt-1">
-                  <FaStore className="text-blue-600 text-lg" />
-                </div>
-                <div className="ml-3">
-                  <h3 className="font-semibold text-blue-800 mb-1">
-                    Seller Registration
-                  </h3>
-                  <p className="text-sm text-blue-700">
-                    Complete your business profile after signup to start
-                    selling. You'll need shop details, business type, and
-                    verification documents.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
