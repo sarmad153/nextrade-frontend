@@ -299,12 +299,18 @@ const AIRecommendations = ({
                     <img
                       src={
                         product.images && product.images.length > 0
-                          ? product.images[0].startsWith("http")
-                            ? product.images[0]
-                            : `${SERVER_URL}/${product.images[0]}`
+                          ? typeof product.images[0] === "string"
+                            ? product.images[0].startsWith("http")
+                              ? product.images[0]
+                              : `${SERVER_URL}${product.images[0]}`
+                            : product.images[0]?.url ||
+                              product.images[0]?.secure_url ||
+                              product.images[0]?.path ||
+                              "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"
                           : "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"
                       }
                       alt={product.name}
+                      className="w-full h-full object-cover"
                     />
 
                     {/* Gradient Overlay */}
