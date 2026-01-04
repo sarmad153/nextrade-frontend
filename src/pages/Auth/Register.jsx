@@ -211,14 +211,7 @@ const Register = () => {
         </div>
 
         {/* Right Side Image - Hidden on mobile, dynamic sizing on desktop */}
-        <div
-          className={`hidden md:block overflow-hidden rounded-r-xl
-            ${
-              formData.role === "seller"
-                ? "md:w-3/5 lg:w-3/5"
-                : "md:w-3/5 lg:w-3/5"
-            }`}
-        >
+        <div className={`hidden md:block overflow-hidden rounded-r-xl`}>
           <div className="relative w-full h-full min-h-[500px]">
             <img
               src="./Images/RegisterImg.png"
