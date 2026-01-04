@@ -182,10 +182,25 @@ const SellerInfoModal = ({
                   {sellerProfile?.profileImage ? (
                     <div className="relative">
                       <img
-                        src={sellerProfile.profileImage}
+                        src={sellerProfile.profileImage} // Use directly - it's already a full URL
                         alt={sellerProfile.name}
                         className="w-16 h-16 rounded-full object-cover border-2 border-blue-200"
-                        onError={handleImageError}
+                        onError={(e) => {
+                          console.error(
+                            "Failed to load profile image:",
+                            sellerProfile.profileImage
+                          );
+
+                          // Show fallback if image fails
+                          e.target.style.display = "none";
+                          const fallbackDiv = e.target.nextSibling;
+                          if (fallbackDiv) {
+                            fallbackDiv.style.display = "flex";
+                          }
+                        }}
+                        onLoad={() => {
+                          console.log("Profile image loaded successfully");
+                        }}
                       />
                       <div className="absolute inset-0 hidden w-16 h-16 rounded-full bg-blue-100 border-2 border-blue-200 items-center justify-center">
                         <FaStore className="text-2xl text-blue-600" />
