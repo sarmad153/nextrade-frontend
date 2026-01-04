@@ -370,11 +370,14 @@ const AddProduct = () => {
         }
       );
 
-      if (response.data.imageUrl) {
-        setMainImage(response.data.imageUrl);
+      if (response.data.imageUrl && response.data.publicId) {
+        setMainImage({
+          url: response.data.imageUrl,
+          publicId: response.data.publicId,
+        });
         toast.success("Main image uploaded successfully");
       } else {
-        throw new Error("No image URL returned from server");
+        throw new Error("No image data returned from server");
       }
     } catch (error) {
       toast.error(
@@ -427,7 +430,15 @@ const AddProduct = () => {
       );
 
       // Directly append the returned URLs
-      setGalleryImages((prev) => [...prev, ...response.data.imageUrls]);
+      if (response.data.imageUrl && response.data.publicId) {
+        setMainImage({
+          url: response.data.imageUrl,
+          publicId: response.data.publicId,
+        });
+        toast.success("Main image uploaded successfully");
+      } else {
+        throw new Error("No image data returned from server");
+      }
 
       toast.success(`${response.data.count} images uploaded successfully`);
     } catch (error) {
@@ -513,7 +524,6 @@ const AddProduct = () => {
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         category: formData.category,
@@ -1016,7 +1026,7 @@ const AddProduct = () => {
                   {mainImage ? (
                     <div className="relative w-full text-center">
                       <img
-                        src={mainImage}
+                        src={mainImage?.url}
                         alt="Main product"
                         className="object-cover w-32 h-32 mx-auto rounded-lg"
                       />
@@ -1121,7 +1131,7 @@ const AddProduct = () => {
                       {galleryImages.map((imageUrl, index) => (
                         <div key={index} className="relative group">
                           <img
-                            src={imageUrl}
+                            src={imageUrl?.url}
                             alt={`Gallery ${index + 1}`}
                             className="object-cover w-full h-24 rounded-lg"
                           />
