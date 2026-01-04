@@ -50,12 +50,18 @@ const CategoryManagement = () => {
 
   const extractImageFromResponse = (data) => {
     if (!data) return "";
+
+    // If data is already a string URL
     if (typeof data === "string") return data;
+
+    // If it's an object with url property
     if (data.url) return data.url;
+
+    // If it's an object with image.url property
     if (data.image?.url) return data.image.url;
+
     return "";
   };
-
   // Fetch categories
   const fetchCategories = async () => {
     try {
@@ -642,6 +648,10 @@ const CategoryManagement = () => {
                             }
                             alt="Preview"
                             onError={(e) => {
+                              console.error(
+                                "Failed to load image:",
+                                currentCategory?.image
+                              );
                               e.target.src = "/placeholder-category.jpg";
                             }}
                             className="object-cover w-full h-32 rounded"

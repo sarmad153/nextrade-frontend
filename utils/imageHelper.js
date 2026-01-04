@@ -13,17 +13,21 @@ export const getCategoryImage = (category) => {
     return "/placeholder-category.jpg";
 };
 
-export const getImageUrl = (image, fallback = "/placeholder-category.jpg") => {
-    if (!image) return fallback;
+export const getImageUrl = (imageData, fallback = "/placeholder-category.jpg") => {
+    if (!imageData) return fallback;
 
-    // Handle new structure { url, publicId, ... }
-    if (typeof image === 'object' && image.url) {
-        return image.url;
+    // If it's already a string URL
+    if (typeof imageData === 'string') {
+        // Check if it's a valid URL
+        if (imageData.startsWith('http') || imageData.startsWith('/')) {
+            return imageData;
+        }
+        return fallback;
     }
 
-    // Handle old structure (string URL)
-    if (typeof image === 'string') {
-        return image;
+    // If it's an object with url property
+    if (imageData.url) {
+        return imageData.url;
     }
 
     return fallback;
