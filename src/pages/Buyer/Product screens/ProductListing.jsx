@@ -221,9 +221,35 @@ const ProductsGrid = ({
                 <img
                   src={
                     product.images && product.images.length > 0
-                      ? product.images[0].startsWith("http")
-                        ? product.images[0]
-                        : `https://nextrade-backend-production-a486.up.railway.app/${product.images[0]}`
+                      ? (() => {
+                          // Safely get the first image
+                          const firstImage = product.images[0];
+
+                          // If it's a string
+                          if (typeof firstImage === "string") {
+                            return firstImage.startsWith("http")
+                              ? firstImage
+                              : `https://nextrade-backend-production-a486.up.railway.app/${firstImage}`;
+                          }
+
+                          // If it's an object, try to get the URL
+                          if (
+                            typeof firstImage === "object" &&
+                            firstImage !== null
+                          ) {
+                            // Try common image object properties
+                            return (
+                              firstImage.url ||
+                              firstImage.secure_url ||
+                              firstImage.path ||
+                              firstImage.src ||
+                              "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop"
+                            );
+                          }
+
+                          // Fallback
+                          return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
+                        })()
                       : "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop"
                   }
                   alt={product.name}
