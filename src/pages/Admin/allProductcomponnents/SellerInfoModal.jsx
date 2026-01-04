@@ -176,37 +176,38 @@ const SellerInfoModal = ({
             </div>
           ) : (
             <>
-              {/* Seller Image */}
               {/* Seller Image and Info */}
               <div className="flex items-start space-x-4 mb-6">
                 <div className="flex-shrink-0">
-                  {sellerProfile?.profileImage ? (
-                    <div className="relative">
-                      <img
-                        src={sellerProfile.profileImage}
-                        alt={sellerProfile.name}
-                        className="w-16 h-16 rounded-full object-cover border-2 border-blue-200"
-                        onError={(e) => {
-                          console.error(
-                            "Failed to load profile image:",
-                            sellerProfile.profileImage
-                          );
-                          e.target.style.display = "none";
-                          const fallbackDiv = e.target.nextSibling;
-                          if (fallbackDiv) {
-                            fallbackDiv.style.display = "flex";
-                          }
-                        }}
-                      />
-                      <div className="absolute inset-0 hidden w-16 h-16 rounded-full bg-blue-100 border-2 border-blue-200 items-center justify-center">
+                  <div className="relative w-16 h-16">
+                    {sellerProfile?.profileImage ? (
+                      <>
+                        <img
+                          src={sellerProfile.profileImage}
+                          alt={sellerProfile.name}
+                          className="w-16 h-16 rounded-full object-cover border-2 border-blue-200 absolute top-0 left-0"
+                          onError={(e) => {
+                            console.error(
+                              "Failed to load profile image:",
+                              sellerProfile.profileImage
+                            );
+                            e.target.style.display = "none";
+                            const fallbackDiv = e.target.nextSibling;
+                            if (fallbackDiv) {
+                              fallbackDiv.style.display = "flex";
+                            }
+                          }}
+                        />
+                        <div className="absolute inset-0 hidden w-16 h-16 rounded-full bg-blue-100 border-2 border-blue-200 items-center justify-center">
+                          <FaStore className="text-2xl text-blue-600" />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-blue-100 border-2 border-blue-200 flex items-center justify-center">
                         <FaStore className="text-2xl text-blue-600" />
                       </div>
-                    </div>
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-blue-100 border-2 border-blue-200 flex items-center justify-center">
-                      <FaStore className="text-2xl text-blue-600" />
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
                 {/* Seller Info - Make sure this has proper width */}
