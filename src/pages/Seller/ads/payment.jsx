@@ -79,34 +79,17 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const response = await API.post("/upload/payment/proof", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      let imageUrl = "";
-      if (response.data.imageUrl) {
-        imageUrl = response.data.imageUrl;
-      } else if (response.data.url) {
-        imageUrl = response.data.url;
-      }
-
-      if (!imageUrl) {
-        throw new Error("No image URL returned from server");
-      }
-
-      setProofImageUrl(imageUrl);
+      // Store the file for later upload to payment endpoint
       setProofImage(file);
-      toast.success("Payment proof uploaded successfully");
+
+      // Create preview URL for display
+      const previewUrl = URL.createObjectURL(file);
+      setProofImageUrl(previewUrl);
+
+      toast.success("Payment proof ready for submission");
     } catch (error) {
-      console.error("Upload error:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to upload payment proof"
-      );
+      console.error("Image processing error:", error);
+      toast.error("Failed to process image");
     } finally {
       setUploading(false);
     }
@@ -118,7 +101,7 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
       return;
     }
 
-    if (selectedMethod === "bank_transfer" && !proofImageUrl) {
+    if (selectedMethod === "bank_transfer" && !proofImage) {
       toast.error("Please upload payment proof for bank transfer");
       return;
     }
@@ -133,55 +116,107 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
         throw new Error("Payment record not found. Please contact support.");
       }
 
-      if (proofImage) {
-        const proofFormData = new FormData();
-        proofFormData.append("image", proofImage);
-
-        await API.post(
-          `/payments/${ad.payment._id}/upload-proof`,
-          proofFormData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-      } else if (proofImageUrl) {
-        const formData = new FormData();
-        formData.append("imageUrl", proofImageUrl);
-
-        await API.post(`/payments/${ad.payment._id}/upload-proof`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-      } else {
+      if (!proofImage) {
         throw new Error("No payment proof provided");
       }
 
-      toast.success("Payment proof submitted successfully!");
+      console.log("Uploading payment proof for payment ID:", ad.payment._id);
+
+      // Create FormData with the correct field name
+      const formData = new FormData();
+      formData.append("image", proofImage); // Field name must be "image" as per backend
+
+      // Log FormData contents for debugging
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
+
+      // Upload payment proof using the correct endpoint
+      const response = await API.post(
+        `/payments/${ad.payment._id}/upload-proof`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("Upload response:", response.data);
+
+      if (response.data.message) {
+        toast.success(response.data.message);
+      } else {
+        toast.success("Payment proof submitted successfully!");
+      }
+
+      // Clean up preview URL
+      if (proofImageUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(proofImageUrl);
+      }
+
       onPaymentComplete();
     } catch (error) {
       console.error("Payment completion error:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Payment failed. Please try again.";
+      console.error("Error details:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        headers: error.response?.headers,
+      });
+
+      let errorMessage = "Payment failed. Please try again.";
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast.error(errorMessage);
     } finally {
       setProcessing(false);
     }
   };
 
-  // Get bank details from backend or use defaults
-  const bankDetails = {
+  // Get bank details from backend
+  const getBankDetails = async () => {
+    try {
+      if (ad.payment?._id) {
+        const response = await API.get(`/payments/instructions/${ad._id}`);
+        return response.data;
+      }
+    } catch (error) {
+      console.error("Failed to fetch bank details:", error);
+    }
+
+    // Fallback to default details
+    return {
+      bankName: "Sadapay",
+      accountNumber: "+9230287900729",
+      accountName: "Muhammad Sarmad Javed",
+      amount: ad.totalCost,
+      reference: `AD${ad._id}`,
+      dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    };
+  };
+
+  const [bankDetails, setBankDetails] = useState({
     bankName: "Sadapay",
     accountNumber: "+9230287900729",
     accountName: "Muhammad Sarmad Javed",
     amount: ad.totalCost,
     reference: `AD${ad._id}`,
-    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
-  };
+    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+  });
+
+  // Fetch bank details when component mounts
+  React.useEffect(() => {
+    const fetchBankDetails = async () => {
+      const details = await getBankDetails();
+      setBankDetails(details);
+    };
+    fetchBankDetails();
+  }, [ad._id]);
 
   const getSelectedMethod = () => {
     return paymentMethods.find((m) => m.id === selectedMethod);
@@ -432,7 +467,7 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
                                   <div className="mt-3">
                                     <FaSpinner className="animate-spin text-blue-600 mx-auto" />
                                     <p className="text-xs text-neutral-500 mt-1">
-                                      Uploading...
+                                      Processing image...
                                     </p>
                                   </div>
                                 )}
@@ -441,20 +476,43 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
                               <div className="text-center">
                                 <FaCheckCircle className="mx-auto text-3xl text-green-500 mb-3" />
                                 <p className="text-green-700 font-medium mb-2">
-                                  Proof uploaded successfully!
+                                  Proof ready for submission!
                                 </p>
-                                <p className="text-xs text-neutral-500">
-                                  Ready to submit for verification
-                                </p>
-                                <button
-                                  onClick={() => {
-                                    setProofImageUrl("");
-                                    setProofImage(null);
-                                  }}
-                                  className="mt-2 text-sm text-red-600 hover:text-red-700"
-                                >
-                                  Remove & Re-upload
-                                </button>
+                                {proofImage && (
+                                  <div className="mb-3">
+                                    <p className="text-xs text-neutral-500 mb-1">
+                                      File: {proofImage.name}
+                                    </p>
+                                    <p className="text-xs text-neutral-500">
+                                      Size:{" "}
+                                      {(proofImage.size / 1024).toFixed(2)} KB
+                                    </p>
+                                  </div>
+                                )}
+                                <div className="flex justify-center space-x-2">
+                                  <button
+                                    onClick={() => {
+                                      if (proofImageUrl.startsWith("blob:")) {
+                                        URL.revokeObjectURL(proofImageUrl);
+                                      }
+                                      setProofImageUrl("");
+                                      setProofImage(null);
+                                    }}
+                                    className="px-3 py-1 text-sm text-red-600 hover:text-red-700 border border-red-300 rounded hover:bg-red-50"
+                                  >
+                                    Remove
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (proofImageUrl.startsWith("blob:")) {
+                                        window.open(proofImageUrl, "_blank");
+                                      }
+                                    }}
+                                    className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700 border border-blue-300 rounded hover:bg-blue-50"
+                                  >
+                                    Preview
+                                  </button>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -556,6 +614,12 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
                           </span>
                         </div>
                         <div className="flex justify-between">
+                          <span className="text-neutral-600">Payment ID:</span>
+                          <span className="font-mono text-xs text-neutral-800">
+                            {ad.payment?._id || "Not found"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
                           <span className="text-neutral-600">Status:</span>
                           <span className="font-medium text-yellow-600">
                             Awaiting Verification
@@ -609,6 +673,26 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
                       </div>
                     </div>
 
+                    {/* File Info */}
+                    {proofImage && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-green-800 mb-2">
+                          Ready to Upload
+                        </h4>
+                        <div className="text-sm text-green-700">
+                          <p className="mb-1">
+                            File: <strong>{proofImage.name}</strong>
+                          </p>
+                          <p>
+                            Size:{" "}
+                            <strong>
+                              {(proofImage.size / 1024).toFixed(2)} KB
+                            </strong>
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Coming Soon Notice */}
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                       <h4 className="font-semibold text-gray-800 mb-2">
@@ -631,13 +715,13 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
                       </button>
                       <button
                         onClick={handleCompletePayment}
-                        disabled={processing}
+                        disabled={processing || !proofImage}
                         className="flex-1 flex items-center justify-center px-4 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-medium"
                       >
                         {processing ? (
                           <>
                             <FaSpinner className="animate-spin mr-2" />
-                            Processing...
+                            Submitting...
                           </>
                         ) : (
                           <>
@@ -661,7 +745,7 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
             <div className="border-t border-neutral-200 p-4 flex-shrink-0">
               <div className="flex justify-between items-center">
                 <div className="text-sm text-neutral-600">
-                  Select payment method
+                  {proofImage ? "Ready to submit" : "Select payment method"}
                 </div>
                 <div className="flex space-x-3">
                   <button
@@ -674,7 +758,7 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
                     onClick={handleProceedToPayment}
                     disabled={
                       !selectedMethod ||
-                      (selectedMethod === "bank_transfer" && !proofImageUrl)
+                      (selectedMethod === "bank_transfer" && !proofImage)
                     }
                     className="px-6 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
