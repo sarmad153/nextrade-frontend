@@ -1123,7 +1123,7 @@ const AddProduct = () => {
                       {galleryImages.map((imageUrl, index) => (
                         <div key={index} className="relative group">
                           <img
-                            src={{ imageUrl }}
+                            src={imageUrl}
                             alt={`Gallery ${index + 1}`}
                             className="object-cover w-full h-24 rounded-lg"
                           />

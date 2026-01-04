@@ -371,13 +371,9 @@ const SellerAds = () => {
   };
 
   // Get image URL
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith("http")) return imagePath;
-    if (imagePath.startsWith("/uploads/")) {
-      return `https://nextrade-backend-production-a486.up.railway.app/${imagePath}`;
-    }
-    return `https://nextrade-backend-production-a486.up.railway.app//uploads/${imagePath}`;
+  const getImageUrl = (image) => {
+    if (!image) return "/placeholder.png"; // fallback placeholder
+    return image.startsWith("http") ? image : `/placeholder.png`;
   };
 
   const filteredAds = (ads || []).filter((ad) => {
@@ -884,7 +880,7 @@ const SellerAds = () => {
                           src={getImageUrl(ad.image)}
                           alt={ad?.title || "Advertisement"}
                           className="object-cover w-full h-full"
-                          onError={handleImageError}
+                          onError={(e) => (e.target.src = "/placeholder.png")}
                         />
                         <div
                           className="absolute inset-0 hidden items-center justify-center bg-neutral-200"

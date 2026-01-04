@@ -28,10 +28,10 @@ const BuyerNavbar = () => {
   const getProfileImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith("http")) return imagePath;
-    if (imagePath.startsWith("/uploads")) {
-      return `https://nextrade-backend-production-a486.up.railway.app/${imagePath}`;
-    }
-    return `https://nextrade-backend-production-a486.up.railway.app//uploads/profiles/${imagePath}`;
+    return `https://nextrade-backend-production-a486.up.railway.app/uploads/profiles/${imagePath.replace(
+      /^\/+/,
+      ""
+    )}`;
   };
 
   useEffect(() => {
@@ -154,11 +154,8 @@ const BuyerNavbar = () => {
         setIsProfileDropdownOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isProfileDropdownOpen]);
 
   const navLinks = [

@@ -140,13 +140,9 @@ const BuyerAdCarousel = () => {
   // Auto-rotate ads
   useEffect(() => {
     if (!isAutoPlaying || ads.length <= 1) return;
-
-    const interval = setInterval(() => {
-      nextAd();
-    }, 5000);
-
+    const interval = setInterval(nextAd, 5000);
     return () => clearInterval(interval);
-  }, [currentAdIndex, isAutoPlaying, ads.length]);
+  }, [isAutoPlaying, ads.length]);
 
   const nextAd = () => {
     setCurrentAdIndex((prevIndex) => {
