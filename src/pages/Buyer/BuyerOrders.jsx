@@ -251,13 +251,36 @@ const BuyerOrders = () => {
     }
   };
 
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    return imagePath.startsWith("http")
-      ? imagePath
-      : `https://nextrade-backend-production-a486.up.railway.app/${imagePath}`;
-  };
+  const getImageUrl = (imageData) => {
+    if (!imageData) {
+      return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
+    }
 
+    // If it's a string
+    if (typeof imageData === "string") {
+      return imageData.startsWith("http")
+        ? imageData
+        : `https://nextrade-backend-production-a486.up.railway.app/${imageData}`;
+    }
+
+    // If it's an object
+    if (typeof imageData === "object" && imageData !== null) {
+      // Try to extract URL from common properties
+      const url =
+        imageData.url ||
+        imageData.secure_url ||
+        imageData.path ||
+        imageData.src;
+      if (url && typeof url === "string") {
+        return url.startsWith("http")
+          ? url
+          : `https://nextrade-backend-production-a486.up.railway.app/${url}`;
+      }
+    }
+
+    // Fallback
+    return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
+  };
   const OrderDetailsModal = ({ order, onClose }) => {
     if (!order) return null;
 

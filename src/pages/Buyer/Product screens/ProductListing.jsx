@@ -436,14 +436,21 @@ const ProductListing = () => {
           productsData.map(async (product) => {
             try {
               const bulkResponse = await API.get(
-                `/products/${product._id}/bulk-pricing`
+                `/bulk-pricing/products/${product._id}`
               );
+
+              // Check if response.data is an array
+              const hasBulkPricing =
+                Array.isArray(bulkResponse.data) &&
+                bulkResponse.data.length > 0;
+
               return {
                 ...product,
-                bulkPricingEnabled: bulkResponse.data.length > 0,
-                bulkTiers: bulkResponse.data,
+                bulkPricingEnabled: hasBulkPricing,
+                bulkTiers: hasBulkPricing ? bulkResponse.data : [],
               };
             } catch (error) {
+              // If 404 or other error, no bulk pricing
               return {
                 ...product,
                 bulkPricingEnabled: false,
