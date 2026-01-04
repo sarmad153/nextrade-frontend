@@ -14,6 +14,7 @@ import {
 } from "react-icons/fa";
 import API from "../../api/axiosInstance";
 import { toast } from "react-toastify";
+import { getImageUrl } from "../../../utils/imageHelper";
 
 const Checkout = () => {
   const [step, setStep] = useState(1);
@@ -865,24 +866,18 @@ const Checkout = () => {
                         {item.product?.images &&
                         item.product.images.length > 0 ? (
                           <img
-                            src={
-                              item.product.images[0].startsWith("http")
-                                ? item.product.images[0]
-                                : `https://nextrade-backend-production-a486.up.railway.app/${item.product.images[0]}`
-                            }
+                            src={getImageUrl(item.product.images[0])}
                             alt={item.product?.name || "Product"}
                             className="object-cover w-full h-full rounded"
                             onError={(e) => {
-                              e.target.style.display = "none";
-                              if (e.target.nextSibling) {
-                                e.target.nextSibling.style.display = "flex";
-                              }
+                              e.target.onerror = null;
+                              e.target.src =
+                                "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
                             }}
                           />
-                        ) : null}
-                        <div className="hidden w-full h-full items-center justify-center text-neutral-500 text-xs">
-                          Img
-                        </div>
+                        ) : (
+                          <span className="text-neutral-500 text-xs">Img</span>
+                        )}
                       </div>
                       {item.appliedTier && (
                         <div className="absolute -top-1 -right-1">
