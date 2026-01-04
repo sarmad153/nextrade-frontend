@@ -277,6 +277,93 @@ const ManageProducts = () => {
     }
   };
 
+  const handleBulkPricing = (product) => {
+    setSelectedProductForBulk(product);
+    setBulkPricingModal(true);
+    setBulkPricingEnabled(product.bulkPricingEnabled || false);
+    setBulkTiers(product.bulkTiers || []);
+  };
+
+  const addBulkTier = () => {
+    const newTier = {
+      minQuantity: 2,
+      discountType: "percentage",
+      discountValue: "",
+      calculatedPrice: "",
+    };
+    setBulkTiers([...bulkTiers, newTier]);
+  };
+
+  const updateBulkTier = (index, field, value) => {
+    const updatedTiers = [...bulkTiers];
+    updatedTiers[index][field] = value;
+
+    // Calculate final price
+    if (
+      selectedProductForBulk?.price &&
+      (field === "discountValue" || field === "discountType")
+    ) {
+      const price = selectedProductForBulk.price;
+      const tier = updatedTiers[index];
+
+      if (tier.discountValue && tier.discountType) {
+        if (tier.discountType === "percentage") {
+          const discount = price * (parseFloat(tier.discountValue) / 100);
+          updatedTiers[index].calculatedPrice = (price - discount).toFixed(2);
+        } else {
+          updatedTiers[index].calculatedPrice = (
+            price - parseFloat(tier.discountValue)
+          ).toFixed(2);
+        }
+      }
+    }
+
+    setBulkTiers(updatedTiers);
+  };
+
+  const removeBulkTier = (index) => {
+    const updatedTiers = bulkTiers.filter((_, i) => i !== index);
+    setBulkTiers(updatedTiers);
+  };
+
+  const saveBulkPricing = async () => {
+    try {
+      await API.patch(
+        `/products/${selectedProductForBulk._id}/bulk-pricing/toggle`,
+        {
+          enabled: bulkPricingEnabled,
+        }
+      );
+
+      // Delete existing tiers
+      await API.delete(
+        `/products/${selectedProductForBulk._id}/bulk-pricing/all`
+      );
+
+      // Add new tiers if enabled
+      if (bulkPricingEnabled && bulkTiers.length > 0) {
+        await Promise.all(
+          bulkTiers.map((tier) =>
+            API.post(
+              `/products/${selectedProductForBulk._id}/bulk-pricing`,
+              tier
+            )
+          )
+        );
+      }
+
+      toast.success("Bulk pricing updated successfully!");
+      setBulkPricingModal(false);
+
+      // Refresh products
+      const productsResponse = await API.get("/products/seller/products");
+      setProducts(productsResponse.data.products || []);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to update bulk pricing"
+      );
+    }
+  };
   // Status badge color with all statuses
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -698,7 +785,7 @@ const ManageProducts = () => {
                           {product.images && product.images.length > 0 ? (
                             <img
                               className="object-cover w-12 h-12 rounded-lg"
-                              src={product.images[0]}
+                              src={product.images[0]?.url || ""}
                               alt={product.name}
                             />
                           ) : (
@@ -1057,13 +1144,10 @@ const ManageProducts = () => {
                   selectedProduct.images.length > 0 ? (
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                       {selectedProduct.images.map((image, index) => (
-                        <div key={index} className="overflow-hidden rounded-lg">
-                          <img
-                            src={image}
-                            alt={`${selectedProduct.name} - ${index + 1}`}
-                            className="object-cover w-full h-48 transition-transform duration-300 hover:scale-105"
-                          />
-                        </div>
+                        <img
+                          src={image.url}
+                          alt={`${selectedProduct.name} - ${index + 1}`}
+                        />
                       ))}
                     </div>
                   ) : (
