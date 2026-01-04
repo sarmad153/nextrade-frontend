@@ -217,7 +217,7 @@ const Register = () => {
             </div>
 
             {/* Overlay with text */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-6 md:p-8">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-6 md:p-8">
               <div className="text-white">
                 <h2 className="text-2xl font-bold mb-2 md:text-3xl">
                   {formData.role === "seller"
