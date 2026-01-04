@@ -189,25 +189,37 @@ const EditProductModal = ({
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    {editFormData.images.map((image, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={
-                            image.startsWith("http")
-                              ? image
-                              : `https://nextrade-backend-production-a486.up.railway.app/${image}`
-                          }
-                          alt={`Product ${index + 1}`}
-                          className="object-cover w-20 h-20 rounded-lg"
-                        />
-                        <button
-                          onClick={() => removeImage(index)}
-                          className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full opacity-0 group-hover:opacity-100"
-                        >
-                          <FaTimes size={10} />
-                        </button>
-                      </div>
-                    ))}
+                    {editFormData.images.map((image, index) => {
+                      const imageUrl =
+                        typeof image === "string" ? image : image?.url;
+
+                      return (
+                        <div key={index} className="relative group">
+                          <img
+                            src={
+                              imageUrl &&
+                              typeof imageUrl === "string" &&
+                              imageUrl.startsWith("http")
+                                ? imageUrl
+                                : imageUrl
+                                ? `https://nextrade-backend-production-a486.up.railway.app/${imageUrl}`
+                                : "https://via.placeholder.com/80"
+                            }
+                            alt={`Product ${index + 1}`}
+                            className="object-cover w-20 h-20 rounded-lg"
+                            onError={(e) => {
+                              e.target.src = "https://via.placeholder.com/80";
+                            }}
+                          />
+                          <button
+                            onClick={() => removeImage(index)}
+                            className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full opacity-0 group-hover:opacity-100"
+                          >
+                            <FaTimes size={10} />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
