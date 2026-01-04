@@ -1221,7 +1221,7 @@ const ManageProducts = () => {
                     {editingProduct.images?.map((image, index) => (
                       <div key={index} className="relative">
                         <img
-                          src={`https://nextrade-backend-production-a486.up.railway.app/${image}`}
+                          src={image}
                           alt={`Product ${index + 1}`}
                           className="w-full h-24 object-cover rounded-lg"
                         />
