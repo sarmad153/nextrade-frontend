@@ -16,6 +16,7 @@ import {
   FaTags,
 } from "react-icons/fa";
 import API, { SERVER_URL } from "../../../api/axiosInstance";
+import { getImageUrl } from "../../../utils/imageHelper";
 
 const iconMap = {
   Electronics: FaMobile,
@@ -93,18 +94,9 @@ const FeaturedCategories = () => {
         >
           <div className="relative h-48 bg-neutral-100 overflow-hidden flex-shrink-0">
             <img
-              src={
-                category.image ||
-                "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"
-              }
+              src={getImageUrl(category.image)}
               alt={category.name}
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full object-cover transition-transform duration-700"
-              onError={(e) => {
-                e.target.src =
-                  "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop";
-              }}
+              className="w-full h-full object-cover"
             />
 
             <div className="absolute top-4 left-4 transform transition-transform duration-300">
