@@ -67,8 +67,6 @@ export default function SellerProfile() {
     totalOrders: 0,
     totalRevenue: 0,
   });
-  const imageUrl = getProfileImageUrl(imageData);
-  const [imgError, setImgError] = useState(false);
 
   // image URL construction
   const getProfileImageUrl = (imagePath) => {
@@ -404,6 +402,11 @@ export default function SellerProfile() {
 
   // Improved ProfileImageDisplay component
   const ProfileImageDisplay = ({ imageData, isEditing, onRemove }) => {
+    const [imgError, setImgError] = useState(false);
+
+    // Compute imageUrl locally
+    const imageUrl = getProfileImageUrl(imageData);
+
     const handleImageError = () => {
       console.log("Image failed to load:", imageUrl);
       setImgError(true);
@@ -412,8 +415,6 @@ export default function SellerProfile() {
     const handleImageLoad = () => {
       setImgError(false);
     };
-
-    console.log("Rendering profile image:", imageData, imageUrl, imgError);
 
     if (imageUrl && !imgError) {
       return (
@@ -444,11 +445,6 @@ export default function SellerProfile() {
       </div>
     );
   };
-
-  useEffect(() => {
-    setImgError(false);
-  }, [imageUrl]);
-
   const completeBusinessProfile = async () => {
     try {
       setUpdating(true);
