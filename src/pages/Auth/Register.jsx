@@ -218,7 +218,7 @@ const Register = () => {
             <img
               src="./Images/RegisterImg.png"
               alt="NexTrade Registration"
-              className={`absolute inset-0 w-full h-full object-cover transition-all duration-300`}
+              className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 object-center`}
               onError={(e) => {
                 e.target.style.display = "none";
                 e.target.nextElementSibling.style.display = "flex";
