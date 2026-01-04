@@ -67,16 +67,35 @@ const SellerInfo = React.memo(({ product }) => {
   }
 
   const getProfileImage = () => {
-    const imageUrl = sellerProfile?.profile?.profileImage;
-    if (!imageUrl) return null;
+    const imageData = sellerProfile?.profile?.profileImage;
 
-    if (imageUrl.startsWith("http")) {
-      return imageUrl;
-    } else if (imageUrl.startsWith("/uploads")) {
-      return `https://nextrade-backend-production-a486.up.railway.app/${imageUrl}`;
-    } else {
-      return `https://nextrade-backend-production-a486.up.railway.app//uploads/profiles/${imageUrl}`;
+    // If no image data
+    if (!imageData) return null;
+
+    // If it's a string
+    if (typeof imageData === "string") {
+      if (imageData.startsWith("http")) {
+        return imageData;
+      } else if (imageData.startsWith("/uploads")) {
+        return `https://nextrade-backend-production-a486.up.railway.app${imageData}`;
+      } else if (imageData) {
+        // Handle cases where it might just be a filename
+        return `https://nextrade-backend-production-a486.up.railway.app/uploads/profiles/${imageData}`;
+      }
     }
+
+    // If it's an object
+    if (typeof imageData === "object" && imageData !== null) {
+      return (
+        imageData.url ||
+        imageData.secure_url ||
+        imageData.path ||
+        imageData.src ||
+        null
+      );
+    }
+
+    return null;
   };
 
   const profileImage = getProfileImage();
@@ -106,12 +125,15 @@ const SellerInfo = React.memo(({ product }) => {
               className="w-16 h-16 rounded-full object-cover border-2 border-blue-200"
               onError={(e) => {
                 e.target.style.display = "none";
-                e.target.nextSibling.style.display = "flex";
+                // Ensure fallback div exists
+                const fallback =
+                  e.target.parentNode.querySelector(".fallback-initial");
+                if (fallback) fallback.style.display = "flex";
               }}
             />
           ) : null}
           <div
-            className={`w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg border-2 border-blue-200 ${
+            className={`fallback-initial w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg border-2 border-blue-200 ${
               profileImage ? "hidden" : "flex"
             }`}
           >
@@ -410,7 +432,21 @@ const ProductDetail = () => {
 
         // Fetch product details
         const productResponse = await API.get(`/products/${id}`);
-        const productData = productResponse.data;
+        let productData = productResponse.data;
+
+        // Normalize image data
+        if (productData.images && Array.isArray(productData.images)) {
+          productData.images = productData.images
+            .map((img) => {
+              if (typeof img === "string") return img;
+              if (typeof img === "object" && img !== null) {
+                return img.url || img.secure_url || img.path || img.src || "";
+              }
+              return "";
+            })
+            .filter((img) => img !== "");
+        }
+
         setProduct(productData);
 
         // Track user activity for recommendations
@@ -776,13 +812,38 @@ const ProductDetail = () => {
               <div className="relative aspect-w-1 aspect-h-1 bg-neutral-200 h-64 sm:h-80 lg:h-96 flex items-center justify-center">
                 {product.images && product.images.length > 0 ? (
                   <img
-                    src={
-                      product.images[selectedImage]?.startsWith("http")
-                        ? product.images[selectedImage]
-                        : `https://nextrade-backend-production-a486.up.railway.app/${product.images[selectedImage]}`
-                    }
+                    src={(() => {
+                      const image = product.images[selectedImage];
+                      // Safely handle the image
+                      if (!image) {
+                        return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
+                      }
+
+                      if (typeof image === "string") {
+                        return image.startsWith("http")
+                          ? image
+                          : `https://nextrade-backend-production-a486.up.railway.app/${image}`;
+                      }
+
+                      if (typeof image === "object" && image !== null) {
+                        return (
+                          image.url ||
+                          image.secure_url ||
+                          image.path ||
+                          image.src ||
+                          "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop"
+                        );
+                      }
+
+                      return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
+                    })()}
                     alt={product.name}
                     className="object-cover w-full h-full"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src =
+                        "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
+                    }}
                   />
                 ) : (
                   <span className="text-neutral-500 text-sm sm:text-base">
@@ -825,15 +886,43 @@ const ProductDetail = () => {
                         : "border-transparent"
                     }`}
                   >
-                    <img
-                      src={
-                        image.startsWith("http")
-                          ? image
-                          : `https://nextrade-backend-production-a486.up.railway.app/${image}`
+                    {(() => {
+                      if (!image) {
+                        return (
+                          <span className="text-xs text-neutral-500">
+                            No Image
+                          </span>
+                        );
                       }
-                      alt={`${product.name} ${index + 1}`}
-                      className="object-cover w-full h-full rounded"
-                    />
+
+                      const imgSrc =
+                        typeof image === "string"
+                          ? image.startsWith("http")
+                            ? image
+                            : `https://nextrade-backend-production-a486.up.railway.app/${image}`
+                          : typeof image === "object" && image !== null
+                          ? image.url ||
+                            image.secure_url ||
+                            image.path ||
+                            image.src ||
+                            ""
+                          : "";
+
+                      return imgSrc ? (
+                        <img
+                          src={imgSrc}
+                          alt={`${product.name} ${index + 1}`}
+                          className="object-cover w-full h-full rounded"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src =
+                              "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
+                          }}
+                        />
+                      ) : (
+                        <span className="text-xs text-neutral-500">Image</span>
+                      );
+                    })()}
                   </button>
                 ))}
               </div>
@@ -1271,15 +1360,45 @@ const ProductDetail = () => {
                   <div className="relative aspect-w-16 aspect-h-9 bg-neutral-200 h-32 flex items-center justify-center">
                     {recommendedProduct.images &&
                     recommendedProduct.images.length > 0 ? (
-                      <img
-                        src={
-                          recommendedProduct.images[0]?.startsWith("http")
-                            ? recommendedProduct.images[0]
-                            : `https://nextrade-backend-production-a486.up.railway.app/${recommendedProduct.images[0]}`
+                      (() => {
+                        const image = recommendedProduct.images[0];
+                        let imgSrc = "";
+
+                        if (image) {
+                          if (typeof image === "string") {
+                            imgSrc = image.startsWith("http")
+                              ? image
+                              : `https://nextrade-backend-production-a486.up.railway.app/${image}`;
+                          } else if (
+                            typeof image === "object" &&
+                            image !== null
+                          ) {
+                            imgSrc =
+                              image.url ||
+                              image.secure_url ||
+                              image.path ||
+                              image.src ||
+                              "";
+                          }
                         }
-                        alt={recommendedProduct.name}
-                        className="object-cover w-full h-full"
-                      />
+
+                        return imgSrc ? (
+                          <img
+                            src={imgSrc}
+                            alt={recommendedProduct.name}
+                            className="object-cover w-full h-full"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src =
+                                "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
+                            }}
+                          />
+                        ) : (
+                          <span className="text-neutral-500 text-sm">
+                            No Image
+                          </span>
+                        );
+                      })()
                     ) : (
                       <span className="text-neutral-500 text-sm">No Image</span>
                     )}
