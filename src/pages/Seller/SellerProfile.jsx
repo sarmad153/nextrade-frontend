@@ -402,10 +402,8 @@ export default function SellerProfile() {
 
   // Improved ProfileImageDisplay component
   const ProfileImageDisplay = ({ imageData, isEditing, onRemove }) => {
-    const [imgError, setImgError] = useState(false);
-
-    // Compute imageUrl locally
     const imageUrl = getProfileImageUrl(imageData);
+    const [imgError, setImgError] = useState(false);
 
     const handleImageError = () => {
       console.log("Image failed to load:", imageUrl);
