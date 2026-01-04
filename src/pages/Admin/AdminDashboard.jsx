@@ -746,69 +746,137 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* PENDING SELLERS SECTION */}
+        {/* PENDING SELLERS SECTION - COMPACT MOBILE DESIGN */}
         {pendingSellersList.length > 0 && (
-          <div className="p-6 mb-6 bg-white rounded-lg shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="flex items-center text-lg font-bold text-neutral-800 md:text-xl">
-                <FaUserClock className="mr-2 text-orange-600" />
-                Pending Seller Approvals
+          <div className="p-4 mb-6 bg-white rounded-lg shadow-lg md:p-6">
+            <div className="flex flex-col items-start justify-between mb-4 md:flex-row md:items-center">
+              <div className="flex items-center mb-2 md:mb-0">
+                <FaUserClock
+                  className="mr-2 text-orange-600 flex-shrink-0"
+                  size={20}
+                />
+                <h2 className="text-lg font-bold text-neutral-800 md:text-xl">
+                  Pending Seller Approvals
+                </h2>
                 <span className="ml-2 px-2 py-1 text-xs font-bold text-white bg-orange-500 rounded-full">
                   {pendingSellersList.length}
                 </span>
-              </h2>
+              </div>
               <Link
                 to="/admin/manage-users"
-                className="flex items-center text-sm font-medium text-primary-600 hover:text-primary-700"
+                className="inline-flex items-center self-end mt-1 text-sm font-medium text-primary-600 hover:text-primary-700 md:self-center md:mt-0"
               >
                 View all
                 <FaArrowRight className="ml-1" size={12} />
               </Link>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {pendingSellersList.slice(0, 3).map((seller) => {
                 const businessProfile = seller.businessProfile || {};
                 return (
                   <div
                     key={seller._id}
-                    className="flex items-center justify-between p-3 border rounded-lg border-neutral-200"
+                    className="p-3 border rounded-lg border-neutral-200 hover:bg-gray-50"
                   >
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center justify-center w-10 h-10 bg-orange-100 rounded-full">
-                        <FaStore className="text-orange-600" />
+                    {/* Mobile Stack Layout */}
+                    <div className="flex flex-col space-y-2 md:hidden">
+                      {/* Header with shop name and actions */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="flex items-center justify-center w-8 h-8 mr-2 bg-orange-100 rounded-full">
+                            <FaStore className="text-orange-600" size={14} />
+                          </div>
+                          <p className="font-medium text-gray-800 truncate">
+                            {businessProfile.shopName || seller.name}
+                          </p>
+                        </div>
+                        <div className="flex space-x-1">
+                          <button
+                            onClick={() => handleApproveSeller(seller._id)}
+                            className="p-1 text-green-600 hover:bg-green-50 rounded"
+                            title="Approve"
+                          >
+                            <FaCheck size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleRejectSeller(seller._id)}
+                            className="p-1 text-red-600 hover:bg-red-50 rounded"
+                            title="Reject"
+                          >
+                            <FaTimes size={14} />
+                          </button>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-800">
-                          {businessProfile.shopName || seller.name}
+
+                      {/* Details */}
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-600 truncate">
+                          {seller.email}
                         </p>
-                        <p className="text-sm text-gray-600">{seller.email}</p>
-                        <p className="text-xs text-gray-500">
-                          Business:{" "}
-                          {businessProfile.businessType || "Not specified"} |
-                          City: {businessProfile.city || "Not specified"}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Applied:{" "}
-                          {new Date(seller.createdAt).toLocaleDateString()}
-                        </p>
+                        <div className="flex flex-wrap gap-x-2 text-xs text-gray-500">
+                          <span>
+                            <span className="font-medium">Type:</span>{" "}
+                            {businessProfile.businessType || "Not specified"}
+                          </span>
+                          <span>
+                            <span className="font-medium">City:</span>{" "}
+                            {businessProfile.city || "Not specified"}
+                          </span>
+                          <span>
+                            <span className="font-medium">Applied:</span>{" "}
+                            {new Date(seller.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleApproveSeller(seller._id)}
-                        className="flex items-center px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
-                      >
-                        <FaCheck className="mr-1" size={10} />
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleRejectSeller(seller._id)}
-                        className="flex items-center px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
-                      >
-                        <FaTimes className="mr-1" size={10} />
-                        Reject
-                      </button>
+
+                    {/* Desktop Row Layout */}
+                    <div className="hidden md:flex md:items-center md:justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center justify-center w-10 h-10 bg-orange-100 rounded-full">
+                          <FaStore className="text-orange-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-800">
+                            {businessProfile.shopName || seller.name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {seller.email}
+                          </p>
+                          <div className="flex space-x-2 text-xs text-gray-500">
+                            <span>
+                              Business:{" "}
+                              {businessProfile.businessType || "Not specified"}
+                            </span>
+                            <span>|</span>
+                            <span>
+                              City: {businessProfile.city || "Not specified"}
+                            </span>
+                            <span>|</span>
+                            <span>
+                              Applied:{" "}
+                              {new Date(seller.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleApproveSeller(seller._id)}
+                          className="flex items-center px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+                        >
+                          <FaCheck className="mr-1" size={10} />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleRejectSeller(seller._id)}
+                          className="flex items-center px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+                        >
+                          <FaTimes className="mr-1" size={10} />
+                          Reject
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
