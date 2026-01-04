@@ -103,44 +103,59 @@ const SellerAds = () => {
     setLoading(true);
     try {
       const response = await API.get(`/ads/seller/me`);
-      console.log("Ads response:", response.data);
+      console.log("Ads API Response:", response.data);
 
       let adsData = response.data || [];
       if (!Array.isArray(adsData)) {
+        console.warn("Ads data is not an array:", adsData);
         adsData = [];
       }
+
+      // Log each ad to see structure
+      adsData.forEach((ad, index) => {
+        console.log(`Ad ${index}:`, {
+          id: ad._id,
+          title: ad.title,
+          images: ad.images,
+          payment: ad.payment,
+          status: ad.status,
+        });
+      });
 
       setAds(adsData);
 
       // Fetch payment status for each ad
       const paymentStatusPromises = adsData.map(async (ad) => {
         try {
-          if (ad.payment) {
-            // If payment is already populated in ad data
+          if (ad.payment && ad.payment._id) {
+            // If payment is already populated
+            console.log(`Ad ${ad._id} has payment:`, ad.payment);
             return {
               adId: ad._id,
               payment: ad.payment,
             };
-          } else {
-            // Try to fetch payment status if ad is approved
-            if (ad.status === "approved") {
-              const paymentResponse = await API.get(
-                `/payments/ad/${ad._id}/status`
-              );
-              return {
-                adId: ad._id,
-                payment: paymentResponse.data.payment || {
-                  status: "not_initiated",
-                },
-              };
-            }
+          } else if (ad.status === "approved") {
+            // Try to fetch payment separately
+            console.log(`Fetching payment for ad ${ad._id}`);
+            const paymentResponse = await API.get(
+              `/payments/ad/${ad._id}/status`
+            );
             return {
               adId: ad._id,
-              payment: { status: "not_initiated" },
+              payment: paymentResponse.data.payment || {
+                status: "not_initiated",
+              },
             };
           }
+          return {
+            adId: ad._id,
+            payment: { status: "not_initiated" },
+          };
         } catch (error) {
-          console.error(`Error fetching payment for ad ${ad._id}:`, error);
+          console.warn(
+            `Error fetching payment for ad ${ad._id}:`,
+            error.message
+          );
           return {
             adId: ad._id,
             payment: { status: "not_initiated" },
@@ -153,6 +168,7 @@ const SellerAds = () => {
       paymentStatuses.forEach((status) => {
         statusMap[status.adId] = status.payment;
       });
+      console.log("Payment status map:", statusMap);
       setPaymentStatus(statusMap);
 
       // Calculate stats
@@ -251,23 +267,30 @@ const SellerAds = () => {
   // Handle payment initiation
   const handlePayNow = async (ad) => {
     try {
-      console.log("Initiating payment for ad:", ad._id);
+      console.log("Handling payment for ad:", ad);
 
-      // First, get payment instructions
+      // First, check if payment already exists
+      let payment;
+      if (ad.payment && ad.payment._id) {
+        payment = ad.payment;
+      } else {
+        // Create payment record
+        console.log("Creating payment record...");
+        const initiateResponse = await API.post(
+          `/payments/ad/${ad._id}/initiate`,
+          {
+            amount: ad.totalCost,
+            method: "bank_transfer",
+          }
+        );
+        payment = initiateResponse.data.payment;
+        console.log("Payment created:", payment);
+      }
+
+      // Get payment instructions
       const instructionsResponse = await API.get(
         `/payments/instructions/${ad._id}`
       );
-
-      // Then create payment record if not exists
-      let payment;
-      if (ad.payment) {
-        payment = ad.payment;
-      } else {
-        const initiateResponse = await API.post(
-          `/payments/ad/${ad._id}/initiate`
-        );
-        payment = initiateResponse.data.payment;
-      }
 
       setSelectedAdForPayment({
         ...ad,
@@ -277,7 +300,16 @@ const SellerAds = () => {
       setShowPaymentModal(true);
     } catch (error) {
       console.error("Failed to initiate payment:", error);
-      toast.error("Failed to initiate payment");
+      console.error("Error details:", error.response?.data);
+
+      let errorMessage = "Failed to initiate payment";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     }
   };
 
@@ -290,9 +322,19 @@ const SellerAds = () => {
 
   // Get payment status for an ad
   const getAdPaymentStatus = (ad) => {
-    const payment = paymentStatus[ad._id] || ad.payment;
-    if (!payment) return "not_initiated";
-    return payment.status || "not_initiated";
+    // First check paymentStatus state
+    const storedPayment = paymentStatus[ad._id];
+    if (storedPayment) {
+      return storedPayment.status || "not_initiated";
+    }
+
+    // Then check ad.payment if populated
+    if (ad.payment) {
+      return ad.payment.status || "not_initiated";
+    }
+
+    // Default
+    return "not_initiated";
   };
 
   // Get payment status color and text
@@ -371,9 +413,40 @@ const SellerAds = () => {
   };
 
   // Get image URL
-  const getImageUrl = (image) => {
-    if (!image) return "/placeholder.png"; // fallback placeholder
-    return image.startsWith("http") ? image : `/placeholder.png`;
+  const getImageUrl = (imageData) => {
+    if (!imageData) return "/placeholder.png";
+
+    // If it's already a string URL
+    if (typeof imageData === "string") {
+      return imageData.startsWith("http") ? imageData : "/placeholder.png";
+    }
+
+    // If it's an object with url property
+    if (typeof imageData === "object" && imageData !== null) {
+      if (imageData.url && typeof imageData.url === "string") {
+        return imageData.url;
+      }
+      // Try common property names
+      const possibleUrls = [
+        imageData.secure_url,
+        imageData.path,
+        imageData.src,
+        imageData.imageUrl,
+        imageData.image_url,
+      ].filter(Boolean);
+
+      if (possibleUrls.length > 0) {
+        return possibleUrls[0];
+      }
+    }
+
+    // If it's an array (like your ads have images array)
+    if (Array.isArray(imageData) && imageData.length > 0) {
+      // Get the first image object
+      return getImageUrl(imageData[0]);
+    }
+
+    return "/placeholder.png";
   };
 
   const filteredAds = (ads || []).filter((ad) => {
@@ -520,19 +593,23 @@ const SellerAds = () => {
   // Show payment button for approved but unpaid ads
   const shouldShowPayButton = (ad) => {
     if (ad.status !== "approved") return false;
-    const status = getAdPaymentStatus(ad);
+    const paymentStatus = getAdPaymentStatus(ad);
+    console.log("Ad payment status:", ad._id, paymentStatus, ad);
     return (
-      status === "pending" || status === "not_initiated" || status === "failed"
+      paymentStatus === "pending" ||
+      paymentStatus === "not_initiated" ||
+      paymentStatus === "failed"
     );
   };
 
   // Show analytics button for paid ads with data
-  const shouldShowAnalyticsButton = (ad) => {
+  const shouldShowActivationButton = (ad) => {
     if (ad.status !== "approved") return false;
     const paymentStatus = getAdPaymentStatus(ad);
-    return (
-      paymentStatus === "completed" && (ad.impressions > 0 || ad.clicks > 0)
-    );
+    const hasEnded = new Date(ad.endDate) < new Date();
+    const isPaid = paymentStatus === "completed";
+
+    return isPaid && !hasEnded;
   };
 
   // Show activation button for paid ads
@@ -874,13 +951,16 @@ const SellerAds = () => {
                 >
                   {/* Advertisement Image */}
                   <div className="relative h-48 bg-neutral-200">
-                    {ad?.image ? (
+                    {ad?.images && ad.images.length > 0 ? (
                       <>
                         <img
-                          src={getImageUrl(ad.image)}
+                          src={getImageUrl(ad.images)} // Pass the images array
                           alt={ad?.title || "Advertisement"}
                           className="object-cover w-full h-full"
-                          onError={(e) => (e.target.src = "/placeholder.png")}
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            e.target.nextElementSibling.style.display = "flex";
+                          }}
                         />
                         <div
                           className="absolute inset-0 hidden items-center justify-center bg-neutral-200"

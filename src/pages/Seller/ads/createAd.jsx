@@ -461,7 +461,7 @@ const CreateAd = ({ onClose, onAdCreated }) => {
     setLoading(true);
 
     try {
-      let finalImageUrl = "";
+      let imageData = null;
 
       // Upload image first
       if (imageFile) {
@@ -478,8 +478,13 @@ const CreateAd = ({ onClose, onAdCreated }) => {
           }
         );
 
-        finalImageUrl = uploadResponse.data.imageUrl;
-        setImageUrl(finalImageUrl);
+        // Get the full image object from upload response
+        imageData = {
+          url: uploadResponse.data.imageUrl,
+          publicId: uploadResponse.data.publicId,
+        };
+
+        setImageUrl(uploadResponse.data.imageUrl);
       }
 
       // Calculate end date based on selection mode
@@ -503,12 +508,30 @@ const CreateAd = ({ onClose, onAdCreated }) => {
         endDate: endDate.toISOString(),
         duration: parseInt(formData.duration),
         totalCost: calculatedPrice,
-        image: finalImageUrl,
+        images: imageData ? [imageData] : [],
       };
 
       console.log("Creating ad with data:", adData);
 
-      const createAdResponse = await API.post("/ads", adData);
+      const adFormData = new FormData();
+      adFormData.append("title", formData.title);
+      adFormData.append("description", formData.description);
+      adFormData.append("link", formData.link);
+      adFormData.append("targetCategory", formData.targetCategory);
+      adFormData.append("startDate", startDate.toISOString());
+      adFormData.append("endDate", endDate.toISOString());
+      adFormData.append("duration", parseInt(formData.duration));
+      adFormData.append("totalCost", calculatedPrice);
+
+      if (imageFile) {
+        adFormData.append("image", imageFile);
+      }
+
+      const createAdResponse = await API.post("/ads", adFormData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       // Call the success callback with correct response structure
       if (createAdResponse.data && createAdResponse.data.ad) {

@@ -91,14 +91,56 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
         },
       });
 
-      setProofImageUrl(response.data.imageUrl || response.data.url);
+      console.log("Upload response:", response.data);
+
+      // Get image URL from response (checking different possible response structures)
+      let imageUrl = "";
+      if (response.data.imageUrl) {
+        imageUrl = response.data.imageUrl;
+      } else if (response.data.url) {
+        imageUrl = response.data.url;
+      } else if (response.data.image && response.data.image.url) {
+        imageUrl = response.data.image.url;
+      } else if (response.data.data && response.data.data.imageUrl) {
+        imageUrl = response.data.data.imageUrl;
+      }
+
+      if (!imageUrl) {
+        throw new Error("No image URL returned from server");
+      }
+
+      setProofImageUrl(imageUrl);
       setProofImage(file);
       toast.success("Payment proof uploaded successfully");
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to upload payment proof"
-      );
+      console.error("Error response:", error.response?.data);
+
+      // Try alternative endpoint if first fails
+      try {
+        toast.info("Trying alternative upload method...");
+        const altResponse = await API.post(
+          "/upload/products/single",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        if (altResponse.data.imageUrl) {
+          setProofImageUrl(altResponse.data.imageUrl);
+          setProofImage(file);
+          toast.success("Payment proof uploaded successfully");
+        }
+      } catch (altError) {
+        toast.error(
+          error.response?.data?.message ||
+            altError.response?.data?.message ||
+            "Failed to upload payment proof"
+        );
+      }
     } finally {
       setUploading(false);
     }
@@ -132,13 +174,37 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
       console.log("Processing bank transfer...");
 
       // For bank transfer, update method and upload proof
-      await API.put(`/payments/${ad.payment._id}/method`, {
-        method: "bank_transfer",
-      });
+      if (!ad.payment.method || ad.payment.method === "pending") {
+        await API.put(`/payments/${ad.payment._id}/method`, {
+          method: "bank_transfer",
+        });
+      }
+      if (proofImage) {
+        const proofFormData = new FormData();
+        proofFormData.append("image", proofImage);
 
-      await API.post(`/payments/${ad.payment._id}/upload-proof`, {
-        imageUrl: proofImageUrl,
-      });
+        // Use the payment-specific upload proof endpoint
+        await API.post(
+          `/payments/${ad.payment._id}/upload-proof`,
+          proofFormData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+      } else if (proofImageUrl) {
+        const formData = new FormData();
+        formData.append("imageUrl", proofImageUrl);
+
+        await API.post(`/payments/${ad.payment._id}/upload-proof`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      } else {
+        throw new Error("No payment proof provided");
+      }
 
       toast.success(
         "Payment proof submitted successfully! Your ad will be activated after admin verification (usually within 24 hours)."
