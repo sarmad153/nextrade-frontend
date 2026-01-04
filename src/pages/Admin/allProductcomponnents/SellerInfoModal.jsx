@@ -177,12 +177,13 @@ const SellerInfoModal = ({
           ) : (
             <>
               {/* Seller Image */}
-              <div className="flex items-center space-x-4 mb-6">
+              {/* Seller Image and Info */}
+              <div className="flex items-start space-x-4 mb-6">
                 <div className="flex-shrink-0">
                   {sellerProfile?.profileImage ? (
                     <div className="relative">
                       <img
-                        src={sellerProfile.profileImage} // Use directly - it's already a full URL
+                        src={sellerProfile.profileImage}
                         alt={sellerProfile.name}
                         className="w-16 h-16 rounded-full object-cover border-2 border-blue-200"
                         onError={(e) => {
@@ -190,16 +191,11 @@ const SellerInfoModal = ({
                             "Failed to load profile image:",
                             sellerProfile.profileImage
                           );
-
-                          // Show fallback if image fails
                           e.target.style.display = "none";
                           const fallbackDiv = e.target.nextSibling;
                           if (fallbackDiv) {
                             fallbackDiv.style.display = "flex";
                           }
-                        }}
-                        onLoad={() => {
-                          console.log("Profile image loaded successfully");
                         }}
                       />
                       <div className="absolute inset-0 hidden w-16 h-16 rounded-full bg-blue-100 border-2 border-blue-200 items-center justify-center">
@@ -212,6 +208,8 @@ const SellerInfoModal = ({
                     </div>
                   )}
                 </div>
+
+                {/* Seller Info - Make sure this has proper width */}
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-semibold text-gray-800 truncate">
                     {sellerProfile?.storeName || selectedSeller.storeName}
