@@ -72,16 +72,16 @@ export default function SellerProfile() {
   const getProfileImageUrl = (imagePath) => {
     if (!imagePath) return null;
 
-    // If it's already a full URL, return as is
+    // Cloudinary full URL check
     if (imagePath.startsWith("http")) return imagePath;
 
-    // If it starts with /uploads, construct full URL
+    // If you ever have local uploads
     if (imagePath.startsWith("/uploads")) {
-      return `https://nextrade-backend-production-a486.up.railway.app/${imagePath}`;
+      return `https://nextrade-backend-production-a486.up.railway.app${imagePath}`;
     }
 
-    // If it's just a filename, construct the full path
-    return `https://nextrade-backend-production-a486.up.railway.app//uploads/profiles/${imagePath}`;
+    // Otherwise, just return as is
+    return imagePath;
   };
 
   const formatJoinDate = () => {
