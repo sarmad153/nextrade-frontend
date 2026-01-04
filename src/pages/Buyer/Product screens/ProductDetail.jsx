@@ -463,7 +463,7 @@ const ProductDetail = () => {
 
         // Fetch bulk pricing information
         try {
-          const bulkResponse = await API.get(`/products/${id}/bulk-pricing`);
+          const bulkResponse = await API.get(`/bulk-pricing/products/${id}`);
           setBulkPricingInfo({
             bulkPricingEnabled: bulkResponse.data.length > 0,
             tiers: bulkResponse.data,
