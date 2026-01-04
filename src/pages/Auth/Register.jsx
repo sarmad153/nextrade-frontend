@@ -60,9 +60,15 @@ const Register = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-background-light font-inter">
-      <div className="w-full max-w-7xl rounded-xl overflow-hidden flex flex-col md:flex-row">
+      <div className="w-full max-w-7xl rounded-xl overflow-hidden flex flex-col md:flex-row shadow-lg">
         {/* Left Side - Form */}
-        <div className="w-full p-4 md:p-8 md:w-2/5 lg:w-2/5">
+        <div
+          className={`w-full p-4 md:p-8 ${
+            formData.role === "seller"
+              ? "md:w-2/5 lg:w-2/5"
+              : "md:w-2/5 lg:w-2/5"
+          }`}
+        >
           <div className="mb-6 text-center md:mb-5">
             <h1 className="text-2xl font-bold text-neutral-800 md:text-[28px] lg:text-3xl">
               Create Your New Account
@@ -171,9 +177,11 @@ const Register = () => {
 
             {/* Seller info message */}
             {formData.role === "seller" && (
-              <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-700">
-                  <strong>Note:</strong> Complete business profile after signup.
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs text-blue-700 md:text-sm">
+                  <strong>Note for Sellers:</strong> After registration, you'll
+                  need to complete your business profile with shop details,
+                  business type, and verification documents to start selling.
                 </p>
               </div>
             )}
@@ -202,23 +210,109 @@ const Register = () => {
           </div>
         </div>
 
-        {/* Right Side Image */}
-        <div className="hidden md:block md:w-3/5">
-          <img
-            src="./Images/RegisterImg.png"
-            alt="NexTrade Registration"
-            className="object-cover w-full h-full rounded-r-xl"
-          />
-        </div>
-      </div>
+        {/* Right Side Image - Hidden on mobile, dynamic sizing on desktop */}
+        <div
+          className={`hidden md:block overflow-hidden rounded-r-xl
+            ${
+              formData.role === "seller"
+                ? "md:w-3/5 lg:w-3/5"
+                : "md:w-3/5 lg:w-3/5"
+            }`}
+        >
+          <div className="relative w-full h-full min-h-[500px]">
+            <img
+              src="./Images/RegisterImg.png"
+              alt="NexTrade Registration"
+              className={`absolute inset-0 w-full h-full object-cover transition-all duration-300
+                ${
+                  formData.role === "seller"
+                    ? "object-center scale-105"
+                    : "object-center"
+                }`}
+              onError={(e) => {
+                e.target.style.display = "none";
+                e.target.nextElementSibling.style.display = "flex";
+              }}
+            />
+            {/* Fallback if image fails to load */}
+            <div className="hidden absolute inset-0 bg-gradient-to-br from-primary-500 to-primary-700 flex-col items-center justify-center text-white p-6">
+              <h2 className="text-2xl font-bold mb-3">Welcome to NexTrade</h2>
+              <p className="text-center text-lg">
+                {formData.role === "seller"
+                  ? "Start your wholesale business journey with us"
+                  : "Discover amazing wholesale products"}
+              </p>
+            </div>
 
-      {/* Mobile Image*/}
-      <div className="mt-6 md:hidden">
-        <img
-          src="./Images/RegisterImg.png"
-          alt="NexTrade Registration"
-          className="w-full max-w-xs mx-auto rounded-lg"
-        />
+            {/* Overlay with text */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-6 md:p-8">
+              <div className="text-white">
+                <h2 className="text-2xl font-bold mb-2 md:text-3xl">
+                  {formData.role === "seller"
+                    ? "Become a Wholesale Seller"
+                    : "Join as a Buyer"}
+                </h2>
+                <p className="text-sm md:text-base opacity-90">
+                  {formData.role === "seller"
+                    ? "Reach thousands of buyers across Pakistan. Start your wholesale business today."
+                    : "Access thousands of wholesale products at best prices from verified sellers."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Image - Only for buyer role, hidden for seller */}
+        {formData.role === "buyer" && (
+          <div className="mt-6 md:hidden">
+            <div className="relative rounded-lg overflow-hidden shadow-md">
+              <img
+                src="./Images/RegisterImg.png"
+                alt="NexTrade Registration"
+                className="w-full h-48 object-cover"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                  e.target.nextElementSibling.style.display = "flex";
+                }}
+              />
+              {/* Fallback for mobile */}
+              <div className="hidden bg-gradient-to-r from-primary-500 to-primary-600 h-48 w-full flex-col items-center justify-center text-white p-4">
+                <h2 className="text-xl font-bold mb-2">Welcome to NexTrade</h2>
+                <p className="text-center text-sm">
+                  Discover amazing wholesale products
+                </p>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                <p className="text-white text-sm font-medium">
+                  Join thousands of buyers finding wholesale deals
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile seller info card */}
+        {formData.role === "seller" && (
+          <div className="mt-6 md:hidden">
+            <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-sm">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 mt-1">
+                  <FaStore className="text-blue-600 text-lg" />
+                </div>
+                <div className="ml-3">
+                  <h3 className="font-semibold text-blue-800 mb-1">
+                    Seller Registration
+                  </h3>
+                  <p className="text-sm text-blue-700">
+                    Complete your business profile after signup to start
+                    selling. You'll need shop details, business type, and
+                    verification documents.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
