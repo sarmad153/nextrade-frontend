@@ -522,16 +522,24 @@ const AddProduct = () => {
 
     try {
       // Combine main image and gallery images
-      const allImages = [mainImage, ...galleryImages];
+      const allImages = [mainImage, ...galleryImages].filter(
+        (img) => img !== null
+      );
 
-      // Prepare product data WITHOUT bulkPricingEnabled field
+      console.log("=== FRONTEND SUBMISSION ===");
+      console.log("All images to send:", allImages);
+      console.log("Main image:", mainImage);
+      console.log("Gallery images:", galleryImages);
+      console.log("=== END LOG ===");
+
+      // Prepare product data
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         category: formData.category,
-        images: allImages,
+        images: allImages, // This should be array of {url, publicId} objects
         tags: formData.tags
           ? formData.tags
               .split(",")
@@ -544,6 +552,8 @@ const AddProduct = () => {
         featured: formData.featured,
         status: formData.status,
       };
+
+      console.log("Product data being sent:", productData);
 
       // Send product data to backend
       const response = await API.post("/products", productData);
@@ -601,6 +611,8 @@ const AddProduct = () => {
         }, 2000);
       }
     } catch (error) {
+      console.error("Full error:", error);
+      console.error("Error response:", error.response?.data);
       toast.error(
         error.response?.data?.message ||
           "Failed to add product. Please try again."
