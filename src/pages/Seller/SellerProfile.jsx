@@ -67,6 +67,8 @@ export default function SellerProfile() {
     totalOrders: 0,
     totalRevenue: 0,
   });
+  const imageUrl = getProfileImageUrl(imageData);
+  const [imgError, setImgError] = useState(false);
 
   // image URL construction
   const getProfileImageUrl = (imagePath) => {
@@ -402,9 +404,6 @@ export default function SellerProfile() {
 
   // Improved ProfileImageDisplay component
   const ProfileImageDisplay = ({ imageData, isEditing, onRemove }) => {
-    const imageUrl = getProfileImageUrl(imageData);
-    const [imgError, setImgError] = useState(false);
-
     const handleImageError = () => {
       console.log("Image failed to load:", imageUrl);
       setImgError(true);
