@@ -23,6 +23,7 @@ import {
 import API from "../../../api/axiosInstance";
 import { toast } from "react-toastify";
 import ReviewForm from "./ReviewForm";
+import { getImageUrl } from "../../../../utils/imageHelper";
 
 const SellerInfo = React.memo(({ product }) => {
   const [sellerProfile, setSellerProfile] = useState(null);
@@ -434,19 +435,6 @@ const ProductDetail = () => {
         const productResponse = await API.get(`/products/${id}`);
         let productData = productResponse.data;
 
-        // Normalize image data
-        if (productData.images && Array.isArray(productData.images)) {
-          productData.images = productData.images
-            .map((img) => {
-              if (typeof img === "string") return img;
-              if (typeof img === "object" && img !== null) {
-                return img.url || img.secure_url || img.path || img.src || "";
-              }
-              return "";
-            })
-            .filter((img) => img !== "");
-        }
-
         setProduct(productData);
 
         // Track user activity for recommendations
@@ -812,31 +800,7 @@ const ProductDetail = () => {
               <div className="relative aspect-w-1 aspect-h-1 bg-neutral-200 h-64 sm:h-80 lg:h-96 flex items-center justify-center">
                 {product.images && product.images.length > 0 ? (
                   <img
-                    src={(() => {
-                      const image = product.images[selectedImage];
-                      // Safely handle the image
-                      if (!image) {
-                        return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
-                      }
-
-                      if (typeof image === "string") {
-                        return image.startsWith("http")
-                          ? image
-                          : `https://nextrade-backend-production-a486.up.railway.app/${image}`;
-                      }
-
-                      if (typeof image === "object" && image !== null) {
-                        return (
-                          image.url ||
-                          image.secure_url ||
-                          image.path ||
-                          image.src ||
-                          "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop"
-                        );
-                      }
-
-                      return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
-                    })()}
+                    src={getImageUrl(product.images[selectedImage])}
                     alt={product.name}
                     className="object-cover w-full h-full"
                     onError={(e) => {
@@ -886,43 +850,16 @@ const ProductDetail = () => {
                         : "border-transparent"
                     }`}
                   >
-                    {(() => {
-                      if (!image) {
-                        return (
-                          <span className="text-xs text-neutral-500">
-                            No Image
-                          </span>
-                        );
-                      }
-
-                      const imgSrc =
-                        typeof image === "string"
-                          ? image.startsWith("http")
-                            ? image
-                            : `https://nextrade-backend-production-a486.up.railway.app/${image}`
-                          : typeof image === "object" && image !== null
-                          ? image.url ||
-                            image.secure_url ||
-                            image.path ||
-                            image.src ||
-                            ""
-                          : "";
-
-                      return imgSrc ? (
-                        <img
-                          src={imgSrc}
-                          alt={`${product.name} ${index + 1}`}
-                          className="object-cover w-full h-full rounded"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src =
-                              "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
-                          }}
-                        />
-                      ) : (
-                        <span className="text-xs text-neutral-500">Image</span>
-                      );
-                    })()}
+                    <img
+                      src={getImageUrl(image)}
+                      alt={`${product.name} ${index + 1}`}
+                      className="object-cover w-full h-full rounded"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src =
+                          "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
+                      }}
+                    />
                   </button>
                 ))}
               </div>
@@ -1358,50 +1295,19 @@ const ProductDetail = () => {
                   className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden flex flex-col"
                 >
                   <div className="relative aspect-w-16 aspect-h-9 bg-neutral-200 h-32 flex items-center justify-center">
-                    {recommendedProduct.images &&
-                    recommendedProduct.images.length > 0 ? (
-                      (() => {
-                        const image = recommendedProduct.images[0];
-                        let imgSrc = "";
-
-                        if (image) {
-                          if (typeof image === "string") {
-                            imgSrc = image.startsWith("http")
-                              ? image
-                              : `https://nextrade-backend-production-a486.up.railway.app/${image}`;
-                          } else if (
-                            typeof image === "object" &&
-                            image !== null
-                          ) {
-                            imgSrc =
-                              image.url ||
-                              image.secure_url ||
-                              image.path ||
-                              image.src ||
-                              "";
-                          }
-                        }
-
-                        return imgSrc ? (
-                          <img
-                            src={imgSrc}
-                            alt={recommendedProduct.name}
-                            className="object-cover w-full h-full"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src =
-                                "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
-                            }}
-                          />
-                        ) : (
-                          <span className="text-neutral-500 text-sm">
-                            No Image
-                          </span>
-                        );
-                      })()
-                    ) : (
-                      <span className="text-neutral-500 text-sm">No Image</span>
-                    )}
+                    <img
+                      src={getImageUrl(
+                        recommendedProduct.images &&
+                          recommendedProduct.images[0]
+                      )}
+                      alt={recommendedProduct.name}
+                      className="object-cover w-full h-full"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src =
+                          "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
+                      }}
+                    />
                     {recommendedProduct.bulkPricingEnabled && (
                       <div className="flex absolute top-2 justify-between right-2 left-2">
                         <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full text-center">
