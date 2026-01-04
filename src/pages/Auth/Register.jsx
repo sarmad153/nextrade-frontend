@@ -62,13 +62,7 @@ const Register = () => {
     <div className="flex items-center justify-center min-h-screen p-4 bg-background-light font-inter">
       <div className="w-full max-w-7xl rounded-xl overflow-hidden flex flex-col md:flex-row shadow-lg">
         {/* Left Side - Form */}
-        <div
-          className={`w-full p-4 md:p-8 ${
-            formData.role === "seller"
-              ? "md:w-2/5 lg:w-2/5"
-              : "md:w-2/5 lg:w-2/5"
-          }`}
-        >
+        <div className="w-full p-4 md:p-8 md:w-2/5 lg:w-2/5">
           <div className="mb-6 text-center md:mb-5">
             <h1 className="text-2xl font-bold text-neutral-800 md:text-[28px] lg:text-3xl">
               Create Your New Account
@@ -210,15 +204,13 @@ const Register = () => {
           </div>
         </div>
 
-        {/* Right Side Image - Hidden on mobile, dynamic sizing on desktop */}
-        <div
-          className={`hidden md:block overflow-hidden rounded-r-xl md:w-3/5 lg:w-3/5`}
-        >
+        {/* Right Side Image - Hidden on mobile, fixed size on desktop */}
+        <div className="hidden md:block md:w-3/5 lg:w-3/5">
           <div className="relative w-full h-full min-h-[500px]">
             <img
               src="./Images/RegisterImg.png"
               alt="NexTrade Registration"
-              className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 object-center`}
+              className="absolute inset-0 w-full h-full object-cover object-center"
               onError={(e) => {
                 e.target.style.display = "none";
                 e.target.nextElementSibling.style.display = "flex";
