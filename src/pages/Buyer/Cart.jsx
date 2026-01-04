@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import API from "../../api/axiosInstance";
 import { toast } from "react-toastify";
+import { getImageUrl } from "../../../utils/imageHelper";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -44,7 +45,7 @@ const Cart = () => {
             try {
               // Fetch bulk pricing for this product
               const bulkResponse = await API.get(
-                `/products/${item.product?._id}/bulk-pricing`
+                `/bulk-pricing/products/${item.product?._id}`
               );
               const bulkTiers = bulkResponse.data || [];
 
@@ -579,16 +580,14 @@ const Cart = () => {
                     <div className="relative flex-shrink-0 w-16 h-16 bg-neutral-200 rounded-lg flex items-center justify-center sm:w-20 sm:h-20">
                       {item.product.images && item.product.images.length > 0 ? (
                         <img
-                          src={
-                            item.product.images[0].startsWith("http")
-                              ? item.product.images[0]
-                              : `${import.meta.env.VITE_API_URL.replace(
-                                  "/api",
-                                  ""
-                                )}${item.product.images[0]}`
-                          }
+                          src={getImageUrl(item.product.images[0])}
                           alt={item.product.name}
                           className="object-cover w-full h-full rounded-lg"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src =
+                              "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
+                          }}
                         />
                       ) : (
                         <FaShoppingCart className="text-neutral-400" />
