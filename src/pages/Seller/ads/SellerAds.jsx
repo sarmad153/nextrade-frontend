@@ -597,6 +597,14 @@ const SellerAds = () => {
     );
   };
 
+  const shouldShowAnalyticsButton = (ad) => {
+    if (ad.status !== "approved") return false;
+    const paymentStatus = getAdPaymentStatus(ad);
+    const hasAnalyticsData = ad.impressions > 0 || ad.clicks > 0;
+
+    return paymentStatus === "completed" && hasAnalyticsData;
+  };
+
   // Show analytics button for paid ads with data
   const shouldShowActivationButton = (ad) => {
     if (ad.status !== "approved") return false;
