@@ -335,19 +335,28 @@ const ManageProducts = () => {
         }
       );
 
-      // Delete existing tiers
-      await API.delete(
-        `/products/${selectedProductForBulk._id}/bulk-pricing/all`
-      );
+      if (
+        selectedProductForBulk.bulkTiers &&
+        selectedProductForBulk.bulkTiers.length > 0
+      ) {
+        await Promise.all(
+          selectedProductForBulk.bulkTiers.map(async (tier) => {
+            if (tier._id) {
+              await API.delete(`/bulk-pricing/${tier._id}`);
+            }
+          })
+        );
+      }
 
       // Add new tiers if enabled
       if (bulkPricingEnabled && bulkTiers.length > 0) {
         await Promise.all(
           bulkTiers.map((tier) =>
-            API.post(
-              `/bulk-pricing/products/${selectedProductForBulk._id}`,
-              tier
-            )
+            API.post(`/bulk-pricing/products/${selectedProductForBulk._id}`, {
+              minQuantity: tier.minQuantity,
+              discountType: tier.discountType,
+              discountValue: parseFloat(tier.discountValue),
+            })
           )
         );
       }
@@ -357,6 +366,31 @@ const ManageProducts = () => {
 
       // Refresh products
       const productsResponse = await API.get("/products/seller/products");
+      const productsData =
+        productsResponse.data.products || productsResponse.data || [];
+
+      // Refresh bulk pricing for each product
+      const productsWithBulkPricing = await Promise.all(
+        productsData.map(async (product) => {
+          try {
+            const bulkResponse = await API.get(
+              `/bulk-pricing/products/${product._id}`
+            );
+            return {
+              ...product,
+              bulkPricingEnabled: bulkResponse.data.length > 0,
+              bulkTiers: bulkResponse.data,
+            };
+          } catch (error) {
+            return {
+              ...product,
+              bulkPricingEnabled: false,
+              bulkTiers: [],
+            };
+          }
+        })
+      );
+
       setProducts(productsResponse.data.products || []);
     } catch (error) {
       toast.error(
