@@ -94,16 +94,14 @@ const FeaturedCategories = () => {
           <div className="relative h-48 bg-neutral-100 overflow-hidden flex-shrink-0">
             <img
               src={
-                category.image?.startsWith("http")
-                  ? category.image
-                  : `${SERVER_URL}/${category.image?.replace(/^\/+/, "")}`
+                category.image ||
+                "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"
               }
               alt={category.name}
               loading="lazy"
               decoding="async"
               className="w-full h-full object-cover transition-transform duration-700"
               onError={(e) => {
-                e.target.onerror = null;
                 e.target.src =
                   "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop";
               }}
