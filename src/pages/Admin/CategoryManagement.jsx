@@ -157,40 +157,6 @@ const CategoryManagement = () => {
     }
   }, [searchTerm, categories]);
 
-  // Handle image upload
-  const uploadImage = async () => {
-    if (!selectedFile) return "";
-
-    try {
-      setUploading(true);
-      const formData = new FormData();
-      formData.append("image", selectedFile);
-
-      const response = await API.post("/upload/categories/single", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      const imageUrl =
-        response.data.imageUrl || response.data.image?.url || response.data.url;
-
-      if (!imageUrl) {
-        throw new Error("No image URL returned from server");
-      }
-
-      return imageUrl;
-
-      toast.success("Image uploaded successfully!");
-      return response.data.imageUrl;
-    } catch (err) {
-      toast.error(
-        `Failed to upload image: ${err.response?.data?.message || err.message}`
-      );
-      return "";
-    } finally {
-      setUploading(false);
-    }
-  };
-
   // Handle create category
   const handleCreate = async (e) => {
     e.preventDefault();
