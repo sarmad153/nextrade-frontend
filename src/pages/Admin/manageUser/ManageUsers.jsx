@@ -66,13 +66,23 @@ const ManageUsers = () => {
       const usersWithProfiles = await Promise.all(
         response.data.users.map(async (user) => {
           let profileData = null;
+          let profileImageUrl = null;
 
           try {
             const profileResponse = await API.get(`/profile/${user._id}`);
             profileData = profileResponse.data;
+
+            // Extract profile image URL consistently
+            if (profileData?.profileImage) {
+              if (typeof profileData.profileImage === "string") {
+                profileImageUrl = profileData.profileImage;
+              } else if (profileData.profileImage?.url) {
+                profileImageUrl = profileData.profileImage.url;
+              }
+            }
           } catch (profileError) {
             if (profileError.response?.status === 404) {
-              // No profile found
+              // No profile found - use default
             } else {
               console.error(
                 `Error fetching profile for user ${user._id}:`,
@@ -93,7 +103,8 @@ const ManageUsers = () => {
             status: user.isBlocked ? "blocked" : "active",
             registrationDate: user.createdAt,
             lastLogin: user.updatedAt,
-            profileImage: profileData?.profileImage || null,
+            // Store profileImage as a string URL
+            profileImage: profileImageUrl,
             avatar: user.name
               .split(" ")
               .map((n) => n[0])
