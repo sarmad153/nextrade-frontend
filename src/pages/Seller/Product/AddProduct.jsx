@@ -1155,7 +1155,7 @@ const AddProduct = () => {
               </button>
               <button
                 type="submit"
-                disabled={isLoading || !mainImage}
+                disabled={isLoading || uploading || !mainImage}
                 className="flex items-center px-6 py-3 font-medium text-white transition duration-300 rounded-lg bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
