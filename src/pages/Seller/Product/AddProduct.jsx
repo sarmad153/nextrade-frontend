@@ -557,14 +557,14 @@ const AddProduct = () => {
         if (bulkPricingEnabled && bulkTiers.length > 0) {
           try {
             // enable bulk pricing for the product
-            await API.patch(`/products/${productId}/bulk-pricing/toggle`, {
+            await API.patch(`/bulk-pricing/products/${productId}/toggle`, {
               enabled: true,
             });
 
             // create bulk tiers
             await Promise.all(
               bulkTiers.map((tier) =>
-                API.post(`/products/${productId}/bulk-pricing`, tier)
+                API.post(`/bulk-pricing/products/${productId}`, tier)
               )
             );
 

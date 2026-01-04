@@ -102,7 +102,7 @@ const ManageProducts = () => {
             productsData.map(async (product) => {
               try {
                 const bulkResponse = await API.get(
-                  `/products/${product._id}/bulk-pricing`
+                  `/bulk-pricing/products/${product._id}`
                 );
                 return {
                   ...product,
@@ -329,7 +329,7 @@ const ManageProducts = () => {
   const saveBulkPricing = async () => {
     try {
       await API.patch(
-        `/products/${selectedProductForBulk._id}/bulk-pricing/toggle`,
+        `/bulk-pricing/products/${selectedProductForBulk._id}/toggle`,
         {
           enabled: bulkPricingEnabled,
         }
@@ -345,7 +345,7 @@ const ManageProducts = () => {
         await Promise.all(
           bulkTiers.map((tier) =>
             API.post(
-              `/products/${selectedProductForBulk._id}/bulk-pricing`,
+              `/bulk-pricing/products/${selectedProductForBulk._id}`,
               tier
             )
           )
