@@ -51,14 +51,31 @@ const CategoryManagement = () => {
   const extractImageFromResponse = (data) => {
     if (!data) return "";
 
-    // If data is already a string URL
-    if (typeof data === "string") return data;
+    console.log("Extract function called with:", {
+      data: data,
+      image: data.image,
+      type: typeof data.image,
+    });
 
-    // If it's an object with url property
-    if (data.url) return data.url;
+    // If image is already a string
+    if (typeof data.image === "string") {
+      return data.image;
+    }
 
-    // If it's an object with image.url property
-    if (data.image?.url) return data.image.url;
+    // If data itself is a string (shouldn't happen but just in case)
+    if (typeof data === "string") {
+      return data;
+    }
+
+    // If image is an object with url property
+    if (data.image && typeof data.image === "object" && data.image.url) {
+      return data.image.url;
+    }
+
+    // If data has url property directly
+    if (data.url && typeof data.url === "string") {
+      return data.url;
+    }
 
     return "";
   };
@@ -68,11 +85,33 @@ const CategoryManagement = () => {
       setIsLoading(true);
       const response = await API.get("/categories/with-counts");
 
+      // DEBUG: Check what we get from API
+      console.log("API Response:", response.data);
+      if (response.data.length > 0) {
+        console.log("First category from API:", {
+          name: response.data[0].name,
+          image: response.data[0].image,
+          type: typeof response.data[0].image,
+          isString: typeof response.data[0].image === "string",
+          isObject: typeof response.data[0].image === "object",
+        });
+      }
+
       // Format categories to ensure consistent image structure
-      const formattedCategories = response.data.map((category) => ({
-        ...category,
-        image: extractImageFromResponse(category),
-      }));
+      const formattedCategories = response.data.map((category) => {
+        const extractedImage = extractImageFromResponse(category);
+        console.log(`Category "${category.name}":`, {
+          original: category.image,
+          extracted: extractedImage,
+          originalType: typeof category.image,
+          extractedType: typeof extractedImage,
+        });
+
+        return {
+          ...category,
+          image: extractedImage,
+        };
+      });
 
       setCategories(formattedCategories);
       setFilteredCategories(formattedCategories);
@@ -411,10 +450,7 @@ const CategoryManagement = () => {
                         <div className="relative w-10 h-10 md:w-12 md:h-12">
                           {category.image ? (
                             <img
-                              src={getImageUrl(
-                                category.image,
-                                "/placeholder-category.jpg"
-                              )}
+                              src={imageUrl}
                               alt={category.name}
                               className="object-cover w-10 h-10 rounded-lg md:w-12 md:h-12"
                               onError={(e) => {

@@ -1,32 +1,35 @@
-export const getCategoryImage = (category) => {
-    if (!category) return "/placeholder-category.jpg";
-
-    // Handle both old and new structures
-    if (typeof category.image === 'object' && category.image.url) {
-        return category.image.url;
-    }
-
-    if (typeof category.image === 'string' && category.image) {
-        return category.image;
-    }
-
-    return "/placeholder-category.jpg";
-};
-
 export const getImageUrl = (imageData, fallback = "/placeholder-category.jpg") => {
     if (!imageData) return fallback;
 
-    // If it's already a string URL
+    console.log('getImageUrl called with:', {
+        imageData: imageData,
+        type: typeof imageData
+    });
+
+    // If it's already a string
     if (typeof imageData === 'string') {
+        const trimmed = imageData.trim();
+
+        // If it's empty, return fallback
+        if (!trimmed) return fallback;
+
         // Check if it's a valid URL
-        if (imageData.startsWith('http') || imageData.startsWith('/')) {
-            return imageData;
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://') ||
+            trimmed.startsWith('/') || trimmed.startsWith('data:')) {
+            return trimmed;
         }
+
+        // If it's a relative path without leading slash
+        if (trimmed.includes('.jpg') || trimmed.includes('.jpeg') ||
+            trimmed.includes('.png') || trimmed.includes('.webp')) {
+            return `/${trimmed}`;
+        }
+
         return fallback;
     }
 
     // If it's an object with url property
-    if (imageData.url) {
+    if (imageData && typeof imageData === 'object' && imageData.url) {
         return imageData.url;
     }
 
