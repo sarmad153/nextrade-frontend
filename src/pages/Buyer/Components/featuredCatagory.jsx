@@ -16,7 +16,7 @@ import {
   FaTags,
 } from "react-icons/fa";
 import API, { SERVER_URL } from "../../../api/axiosInstance";
-import { getImageUrl } from "../../../utils/imageHelper";
+import { getImageUrl } from "../../../../utils/imageHelper";
 
 const iconMap = {
   Electronics: FaMobile,
