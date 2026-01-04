@@ -180,13 +180,52 @@ const AdminAdsManagement = () => {
     }
   };
 
-  // Get image URL
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith("http")) return imagePath;
-    if (imagePath.startsWith("/uploads/"))
-      return `https://nextrade-backend-production-a486.up.railway.app/${imagePath}`;
-    return `https://nextrade-backend-production-a486.up.railway.app//uploads/${imagePath}`;
+  // Get image URL - UPDATED FUNCTION
+  const getImageUrl = (imageData) => {
+    if (!imageData) return null;
+
+    // If it's already a URL
+    if (typeof imageData === "string") {
+      if (imageData.startsWith("http")) return imageData;
+      if (imageData.startsWith("/uploads/")) {
+        return `https://nextrade-backend-production-a486.up.railway.app${imageData}`;
+      }
+      return `https://nextrade-backend-production-a486.up.railway.app/uploads/${imageData}`;
+    }
+
+    // If it's an object with url property
+    if (typeof imageData === "object" && imageData !== null) {
+      if (imageData.url) return getImageUrl(imageData.url);
+      if (imageData.secure_url) return imageData.secure_url;
+      if (imageData.path) return getImageUrl(imageData.path);
+    }
+
+    // If it's an array
+    if (Array.isArray(imageData) && imageData.length > 0) {
+      return getImageUrl(imageData[0]);
+    }
+
+    return null;
+  };
+
+  // Get ad image
+  const getAdImage = (ad) => {
+    if (!ad) return null;
+
+    // Try different possible image properties
+    const possibleImageSources = [
+      ad.image,
+      ad.images,
+      ad.imageUrl,
+      ad.image_url,
+    ].filter(Boolean);
+
+    for (const source of possibleImageSources) {
+      const url = getImageUrl(source);
+      if (url) return url;
+    }
+
+    return null;
   };
 
   // Filter ads
@@ -594,8 +633,8 @@ const AdminAdsManagement = () => {
       if (selectedPayment.proofImage.startsWith("http"))
         return selectedPayment.proofImage;
       if (selectedPayment.proofImage.startsWith("/"))
-        return `https://nextrade-backend-production-a486.up.railway.app/${selectedPayment.proofImage}`;
-      return `https://nextrade-backend-production-a486.up.railway.app//uploads/${selectedPayment.proofImage}`;
+        return `https://nextrade-backend-production-a486.up.railway.app${selectedPayment.proofImage}`;
+      return `https://nextrade-backend-production-a486.up.railway.app/uploads/${selectedPayment.proofImage}`;
     };
 
     const paymentProofUrl = getPaymentProofUrl();
@@ -1116,9 +1155,9 @@ const AdminAdsManagement = () => {
                           <td className="px-4 py-4">
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-12 w-16 bg-neutral-200 rounded-lg overflow-hidden">
-                                {ad.image ? (
+                                {getAdImage(ad) ? (
                                   <img
-                                    src={getImageUrl(ad.image)}
+                                    src={getAdImage(ad)}
                                     alt={ad.title}
                                     className="h-12 w-16 object-cover"
                                     onError={(e) => {
@@ -1130,7 +1169,7 @@ const AdminAdsManagement = () => {
                                 ) : null}
                                 <div
                                   className={`h-12 w-16 flex items-center justify-center bg-neutral-200 ${
-                                    ad.image ? "hidden" : "flex"
+                                    getAdImage(ad) ? "hidden" : "flex"
                                   }`}
                                 >
                                   <FaImage className="text-neutral-400" />
@@ -1332,25 +1371,6 @@ const AdminAdsManagement = () => {
                   <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
                     {pendingPayments.length} Require Action
                   </span>
-                  {pendingPayments.length > 0 && (
-                    <button
-                      onClick={() => {
-                        const paymentIds = pendingPayments.map((p) => p._id);
-                        if (
-                          paymentIds.length > 0 &&
-                          window.confirm(
-                            `Verify all ${paymentIds.length} payments?`
-                          )
-                        ) {
-                          handleBulkVerifyPayments(paymentIds, "verify");
-                        }
-                      }}
-                      className="flex items-center px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
-                    >
-                      <FaCheckDouble className="mr-2" />
-                      Verify All
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -1506,405 +1526,366 @@ const AdminAdsManagement = () => {
           </div>
         )}
 
-        {/* Ad Detail Modal */}
+        {/* Ad Detail Modal - Updated image handling */}
         {showDetailModal && selectedAd && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
             <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl">
-              {showDetailModal && selectedAd && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-                  <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl">
-                    <div className="p-6 border-b border-neutral-200">
-                      <div className="flex items-center justify-between">
-                        <h2 className="text-2xl font-bold text-neutral-800">
-                          Ad Details
-                        </h2>
-                        <button
-                          onClick={() => setShowDetailModal(false)}
-                          className="p-2 text-neutral-400 rounded-lg hover:bg-neutral-100 hover:text-neutral-600"
-                        >
-                          <FaTimes className="text-xl" />
-                        </button>
+              <div className="p-6 border-b border-neutral-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-neutral-800">
+                    Ad Details
+                  </h2>
+                  <button
+                    onClick={() => setShowDetailModal(false)}
+                    className="p-2 text-neutral-400 rounded-lg hover:bg-neutral-100 hover:text-neutral-600"
+                  >
+                    <FaTimes className="text-xl" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 max-h-[70vh] overflow-y-auto">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  {/* Left Column - Ad Information */}
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-neutral-800 mb-4">
+                        Ad Information
+                      </h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700">
+                            Title
+                          </label>
+                          <p className="mt-1 text-neutral-900">
+                            {getSafeValue(selectedAd.title, "Untitled Ad")}
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700">
+                            Description
+                          </label>
+                          <p className="mt-1 text-neutral-900 whitespace-pre-wrap break-words">
+                            {getSafeValue(
+                              selectedAd.description,
+                              "No description"
+                            )}
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700">
+                            Landing Page
+                          </label>
+                          <p className="mt-1 text-primary-600 break-all">
+                            {getSafeValue(selectedAd.link, "No link provided")}
+                          </p>
+                        </div>
+
+                        <div className="bg-neutral-100 p-4 rounded-lg">
+                          <label className="block text-sm font-medium text-neutral-700 mb-2">
+                            Ad Image
+                          </label>
+                          {getAdImage(selectedAd) ? (
+                            <img
+                              src={getAdImage(selectedAd)}
+                              alt={selectedAd.title}
+                              className="w-full h-48 object-cover rounded-lg"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                                e.target.nextSibling.style.display = "flex";
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className={`w-full h-48 flex items-center justify-center bg-neutral-200 rounded-lg ${
+                              getAdImage(selectedAd) ? "hidden" : "flex"
+                            }`}
+                          >
+                            <FaImage className="text-4xl text-neutral-400" />
+                            <span className="ml-2 text-neutral-500">
+                              No image available
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="p-6 max-h-[70vh] overflow-y-auto">
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {/* Left Column - Ad Information */}
-                        <div className="space-y-6">
-                          <div>
-                            <h3 className="text-lg font-semibold text-neutral-800 mb-4">
-                              Ad Information
-                            </h3>
-                            <div className="space-y-4">
-                              <div>
-                                <label className="block text-sm font-medium text-neutral-700">
-                                  Title
-                                </label>
-                                <p className="mt-1 text-neutral-900">
-                                  {getSafeValue(
-                                    selectedAd.title,
-                                    "Untitled Ad"
-                                  )}
-                                </p>
-                              </div>
-
-                              <div>
-                                <label className="block text-sm font-medium text-neutral-700">
-                                  Description
-                                </label>
-                                <p className="mt-1 text-neutral-900 whitespace-pre-wrap break-words">
-                                  {getSafeValue(
-                                    selectedAd.description,
-                                    "No description"
-                                  )}
-                                </p>
-                              </div>
-
-                              <div>
-                                <label className="block text-sm font-medium text-neutral-700">
-                                  Landing Page
-                                </label>
-                                <p className="mt-1 text-primary-600 break-all">
-                                  {getSafeValue(
-                                    selectedAd.link,
-                                    "No link provided"
-                                  )}
-                                </p>
-                              </div>
-
-                              <div className="bg-neutral-100 p-4 rounded-lg">
-                                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                                  Ad Image
-                                </label>
-                                {selectedAd.image ? (
-                                  <img
-                                    src={getImageUrl(selectedAd.image)}
-                                    alt={selectedAd.title}
-                                    className="w-full h-48 object-cover rounded-lg"
-                                    onError={(e) => {
-                                      e.target.style.display = "none";
-                                      e.target.nextSibling.style.display =
-                                        "flex";
-                                    }}
-                                  />
-                                ) : null}
-                                <div
-                                  className={`w-full h-48 flex items-center justify-center bg-neutral-200 rounded-lg ${
-                                    selectedAd.image ? "hidden" : "flex"
-                                  }`}
-                                >
-                                  <FaImage className="text-4xl text-neutral-400" />
-                                  <span className="ml-2 text-neutral-500">
-                                    No image available
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div>
-                            <h3 className="text-lg font-semibold text-neutral-800 mb-4">
-                              Campaign Details
-                            </h3>
-                            <div className="space-y-3">
-                              <div className="flex justify-between">
-                                <span className="text-neutral-600">
-                                  Duration:
-                                </span>
-                                <span className="font-medium">
-                                  {selectedAd.duration || 0} days
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-neutral-600">
-                                  Start Date:
-                                </span>
-                                <span className="font-medium">
-                                  {formatDate(selectedAd.startDate)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-neutral-600">
-                                  End Date:
-                                </span>
-                                <span className="font-medium">
-                                  {formatDate(selectedAd.endDate)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-neutral-600">
-                                  Remaining Days:
-                                </span>
-                                <span className="font-medium">
-                                  {getRemainingDays(selectedAd.endDate)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between text-lg font-bold border-t border-neutral-200 pt-2">
-                                <span className="text-neutral-800">
-                                  Total Cost:
-                                </span>
-                                <span className="text-primary-600">
-                                  Rs {selectedAd.totalCost || 0}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-neutral-800 mb-4">
+                        Campaign Details
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-neutral-600">Duration:</span>
+                          <span className="font-medium">
+                            {selectedAd.duration || 0} days
+                          </span>
                         </div>
-
-                        {/* Right Column - Seller Info & Actions */}
-                        <div className="space-y-6">
-                          <div>
-                            <h3 className="text-lg font-semibold text-neutral-800 mb-4">
-                              Seller Information
-                            </h3>
-                            <div className="space-y-4 p-4 bg-neutral-50 rounded-lg">
-                              <div className="flex items-start space-x-3">
-                                <div className="flex-shrink-0">
-                                  <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                                    <FaUser className="text-primary-600 text-lg" />
-                                  </div>
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="font-semibold text-neutral-900 text-lg">
-                                    {getSellerName(selectedAd)}
-                                  </h4>
-                                  <p className="text-neutral-600 text-sm">
-                                    {getSellerEmail(selectedAd)}
-                                  </p>
-                                  <p className="text-neutral-500 text-xs mt-1">
-                                    Member since:{" "}
-                                    {formatDate(selectedAd.seller?.createdAt)}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <div>
-                                  <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide">
-                                    Phone
-                                  </label>
-                                  <p className="text-neutral-800 font-medium mt-1">
-                                    {getSellerPhone(selectedAd)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide">
-                                    Store Name
-                                  </label>
-                                  <p className="text-neutral-800 font-medium mt-1">
-                                    {getSellerBusinessInfo(selectedAd).shopName}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="border-t border-neutral-200 pt-3 mt-3">
-                                <h5 className="font-medium text-neutral-700 mb-2">
-                                  Business Details
-                                </h5>
-                                <div className="grid grid-cols-1 gap-2 text-sm">
-                                  <div className="flex justify-between">
-                                    <span className="text-neutral-600">
-                                      Business Type:
-                                    </span>
-                                    <span className="font-medium text-neutral-800 capitalize">
-                                      {
-                                        getSellerBusinessInfo(selectedAd)
-                                          .businessType
-                                      }
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-neutral-600">
-                                      City:
-                                    </span>
-                                    <span className="font-medium text-neutral-800">
-                                      {getSellerBusinessInfo(selectedAd).city}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-neutral-600">
-                                      CNIC:
-                                    </span>
-                                    <span className="font-medium text-neutral-800">
-                                      {
-                                        getSellerBusinessInfo(selectedAd)
-                                          .cnicNumber
-                                      }
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="border-t border-neutral-200 pt-3">
-                                <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">
-                                  Business Address
-                                </label>
-                                <p className="text-neutral-700 text-sm">
-                                  {getSellerBusinessInfo(selectedAd).address}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div>
-                            <h3 className="text-lg font-semibold text-neutral-800 mb-4">
-                              Status & Analytics
-                            </h3>
-                            <div className="space-y-3">
-                              <div className="flex justify-between items-center">
-                                <span className="text-neutral-600">
-                                  Ad Status:
-                                </span>
-                                <span
-                                  className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                                    selectedAd.status
-                                  )}`}
-                                >
-                                  {selectedAd.status
-                                    ? selectedAd.status
-                                        .charAt(0)
-                                        .toUpperCase() +
-                                      selectedAd.status.slice(1)
-                                    : "Unknown"}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-neutral-600">
-                                  Payment Status:
-                                </span>
-                                <span
-                                  className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusColor(
-                                    selectedAd.payment
-                                  )}`}
-                                >
-                                  {getPaymentStatusText(selectedAd.payment)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-neutral-600">
-                                  Active Status:
-                                </span>
-                                <span
-                                  className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                                    selectedAd.isActive
-                                      ? "bg-green-100 text-green-800"
-                                      : "bg-gray-100 text-gray-800"
-                                  }`}
-                                >
-                                  {selectedAd.isActive ? "Active" : "Inactive"}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {!selectedAd.isDeleted && (
-                            <div>
-                              <h3 className="text-lg font-semibold text-neutral-800 mb-4">
-                                Admin Actions
-                              </h3>
-                              <div className="space-y-3">
-                                {selectedAd.status === "pending" && (
-                                  <div className="flex space-x-3">
-                                    <button
-                                      onClick={() =>
-                                        showConfirmationModal(
-                                          "approve",
-                                          selectedAd._id,
-                                          selectedAd.title
-                                        )
-                                      }
-                                      className="flex-1 flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                                    >
-                                      <FaCheck className="mr-2" />
-                                      Approve Ad
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        showConfirmationModal(
-                                          "reject",
-                                          selectedAd._id,
-                                          selectedAd.title
-                                        )
-                                      }
-                                      className="flex-1 flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                                    >
-                                      <FaTimes className="mr-2" />
-                                      Reject Ad
-                                    </button>
-                                  </div>
-                                )}
-
-                                {selectedAd.status === "approved" &&
-                                  selectedAd.payment?.status === "pending" && (
-                                    <button
-                                      onClick={() =>
-                                        showConfirmationModal(
-                                          "markPaid",
-                                          selectedAd._id,
-                                          selectedAd.title
-                                        )
-                                      }
-                                      className="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                                    >
-                                      <FaMoneyBillWave className="mr-2" />
-                                      Mark as Paid
-                                    </button>
-                                  )}
-
-                                {selectedAd.status === "approved" &&
-                                  selectedAd.payment?.status ===
-                                    "completed" && (
-                                    <button
-                                      onClick={() =>
-                                        showConfirmationModal(
-                                          selectedAd.isActive
-                                            ? "pause"
-                                            : "activate",
-                                          selectedAd._id,
-                                          selectedAd.title
-                                        )
-                                      }
-                                      className={`w-full flex items-center justify-center px-4 py-2 text-white rounded-lg transition-colors ${
-                                        selectedAd.isActive
-                                          ? "bg-yellow-600 hover:bg-yellow-700"
-                                          : "bg-blue-600 hover:bg-blue-700"
-                                      }`}
-                                    >
-                                      {selectedAd.isActive ? (
-                                        <>
-                                          <FaBan className="mr-2" />
-                                          Pause Ad
-                                        </>
-                                      ) : (
-                                        <>
-                                          <FaPlay className="mr-2" />
-                                          Activate Ad
-                                        </>
-                                      )}
-                                    </button>
-                                  )}
-                              </div>
-                            </div>
-                          )}
-                          {selectedAd.isDeleted && (
-                            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                              <h3 className="text-lg font-semibold text-red-800 mb-2">
-                                Ad Deleted
-                              </h3>
-                              <p className="text-red-700">
-                                This ad was deleted on{" "}
-                                {formatDateTime(selectedAd.deletedAt)}. It
-                                remains in the system for record-keeping
-                                purposes.
-                              </p>
-                            </div>
-                          )}
+                        <div className="flex justify-between">
+                          <span className="text-neutral-600">Start Date:</span>
+                          <span className="font-medium">
+                            {formatDate(selectedAd.startDate)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-neutral-600">End Date:</span>
+                          <span className="font-medium">
+                            {formatDate(selectedAd.endDate)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-neutral-600">
+                            Remaining Days:
+                          </span>
+                          <span className="font-medium">
+                            {getRemainingDays(selectedAd.endDate)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-lg font-bold border-t border-neutral-200 pt-2">
+                          <span className="text-neutral-800">Total Cost:</span>
+                          <span className="text-primary-600">
+                            Rs {selectedAd.totalCost || 0}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* Right Column - Seller Info & Actions */}
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-neutral-800 mb-4">
+                        Seller Information
+                      </h3>
+                      <div className="space-y-4 p-4 bg-neutral-50 rounded-lg">
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0">
+                            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                              <FaUser className="text-primary-600 text-lg" />
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-neutral-900 text-lg">
+                              {getSellerName(selectedAd)}
+                            </h4>
+                            <p className="text-neutral-600 text-sm">
+                              {getSellerEmail(selectedAd)}
+                            </p>
+                            <p className="text-neutral-500 text-xs mt-1">
+                              Member since:{" "}
+                              {formatDate(selectedAd.seller?.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <div>
+                            <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide">
+                              Phone
+                            </label>
+                            <p className="text-neutral-800 font-medium mt-1">
+                              {getSellerPhone(selectedAd)}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide">
+                              Store Name
+                            </label>
+                            <p className="text-neutral-800 font-medium mt-1">
+                              {getSellerBusinessInfo(selectedAd).shopName}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-neutral-200 pt-3 mt-3">
+                          <h5 className="font-medium text-neutral-700 mb-2">
+                            Business Details
+                          </h5>
+                          <div className="grid grid-cols-1 gap-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-neutral-600">
+                                Business Type:
+                              </span>
+                              <span className="font-medium text-neutral-800 capitalize">
+                                {getSellerBusinessInfo(selectedAd).businessType}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-neutral-600">City:</span>
+                              <span className="font-medium text-neutral-800">
+                                {getSellerBusinessInfo(selectedAd).city}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-neutral-600">CNIC:</span>
+                              <span className="font-medium text-neutral-800">
+                                {getSellerBusinessInfo(selectedAd).cnicNumber}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-neutral-200 pt-3">
+                          <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">
+                            Business Address
+                          </label>
+                          <p className="text-neutral-700 text-sm">
+                            {getSellerBusinessInfo(selectedAd).address}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-lg font-semibold text-neutral-800 mb-4">
+                        Status & Analytics
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-neutral-600">Ad Status:</span>
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                              selectedAd.status
+                            )}`}
+                          >
+                            {selectedAd.status
+                              ? selectedAd.status.charAt(0).toUpperCase() +
+                                selectedAd.status.slice(1)
+                              : "Unknown"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-neutral-600">
+                            Payment Status:
+                          </span>
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusColor(
+                              selectedAd.payment
+                            )}`}
+                          >
+                            {getPaymentStatusText(selectedAd.payment)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-neutral-600">
+                            Active Status:
+                          </span>
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                              selectedAd.isActive
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {selectedAd.isActive ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {!selectedAd.isDeleted && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-neutral-800 mb-4">
+                          Admin Actions
+                        </h3>
+                        <div className="space-y-3">
+                          {selectedAd.status === "pending" && (
+                            <div className="flex space-x-3">
+                              <button
+                                onClick={() =>
+                                  showConfirmationModal(
+                                    "approve",
+                                    selectedAd._id,
+                                    selectedAd.title
+                                  )
+                                }
+                                className="flex-1 flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                              >
+                                <FaCheck className="mr-2" />
+                                Approve Ad
+                              </button>
+                              <button
+                                onClick={() =>
+                                  showConfirmationModal(
+                                    "reject",
+                                    selectedAd._id,
+                                    selectedAd.title
+                                  )
+                                }
+                                className="flex-1 flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                              >
+                                <FaTimes className="mr-2" />
+                                Reject Ad
+                              </button>
+                            </div>
+                          )}
+
+                          {selectedAd.status === "approved" &&
+                            selectedAd.payment?.status === "pending" && (
+                              <button
+                                onClick={() =>
+                                  showConfirmationModal(
+                                    "markPaid",
+                                    selectedAd._id,
+                                    selectedAd.title
+                                  )
+                                }
+                                className="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                              >
+                                <FaMoneyBillWave className="mr-2" />
+                                Mark as Paid
+                              </button>
+                            )}
+
+                          {selectedAd.status === "approved" &&
+                            selectedAd.payment?.status === "completed" && (
+                              <button
+                                onClick={() =>
+                                  showConfirmationModal(
+                                    selectedAd.isActive ? "pause" : "activate",
+                                    selectedAd._id,
+                                    selectedAd.title
+                                  )
+                                }
+                                className={`w-full flex items-center justify-center px-4 py-2 text-white rounded-lg transition-colors ${
+                                  selectedAd.isActive
+                                    ? "bg-yellow-600 hover:bg-yellow-700"
+                                    : "bg-blue-600 hover:bg-blue-700"
+                                }`}
+                              >
+                                {selectedAd.isActive ? (
+                                  <>
+                                    <FaBan className="mr-2" />
+                                    Pause Ad
+                                  </>
+                                ) : (
+                                  <>
+                                    <FaPlay className="mr-2" />
+                                    Activate Ad
+                                  </>
+                                )}
+                              </button>
+                            )}
+                        </div>
+                      </div>
+                    )}
+                    {selectedAd.isDeleted && (
+                      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <h3 className="text-lg font-semibold text-red-800 mb-2">
+                          Ad Deleted
+                        </h3>
+                        <p className="text-red-700">
+                          This ad was deleted on{" "}
+                          {formatDateTime(selectedAd.deletedAt)}. It remains in
+                          the system for record-keeping purposes.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         )}
