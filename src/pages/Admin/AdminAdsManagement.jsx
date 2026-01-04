@@ -62,6 +62,7 @@ const AdminAdsManagement = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentDetailModal, setShowPaymentDetailModal] = useState(false);
   const [rejectionInput, setRejectionInput] = useState("");
+  const [isConfirming, setIsConfirming] = useState(false);
 
   // Fetch ads data
   const fetchAds = async () => {
@@ -70,8 +71,9 @@ const AdminAdsManagement = () => {
     try {
       const response = await API.get("/ads/all");
       const adsData = response.data || [];
-      setAds([...adsData]);
+      setAds(adsData);
 
+      // Calculate stats
       const totalAds = adsData.length;
       const pendingAds = adsData.filter((ad) => ad.status === "pending").length;
       const approvedAds = adsData.filter(
@@ -106,22 +108,8 @@ const AdminAdsManagement = () => {
       const response = await API.get("/payments/admin/pending");
       const paymentsData = response.data.payments || [];
 
-      const processedPayments = await Promise.all(
-        paymentsData.map(async (payment) => {
-          try {
-            if (payment.itemId && typeof payment.itemId === "string") {
-              const adResponse = await API.get(`/ads/${payment.itemId}`);
-              return { ...payment, adDetails: adResponse.data };
-            }
-            return payment;
-          } catch (error) {
-            console.error("Error fetching ad details:", error);
-            return payment;
-          }
-        })
-      );
-
-      setPendingPayments(processedPayments);
+      // Don't fetch ad details for each payment - it's already populated in backend
+      setPendingPayments(paymentsData);
     } catch (error) {
       console.error("Error fetching pending payments:", error);
       setPendingPayments([]);
@@ -152,7 +140,38 @@ const AdminAdsManagement = () => {
   }, []);
 
   const hasPaymentProof = (payment) => {
-    return Boolean(payment?.proofImage);
+    if (!payment) return false;
+
+    // Check images array
+    if (payment.images && payment.images.length > 0) {
+      const imageObj = payment.images[0];
+      if (imageObj && (imageObj.url || imageObj.publicId)) {
+        return true;
+      }
+    }
+
+    // Check paymentProof field
+    if (payment.paymentProof) {
+      if (
+        typeof payment.paymentProof === "string" &&
+        payment.paymentProof.trim() !== ""
+      ) {
+        return true;
+      }
+      if (
+        typeof payment.paymentProof === "object" &&
+        payment.paymentProof.url
+      ) {
+        return true;
+      }
+    }
+
+    // Check proofImage field
+    if (payment.proofImage && payment.proofImage.trim() !== "") {
+      return true;
+    }
+
+    return false;
   };
 
   // Fetch seller profile
@@ -240,29 +259,116 @@ const AdminAdsManagement = () => {
   // Update ad status
   const updateAdStatus = async (adId, newStatus, rejectionReason = "") => {
     try {
-      const requestData = { status: newStatus };
-      if (newStatus === "rejected" && rejectionReason) {
-        requestData.rejectionReason = rejectionReason;
-      }
+      const requestData = {
+        status: newStatus,
+        ...(newStatus === "rejected" && { rejectionReason }),
+      };
+
+      // Show immediate feedback
+      toast.info(`Updating ad status to ${newStatus}...`, {
+        toastId: "adStatusUpdate",
+        autoClose: false,
+      });
 
       const response = await API.put(`/ads/${adId}/status`, requestData);
 
       if (response.data) {
+        toast.dismiss("adStatusUpdate");
         toast.success(`Ad ${newStatus} successfully`);
-        await fetchAds();
-        await fetchPendingPayments();
-        await fetchPaymentStats();
+
+        // Update local state immediately
+        setAds((prevAds) =>
+          prevAds.map((ad) =>
+            ad._id === adId
+              ? {
+                  ...ad,
+                  status: newStatus,
+                  ...(newStatus === "rejected" && { rejectionReason }),
+                  ...(newStatus === "approved" && {
+                    approvedAt: new Date().toISOString(),
+                    isActive: false, // Approved ads are not active until payment
+                  }),
+                }
+              : ad
+          )
+        );
+
+        // Update stats
+        setStats((prevStats) => {
+          const updatedStats = { ...prevStats };
+
+          // Find the ad to determine its previous status
+          const ad = ads.find((a) => a._id === adId);
+          const oldStatus = ad?.status;
+
+          // Only update counts if status actually changed
+          if (oldStatus && oldStatus !== newStatus) {
+            // Decrement old status count
+            if (oldStatus === "pending") updatedStats.pendingAds -= 1;
+            if (oldStatus === "approved") updatedStats.approvedAds -= 1;
+            if (oldStatus === "rejected") updatedStats.rejectedAds -= 1;
+
+            // Increment new status count
+            if (newStatus === "pending") updatedStats.pendingAds += 1;
+            if (newStatus === "approved") updatedStats.approvedAds += 1;
+            if (newStatus === "rejected") updatedStats.rejectedAds += 1;
+          }
+
+          return updatedStats;
+        });
+
+        // Refresh data in background without setTimeout
+        Promise.all([
+          fetchAds(),
+          fetchPendingPayments(),
+          fetchPaymentStats(),
+        ]).catch((err) => {
+          console.error("Background refresh failed:", err);
+        });
       }
 
       hideConfirmationModal();
       if (showDetailModal) setShowDetailModal(false);
     } catch (error) {
+      toast.dismiss("adStatusUpdate");
       console.error("Error updating ad status:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to update ad status"
-      );
+
+      let errorMessage = "Failed to update ad status";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 404) {
+        errorMessage = "Ad not found";
+      } else if (error.response?.status === 401) {
+        errorMessage = "Unauthorized. Please login again.";
+      }
+
+      toast.error(errorMessage);
       hideConfirmationModal();
     }
+  };
+
+  const getPaymentProofUrl = (payment) => {
+    if (!payment) return null;
+
+    // Check images array first (new format)
+    if (payment.images && payment.images.length > 0) {
+      const imageObj = payment.images[0];
+      if (imageObj) {
+        return getImageUrl(imageObj);
+      }
+    }
+
+    // Check paymentProof field
+    if (payment.paymentProof) {
+      return getImageUrl(payment.paymentProof);
+    }
+
+    // Check proofImage field
+    if (payment.proofImage) {
+      return getImageUrl(payment.proofImage);
+    }
+
+    return null;
   };
 
   // Toggle ad active status
@@ -357,28 +463,37 @@ const AdminAdsManagement = () => {
   };
 
   // Handle confirm action
-  const handleConfirmAction = () => {
+  const handleConfirmAction = async () => {
     const { type, adId, adTitle, rejectionReason } = confirmationModal;
 
-    switch (type) {
-      case "approve":
-        updateAdStatus(adId, "approved");
-        break;
-      case "reject":
-        if (!rejectionReason || rejectionReason.trim() === "") {
-          toast.error("Please enter a rejection reason");
-          return;
-        }
-        updateAdStatus(adId, "rejected", rejectionReason);
-        break;
-      case "activate":
-        toggleAdActive(adId, true);
-        break;
-      case "pause":
-        toggleAdActive(adId, false);
-        break;
-      default:
-        hideConfirmationModal();
+    setIsConfirming(true); // Start loading
+
+    try {
+      switch (type) {
+        case "approve":
+          await updateAdStatus(adId, "approved");
+          break;
+        case "reject":
+          if (!rejectionReason || rejectionReason.trim() === "") {
+            toast.error("Please enter a rejection reason");
+            setIsConfirming(false);
+            return;
+          }
+          await updateAdStatus(adId, "rejected", rejectionReason);
+          break;
+        case "activate":
+          await toggleAdActive(adId, true);
+          break;
+        case "pause":
+          await toggleAdActive(adId, false);
+          break;
+        default:
+          hideConfirmationModal();
+      }
+    } catch (error) {
+      console.error("Error in confirm action:", error);
+    } finally {
+      setIsConfirming(false);
     }
   };
 
@@ -609,13 +724,21 @@ const AdminAdsManagement = () => {
               </button>
               <button
                 onClick={handleConfirmAction}
-                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition ${getConfirmButtonColor()}`}
+                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition flex items-center justify-center ${getConfirmButtonColor()}`}
                 disabled={
-                  confirmationModal.type === "reject" &&
-                  !confirmationModal.rejectionReason.trim()
+                  (confirmationModal.type === "reject" &&
+                    !confirmationModal.rejectionReason.trim()) ||
+                  isConfirming
                 }
               >
-                Confirm
+                {isConfirming ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  "Confirm"
+                )}
               </button>
             </div>
           </div>
@@ -628,16 +751,7 @@ const AdminAdsManagement = () => {
   const PaymentDetailModal = () => {
     if (!showPaymentDetailModal || !selectedPayment) return null;
 
-    const getPaymentProofUrl = () => {
-      if (!selectedPayment.proofImage) return null;
-      if (selectedPayment.proofImage.startsWith("http"))
-        return selectedPayment.proofImage;
-      if (selectedPayment.proofImage.startsWith("/"))
-        return `https://nextrade-backend-production-a486.up.railway.app${selectedPayment.proofImage}`;
-      return `https://nextrade-backend-production-a486.up.railway.app/uploads/${selectedPayment.proofImage}`;
-    };
-
-    const paymentProofUrl = getPaymentProofUrl();
+    const paymentProofUrl = getPaymentProofUrl(selectedPayment);
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
