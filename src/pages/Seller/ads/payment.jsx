@@ -67,13 +67,11 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
   const handleImageUpload = async (file) => {
     if (!file) return;
 
-    // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File size too large. Maximum size is 5MB.");
       return;
     }
 
-    // Check file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload an image file");
       return;
@@ -84,25 +82,17 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
       const formData = new FormData();
       formData.append("image", file);
 
-      // Use your existing upload endpoint
       const response = await API.post("/upload/payment/proof", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      console.log("Upload response:", response.data);
-
-      // Get image URL from response (checking different possible response structures)
       let imageUrl = "";
       if (response.data.imageUrl) {
         imageUrl = response.data.imageUrl;
       } else if (response.data.url) {
         imageUrl = response.data.url;
-      } else if (response.data.image && response.data.image.url) {
-        imageUrl = response.data.image.url;
-      } else if (response.data.data && response.data.data.imageUrl) {
-        imageUrl = response.data.data.imageUrl;
       }
 
       if (!imageUrl) {
@@ -114,33 +104,9 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
       toast.success("Payment proof uploaded successfully");
     } catch (error) {
       console.error("Upload error:", error);
-      console.error("Error response:", error.response?.data);
-
-      // Try alternative endpoint if first fails
-      try {
-        toast.info("Trying alternative upload method...");
-        const altResponse = await API.post(
-          "/upload/products/single",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-
-        if (altResponse.data.imageUrl) {
-          setProofImageUrl(altResponse.data.imageUrl);
-          setProofImage(file);
-          toast.success("Payment proof uploaded successfully");
-        }
-      } catch (altError) {
-        toast.error(
-          error.response?.data?.message ||
-            altError.response?.data?.message ||
-            "Failed to upload payment proof"
-        );
-      }
+      toast.error(
+        error.response?.data?.message || "Failed to upload payment proof"
+      );
     } finally {
       setUploading(false);
     }
@@ -163,27 +129,14 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
   const handleCompletePayment = async () => {
     setProcessing(true);
     try {
-      console.log("Completing payment for ad:", ad._id);
-      console.log("Selected method:", selectedMethod);
-      console.log("Payment ID:", ad.payment?._id);
-
       if (!ad.payment?._id) {
         throw new Error("Payment record not found. Please contact support.");
       }
 
-      console.log("Processing bank transfer...");
-
-      // For bank transfer, update method and upload proof
-      if (!ad.payment.method || ad.payment.method === "pending") {
-        await API.put(`/payments/${ad.payment._id}/method`, {
-          method: "bank_transfer",
-        });
-      }
       if (proofImage) {
         const proofFormData = new FormData();
         proofFormData.append("image", proofImage);
 
-        // Use the payment-specific upload proof endpoint
         await API.post(
           `/payments/${ad.payment._id}/upload-proof`,
           proofFormData,
@@ -206,11 +159,7 @@ const PaymentModal = ({ ad, onClose, onPaymentComplete }) => {
         throw new Error("No payment proof provided");
       }
 
-      toast.success(
-        "Payment proof submitted successfully! Your ad will be activated after admin verification (usually within 24 hours)."
-      );
-
-      // Close modal and refresh
+      toast.success("Payment proof submitted successfully!");
       onPaymentComplete();
     } catch (error) {
       console.error("Payment completion error:", error);

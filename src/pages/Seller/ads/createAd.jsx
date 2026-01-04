@@ -451,109 +451,67 @@ const CreateAd = ({ onClose, onAdCreated }) => {
 
   //  Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!validateForm()) {
-      toast.error("Please fix the form errors before submitting");
+  if (!validateForm()) {
+    toast.error("Please fix the form errors before submitting");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const startDate = new Date(formData.startDate);
+    let endDate;
+
+    if (dateSelectionMode === "duration") {
+      endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + parseInt(selectedDuration));
+    } else {
+      endDate = new Date(formData.endDate);
+    }
+
+    const adFormData = new FormData();
+    
+    if (imageFile) {
+      adFormData.append("image", imageFile);
+    } else {
+      toast.error("Please select an image for your ad");
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
+    adFormData.append("title", formData.title);
+    adFormData.append("description", formData.description);
+    adFormData.append("link", formData.link);
+    adFormData.append("targetCategory", formData.targetCategory);
+    adFormData.append("startDate", startDate.toISOString());
+    adFormData.append("endDate", endDate.toISOString());
+    adFormData.append("duration", parseInt(formData.duration));
+    adFormData.append("totalCost", calculatedPrice);
 
-    try {
-      let imageData = null;
+    const createAdResponse = await API.post("/ads", adFormData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
-      // Upload image first
-      if (imageFile) {
-        const imageFormData = new FormData();
-        imageFormData.append("image", imageFile);
-
-        const uploadResponse = await API.post(
-          "/upload/products/single",
-          imageFormData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-
-        // Get the full image object from upload response
-        imageData = {
-          url: uploadResponse.data.imageUrl,
-          publicId: uploadResponse.data.publicId,
-        };
-
-        setImageUrl(uploadResponse.data.imageUrl);
-      }
-
-      // Calculate end date based on selection mode
-      const startDate = new Date(formData.startDate);
-      let endDate;
-
-      if (dateSelectionMode === "duration") {
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + parseInt(selectedDuration));
-      } else {
-        endDate = new Date(formData.endDate);
-      }
-
-      // Create the ad using correct data structure
-      const adData = {
-        title: formData.title,
-        description: formData.description,
-        link: formData.link,
-        targetCategory: formData.targetCategory,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        duration: parseInt(formData.duration),
-        totalCost: calculatedPrice,
-        images: imageData ? [imageData] : [],
-      };
-
-      console.log("Creating ad with data:", adData);
-
-      const adFormData = new FormData();
-      adFormData.append("title", formData.title);
-      adFormData.append("description", formData.description);
-      adFormData.append("link", formData.link);
-      adFormData.append("targetCategory", formData.targetCategory);
-      adFormData.append("startDate", startDate.toISOString());
-      adFormData.append("endDate", endDate.toISOString());
-      adFormData.append("duration", parseInt(formData.duration));
-      adFormData.append("totalCost", calculatedPrice);
-
-      if (imageFile) {
-        adFormData.append("image", imageFile);
-      }
-
-      const createAdResponse = await API.post("/ads", adFormData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      // Call the success callback with correct response structure
-      if (createAdResponse.data && createAdResponse.data.ad) {
-        onAdCreated(createAdResponse.data.ad);
-      } else {
-        onAdCreated(createAdResponse.data);
-      }
-
-      toast.success("Ad created successfully! It's now pending approval.");
-    } catch (error) {
-      console.error("Error creating ad:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        "Failed to create advertisement. Please try again.";
-      setErrors({
-        submit: errorMessage,
-      });
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
+    if (createAdResponse.data && createAdResponse.data.ad) {
+      onAdCreated(createAdResponse.data.ad);
+    } else {
+      onAdCreated(createAdResponse.data);
     }
-  };
+
+    toast.success("Ad created successfully! It's now pending approval.");
+  } catch (error) {
+    console.error("Error creating ad:", error);
+    const errorMessage = error.response?.data?.message || "Failed to create advertisement. Please try again.";
+    setErrors({ submit: errorMessage });
+    toast.error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const clearImage = () => {
     setImagePreview(null);

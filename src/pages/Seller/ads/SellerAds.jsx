@@ -416,17 +416,14 @@ const SellerAds = () => {
   const getImageUrl = (imageData) => {
     if (!imageData) return "/placeholder.png";
 
-    // If it's already a string URL
     if (typeof imageData === "string") {
       return imageData.startsWith("http") ? imageData : "/placeholder.png";
     }
 
-    // If it's an object with url property
     if (typeof imageData === "object" && imageData !== null) {
       if (imageData.url && typeof imageData.url === "string") {
         return imageData.url;
       }
-      // Try common property names
       const possibleUrls = [
         imageData.secure_url,
         imageData.path,
@@ -440,9 +437,7 @@ const SellerAds = () => {
       }
     }
 
-    // If it's an array (like your ads have images array)
     if (Array.isArray(imageData) && imageData.length > 0) {
-      // Get the first image object
       return getImageUrl(imageData[0]);
     }
 
@@ -610,15 +605,6 @@ const SellerAds = () => {
     const isPaid = paymentStatus === "completed";
 
     return isPaid && !hasEnded;
-  };
-
-  // Show activation button for paid ads
-  const shouldShowActivationButton = (ad) => {
-    if (ad.status !== "approved") return false;
-    const paymentStatus = getAdPaymentStatus(ad);
-    const hasEnded = new Date(ad.endDate) < new Date();
-
-    return paymentStatus === "completed" && !hasEnded;
   };
 
   // Loading state
@@ -954,7 +940,7 @@ const SellerAds = () => {
                     {ad?.images && ad.images.length > 0 ? (
                       <>
                         <img
-                          src={getImageUrl(ad.images)} // Pass the images array
+                          src={getImageUrl(ad.images)}
                           alt={ad?.title || "Advertisement"}
                           className="object-cover w-full h-full"
                           onError={(e) => {
