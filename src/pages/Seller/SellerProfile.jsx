@@ -71,16 +71,10 @@ export default function SellerProfile() {
   // image URL construction
   const getProfileImageUrl = (imagePath) => {
     if (!imagePath) return null;
-
-    // Cloudinary full URL check
     if (imagePath.startsWith("http")) return imagePath;
-
-    // If you ever have local uploads
     if (imagePath.startsWith("/uploads")) {
       return `https://nextrade-backend-production-a486.up.railway.app${imagePath}`;
     }
-
-    // Otherwise, just return as is
     return imagePath;
   };
 
@@ -420,6 +414,8 @@ export default function SellerProfile() {
       setImgError(false);
     };
 
+    console.log("Rendering profile image:", imageData, imageUrl, imgError);
+
     if (imageUrl && !imgError) {
       return (
         <div className="relative">
@@ -449,6 +445,10 @@ export default function SellerProfile() {
       </div>
     );
   };
+
+  useEffect(() => {
+    setImgError(false);
+  }, [imageUrl]);
 
   const completeBusinessProfile = async () => {
     try {
