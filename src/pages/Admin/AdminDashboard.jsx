@@ -771,6 +771,7 @@ const AdminDashboard = () => {
               </Link>
             </div>
 
+            {/* Pending Seller */}
             <div className="space-y-2">
               {pendingSellersList.slice(0, 3).map((seller) => {
                 const businessProfile = seller.businessProfile || {};
