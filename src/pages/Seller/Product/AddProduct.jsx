@@ -415,22 +415,20 @@ const AddProduct = () => {
     setUploading(true);
     try {
       const uploadFormData = new FormData();
-      files.forEach((file) => {
-        uploadFormData.append("images", file);
-      });
+      files.forEach((file) => uploadFormData.append("images", file));
 
       const response = await API.post(
         "/upload/products/multiple",
         uploadFormData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
           timeout: 30000,
         }
       );
 
+      // Directly append the returned URLs
       setGalleryImages((prev) => [...prev, ...response.data.imageUrls]);
+
       toast.success(`${response.data.count} images uploaded successfully`);
     } catch (error) {
       toast.error(
