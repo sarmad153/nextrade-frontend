@@ -385,7 +385,10 @@ const AllProducts = () => {
 
   const ProductImage = ({ product, className = "w-8 h-8" }) => {
     const hasImages = product.images && product.images.length > 0;
-    const imageUrl = hasImages ? product.images[0] : null;
+
+    // Get the URL from the image object
+    const imageObj = hasImages ? product.images[0] : null;
+    const imageUrl = imageObj?.url || null;
 
     return (
       <div
@@ -394,7 +397,7 @@ const AllProducts = () => {
         {imageUrl ? (
           <img
             src={
-              imageUrl.startsWith("http")
+              typeof imageUrl === "string" && imageUrl.startsWith("http")
                 ? imageUrl
                 : `https://nextrade-backend-production-a486.up.railway.app/${imageUrl}`
             }
