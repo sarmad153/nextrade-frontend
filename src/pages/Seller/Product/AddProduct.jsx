@@ -430,21 +430,13 @@ const AddProduct = () => {
       );
 
       // Directly append the returned URLs
-      if (response.data.imageUrls && Array.isArray(response.data.imageUrls)) {
-        // Create image objects from URLs
-        const newImages = response.data.imageUrls.map((url) => ({
-          url: url,
-          publicId: null,
-        }));
-
-        // Add to gallery images
-        setGalleryImages((prev) => [...prev, ...newImages]);
+      if (response.data.images && Array.isArray(response.data.images)) {
+        // Add to gallery images - response.data.images already has {url, publicId} objects
+        setGalleryImages((prev) => [...prev, ...response.data.images]);
         toast.success(`${response.data.count} images uploaded successfully`);
       } else {
         throw new Error("No image data returned from server");
       }
-
-      toast.success(`${response.data.count} images uploaded successfully`);
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to upload gallery images"
