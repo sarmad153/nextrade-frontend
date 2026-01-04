@@ -1339,7 +1339,7 @@ const ManageProducts = () => {
                     {editingProduct.images?.map((image, index) => (
                       <div key={index} className="relative">
                         <img
-                          src={image}
+                          src={image.url || image}
                           alt={`Product ${index + 1}`}
                           className="w-full h-24 object-cover rounded-lg"
                         />
