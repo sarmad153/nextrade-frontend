@@ -229,18 +229,64 @@ const BuyerAdCarousel = () => {
     };
   };
 
-  const getImageUrl = (image) => {
-    if (!image) {
+  const getImageUrl = (imageData) => {
+    if (!imageData) {
       return "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=400&fit=crop";
     }
 
-    if (image.startsWith("http")) {
-      return image;
-    } else if (image.startsWith("/uploads")) {
-      return `https://nextrade-backend-production-a486.up.railway.app/${image}`;
-    } else {
-      return `https://nextrade-backend-production-a486.up.railway.app//uploads/ads/${image}`;
+    // If it's already a URL
+    if (typeof imageData === "string") {
+      // Check if it's a Cloudinary URL
+      if (imageData.includes("cloudinary.com")) {
+        return imageData;
+      }
+      if (imageData.startsWith("http")) return imageData;
+      if (imageData.startsWith("/uploads/")) {
+        return `https://nextrade-backend-production-a486.up.railway.app${imageData}`;
+      }
+      return `https://nextrade-backend-production-a486.up.railway.app/uploads/${imageData}`;
     }
+
+    // If it's an object with url property (Cloudinary object)
+    if (typeof imageData === "object" && imageData !== null) {
+      if (imageData.url) return getImageUrl(imageData.url);
+      if (imageData.secure_url) return imageData.secure_url;
+      if (imageData.publicId) {
+        // Convert Cloudinary public_id to URL
+        return `https://res.cloudinary.com/${
+          process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "your-cloud-name"
+        }/image/upload/${imageData.publicId}`;
+      }
+      if (imageData.path) return getImageUrl(imageData.path);
+    }
+
+    // If it's an array (images array from backend)
+    if (Array.isArray(imageData) && imageData.length > 0) {
+      // Get first image from array
+      return getImageUrl(imageData[0]);
+    }
+
+    return "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=400&fit=crop";
+  };
+
+  // Get ad image
+  const getAdImage = (ad) => {
+    if (!ad) return null;
+
+    // Try different possible image properties in order
+    const possibleImageSources = [
+      ad.images,
+      ad.image,
+      ad.imageUrl,
+      ad.image_url,
+    ].filter(Boolean);
+
+    for (const source of possibleImageSources) {
+      const url = getImageUrl(source);
+      if (url) return url;
+    }
+
+    return null;
   };
 
   const getSellerName = (ad) => {
@@ -361,7 +407,7 @@ const BuyerAdCarousel = () => {
             onClick={() => handleAdClick(currentAd)}
           >
             <img
-              src={getImageUrl(currentAd.image)}
+              src={getAdImage(currentAd)}
               alt={currentAd.title}
               className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
               onError={(e) => {
