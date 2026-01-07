@@ -254,7 +254,7 @@ const BuyerAdCarousel = () => {
       if (imageData.publicId) {
         // Convert Cloudinary public_id to URL
         return `https://res.cloudinary.com/${
-          process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "your-cloud-name"
+          process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "cloud-name"
         }/image/upload/${imageData.publicId}`;
       }
       if (imageData.path) return getImageUrl(imageData.path);

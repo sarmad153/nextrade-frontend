@@ -12,6 +12,9 @@ import {
   FaShieldAlt,
   FaClock,
   FaWhatsapp,
+  FaBars,
+  FaChevronDown,
+  FaChevronUp,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import API from "../../api/axiosInstance";
@@ -28,11 +31,14 @@ const ContactFormModal = ({ isOpen, onClose }) => {
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Check authentication and load user data
   useEffect(() => {
     if (isOpen) {
       checkAuthentication();
+      // Reset mobile menu state on open
+      setIsMobileMenuOpen(false);
     }
   }, [isOpen]);
 
@@ -138,38 +144,59 @@ const ContactFormModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000] p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl transform transition-all border border-neutral-200 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000] p-2 sm:p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl transform transition-all border border-neutral-200 flex flex-col max-h-[95vh] sm:max-h-[90vh] mx-auto">
         {/* Header with Gradient */}
-        <div className="bg-gradient-primary-vertical rounded-t-xl p-6 text-white flex-shrink-0">
+        <div className="bg-gradient-primary-vertical rounded-t-xl p-4 sm:p-6 text-white flex-shrink-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-white bg-opacity-20 rounded-xl">
-                <FaHeadset className="text-2xl text-primary-600" />
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="p-2 sm:p-3 bg-white bg-opacity-20 rounded-lg sm:rounded-xl">
+                <FaHeadset className="text-xl sm:text-2xl text-primary-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">Contact Support</h2>
-                <p className="text-blue-100 text-sm mt-1">
+                <h2 className="text-lg sm:text-2xl font-bold">
+                  Contact Support
+                </h2>
+                <p className="text-blue-100 text-xs sm:text-sm mt-1">
                   Get help with your orders, products, or any questions
                 </p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-blue-200 transition-colors p-2 hover:bg-white hover:bg-opacity-10 rounded-lg"
-            >
-              <FaTimes className="text-xl" />
-            </button>
+            <div className="flex items-center space-x-2">
+              {/* Mobile Toggle Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden text-white hover:text-blue-200 transition-colors p-2 hover:bg-white hover:bg-opacity-10 rounded-lg"
+              >
+                {isMobileMenuOpen ? <FaChevronUp /> : <FaChevronDown />}
+              </button>
+              <button
+                onClick={onClose}
+                className="text-white hover:text-blue-200 transition-colors p-2 hover:bg-white hover:bg-opacity-10 rounded-lg"
+              >
+                <FaTimes className="text-xl" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Main Content - Horizontal Layout */}
-        <div className="flex flex-1 min-h-0">
-          {/* Left Side - Support Options */}
-          <div className="w-1/3 bg-gradient-to-b from-blue-50 to-purple-50 p-6 border-r border-neutral-200 flex flex-col">
+        {/* Main Content - Responsive Layout */}
+        <div className="flex flex-col lg:flex-row flex-1 min-h-0">
+          {/* Support Options Panel - Hidden on mobile when collapsed */}
+          <div
+            className={`
+            ${isMobileMenuOpen ? "block" : "hidden"} 
+            lg:block lg:w-1/3 
+            bg-gradient-to-b from-blue-50 to-purple-50 
+            p-4 sm:p-6 
+            border-b lg:border-r border-neutral-200 
+            flex flex-col
+            transition-all duration-300
+          `}
+          >
             {/* Authentication Status */}
             {!isLoggedIn && (
-              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-amber-100 rounded-lg">
                     <FaShieldAlt className="text-amber-600" />
@@ -194,7 +221,7 @@ const ContactFormModal = ({ isOpen, onClose }) => {
             )}
 
             {isLoggedIn && (
-              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-emerald-100 rounded-lg">
                     <FaCheck className="text-emerald-600" />
@@ -203,7 +230,7 @@ const ContactFormModal = ({ isOpen, onClose }) => {
                     <p className="text-emerald-800 font-medium text-sm">
                       Welcome back!
                     </p>
-                    <p className="text-emerald-600 text-xs mt-1">
+                    <p className="text-emerald-600 text-xs mt-1 truncate">
                       {user?.email}
                     </p>
                   </div>
@@ -213,12 +240,12 @@ const ContactFormModal = ({ isOpen, onClose }) => {
 
             {/* Support Options */}
             <div className="space-y-4 flex-1">
-              <h3 className="font-semibold text-neutral-700 text-lg">
+              <h3 className="font-semibold text-neutral-700 text-base sm:text-lg">
                 Quick Support
               </h3>
 
               <div className="space-y-3">
-                <div className="p-4 bg-white border border-neutral-200 rounded-lg hover:border-blue-300 transition-colors cursor-pointer">
+                <div className="p-3 sm:p-4 bg-white border border-neutral-200 rounded-lg hover:border-blue-300 transition-colors cursor-pointer">
                   <div className="flex items-center space-x-3">
                     <div className="p-2 bg-blue-100 rounded-lg">
                       <FaHeadset className="text-blue-600 text-sm" />
@@ -236,7 +263,7 @@ const ContactFormModal = ({ isOpen, onClose }) => {
 
                 <button
                   onClick={handleWhatsAppRedirect}
-                  className="w-full p-4 bg-white border border-neutral-200 rounded-lg hover:border-green-300 transition-colors text-left"
+                  className="w-full p-3 sm:p-4 bg-white border border-neutral-200 rounded-lg hover:border-green-300 transition-colors text-left"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="p-2 bg-green-100 rounded-lg">
@@ -255,8 +282,8 @@ const ContactFormModal = ({ isOpen, onClose }) => {
               </div>
 
               {/* Support Info */}
-              <div className="mt-auto pt-6 border-t border-neutral-200">
-                <div className="space-y-3 text-sm text-neutral-600">
+              <div className="mt-4 sm:mt-auto pt-4 sm:pt-6 border-t border-neutral-200">
+                <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-neutral-600">
                   <div className="flex items-center space-x-2">
                     <FaClock className="text-blue-500 text-xs" />
                     <span>24/7 Email Support</span>
@@ -274,16 +301,16 @@ const ContactFormModal = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* Right Side - Contact Form */}
-          <div className="w-2/3 p-6 flex flex-col min-h-0">
+          {/* Contact Form */}
+          <div className="w-full lg:w-2/3 p-4 sm:p-6 flex flex-col min-h-0">
             <form
               onSubmit={handleSubmit}
               className="space-y-4 flex-1 min-h-0 flex flex-col"
             >
-              <div className="grid grid-cols-2 gap-4 flex-shrink-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 flex-shrink-0">
                 {/* Name Field */}
                 <div className="space-y-2">
-                  <div className="flex">
+                  <div className="flex items-center">
                     <label className="flex items-center text-sm font-semibold text-neutral-700">
                       <FaUser className="mr-2 text-blue-500 text-xs" />
                       Your Name
@@ -376,8 +403,8 @@ const ContactFormModal = ({ isOpen, onClose }) => {
                   value={formData.message}
                   onChange={handleChange}
                   required
-                  className="flex-1 w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-neutral-800 placeholder-neutral-500 text-sm bg-white hover:border-neutral-400 resize-none min-h-[120px]"
-                  placeholder="Please describe your issue or question in detail. Include order numbers, product details, or any relevant information to help us assist you better..."
+                  className="flex-1 w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-neutral-800 placeholder-neutral-500 text-sm bg-white hover:border-neutral-400 resize-none min-h-[100px] sm:min-h-[120px]"
+                  placeholder="Please describe your issue or question in detail..."
                 />
               </div>
 
@@ -396,12 +423,14 @@ const ContactFormModal = ({ isOpen, onClose }) => {
                 ) : isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-3"></div>
-                    Sending Your Message...
+                    <span className="text-sm sm:text-base">
+                      Sending Your Message...
+                    </span>
                   </>
                 ) : (
                   <>
                     <FaPaperPlane className="mr-3" />
-                    Send Message
+                    <span className="text-sm sm:text-base">Send Message</span>
                   </>
                 )}
               </button>
