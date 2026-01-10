@@ -96,7 +96,7 @@ const BuyerOrders = () => {
     return (
       <button
         onClick={() => handleReviewProduct(product)}
-        className="flex items-center px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+        className="flex items-center px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap"
       >
         <FaEdit className="mr-1" size={12} />
         Write Review
@@ -159,8 +159,8 @@ const BuyerOrders = () => {
         : `Rs ${item.appliedTier.discountValue} off`;
 
     return (
-      <div className="flex items-center mt-1 text-xs">
-        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full flex items-center">
+      <div className="flex items-center mt-1">
+        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs flex items-center whitespace-nowrap">
           <FaTag className="mr-1" />
           Bulk Discount: {discountText}
         </span>
@@ -176,8 +176,8 @@ const BuyerOrders = () => {
     const savingsPercentage = ((savings / originalTotal) * 100).toFixed(1);
 
     return (
-      <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg mb-4">
-        <div className="flex items-center text-green-800">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg mb-4">
+        <div className="flex items-center text-green-800 mb-2 sm:mb-0">
           <FaTag className="mr-2" />
           <span className="font-medium">Bulk Purchase Savings</span>
         </div>
@@ -196,8 +196,8 @@ const BuyerOrders = () => {
       const originalPrice =
         (item.product?.price || item.unitPrice) * item.quantity;
       return (
-        <div className="text-right">
-          <div className="flex items-center justify-end space-x-2">
+        <div className="text-right min-w-[100px]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end sm:space-x-2">
             <span className="text-sm text-gray-500 line-through">
               Rs {originalPrice}
             </span>
@@ -213,9 +213,11 @@ const BuyerOrders = () => {
     }
 
     return (
-      <span className="font-semibold text-neutral-800">
-        Rs {item.finalPrice}
-      </span>
+      <div className="text-right min-w-[80px]">
+        <span className="font-semibold text-neutral-800">
+          Rs {item.finalPrice}
+        </span>
+      </div>
     );
   };
 
@@ -256,16 +258,13 @@ const BuyerOrders = () => {
       return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
     }
 
-    // If it's a string
     if (typeof imageData === "string") {
       return imageData.startsWith("http")
         ? imageData
         : `https://nextrade-backend-production-a486.up.railway.app/${imageData}`;
     }
 
-    // If it's an object
     if (typeof imageData === "object" && imageData !== null) {
-      // Try to extract URL from common properties
       const url =
         imageData.url ||
         imageData.secure_url ||
@@ -278,43 +277,45 @@ const BuyerOrders = () => {
       }
     }
 
-    // Fallback
     return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
   };
+
   const OrderDetailsModal = ({ order, onClose }) => {
     if (!order) return null;
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between p-6 border-b border-neutral-200">
-            <div>
-              <h2 className="text-2xl font-bold text-neutral-800">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-neutral-200">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg sm:text-2xl font-bold text-neutral-800 truncate">
                 Order Details
               </h2>
-              <p className="text-neutral-600">Order #{order._id}</p>
+              <p className="text-neutral-600 text-sm truncate">
+                Order #{order._id}
+              </p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
+              className="ml-4 p-2 hover:bg-neutral-100 rounded-full transition-colors flex-shrink-0"
             >
               <FaTimes className="text-neutral-500" />
             </button>
           </div>
 
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-4 sm:p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-4">
                 <div>
                   <h3 className="font-semibold text-neutral-800 mb-2 flex items-center">
                     <FaUser className="mr-2" />
                     Customer Information
                   </h3>
-                  <div className="bg-neutral-50 p-4 rounded-lg">
-                    <p className="text-neutral-800">
+                  <div className="bg-neutral-50 p-3 sm:p-4 rounded-lg">
+                    <p className="text-neutral-800 break-words">
                       {order.shippingAddress?.fullName || "N/A"}
                     </p>
-                    <p className="text-neutral-600 text-sm mt-1">
+                    <p className="text-neutral-600 text-sm mt-1 break-words">
                       {order.user?.email || "N/A"}
                     </p>
                   </div>
@@ -325,11 +326,11 @@ const BuyerOrders = () => {
                     <FaMapMarkerAlt className="mr-2" />
                     Shipping Address
                   </h3>
-                  <div className="bg-neutral-50 p-4 rounded-lg">
-                    <p className="text-neutral-800">
+                  <div className="bg-neutral-50 p-3 sm:p-4 rounded-lg">
+                    <p className="text-neutral-800 break-words">
                       {order.shippingAddress?.address || "N/A"}
                     </p>
-                    <p className="text-neutral-600">
+                    <p className="text-neutral-600 break-words">
                       {order.shippingAddress?.city || "N/A"}
                       {order.shippingAddress?.postalCode &&
                         `, ${order.shippingAddress.postalCode}`}
@@ -344,11 +345,11 @@ const BuyerOrders = () => {
                     <FaPhone className="mr-2" />
                     Contact Information
                   </h3>
-                  <div className="bg-neutral-50 p-4 rounded-lg">
-                    <p className="text-neutral-800">
+                  <div className="bg-neutral-50 p-3 sm:p-4 rounded-lg">
+                    <p className="text-neutral-800 break-words">
                       Phone: {order.shippingAddress?.phone || "N/A"}
                     </p>
-                    <p className="text-neutral-800 mt-1">
+                    <p className="text-neutral-800 mt-1 break-words">
                       Email: {order.shippingAddress?.email || "N/A"}
                     </p>
                   </div>
@@ -358,26 +359,32 @@ const BuyerOrders = () => {
                   <h3 className="font-semibold text-neutral-800 mb-2">
                     Order Information
                   </h3>
-                  <div className="bg-neutral-50 p-4 rounded-lg space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-neutral-600">Order Date:</span>
-                      <span className="text-neutral-800">
+                  <div className="bg-neutral-50 p-3 sm:p-4 rounded-lg space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:justify-between">
+                      <span className="text-neutral-600 text-sm sm:text-base">
+                        Order Date:
+                      </span>
+                      <span className="text-neutral-800 text-sm sm:text-base">
                         {formatDate(order.createdAt)}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-neutral-600">Status:</span>
+                    <div className="flex flex-col sm:flex-row sm:justify-between">
+                      <span className="text-neutral-600 text-sm sm:text-base">
+                        Status:
+                      </span>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                           order.status
-                        )}`}
+                        )} mt-1 sm:mt-0`}
                       >
                         {order.status}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-neutral-600">Payment Method:</span>
-                      <span className="text-neutral-800">
+                    <div className="flex flex-col sm:flex-row sm:justify-between">
+                      <span className="text-neutral-600 text-sm sm:text-base">
+                        Payment Method:
+                      </span>
+                      <span className="text-neutral-800 text-sm sm:text-base">
                         {order.paymentMethod}
                       </span>
                     </div>
@@ -399,10 +406,10 @@ const BuyerOrders = () => {
                 {order.items?.map((item, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-neutral-50 rounded-lg gap-3"
                   >
-                    <div className="flex items-center space-x-4 flex-1">
-                      <div className="relative w-16 h-16 bg-neutral-200 rounded flex items-center justify-center">
+                    <div className="flex items-start space-x-3 flex-1 min-w-0">
+                      <div className="relative w-16 h-16 bg-neutral-200 rounded flex items-center justify-center flex-shrink-0">
                         {item.product?.images?.[0] ? (
                           <img
                             src={getImageUrl(item.product?.images?.[0])}
@@ -420,11 +427,11 @@ const BuyerOrders = () => {
                           </div>
                         )}
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-neutral-800">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-neutral-800 truncate">
                           {item.product?.name || "Product"}
                         </h4>
-                        <div className="flex items-center space-x-4 mt-1">
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
                           <p className="text-sm text-neutral-600">
                             Quantity: {item.quantity}
                           </p>
@@ -450,20 +457,20 @@ const BuyerOrders = () => {
             </div>
 
             <div className="border-t border-neutral-200 pt-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-lg font-semibold text-neutral-800">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                <div className="mb-3 sm:mb-0">
+                  <p className="text-base sm:text-lg font-semibold text-neutral-800">
                     Order Total
                   </p>
                   {calculateBulkSavings(order) > 0 && (
-                    <p className="text-green-600 text-sm">
+                    <p className="text-green-600 text-sm mt-1">
                       You saved Rs {calculateBulkSavings(order)} with bulk
                       discounts
                     </p>
                   )}
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-primary-600">
+                  <p className="text-xl sm:text-2xl font-bold text-primary-600">
                     Rs {order.totalAmount}
                   </p>
                 </div>
@@ -471,10 +478,10 @@ const BuyerOrders = () => {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 p-6 border-t border-neutral-200">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 p-4 sm:p-6 border-t border-neutral-200">
             <button
               onClick={onClose}
-              className="px-6 py-2 text-neutral-600 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
+              className="px-4 sm:px-6 py-2 text-neutral-600 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors order-2 sm:order-1"
             >
               Close
             </button>
@@ -484,7 +491,7 @@ const BuyerOrders = () => {
                   handleBuyAgain(order);
                   onClose();
                 }}
-                className="px-6 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
+                className="px-4 sm:px-6 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors order-1 sm:order-2"
               >
                 Buy Again
               </button>
@@ -497,9 +504,9 @@ const BuyerOrders = () => {
 
   const OrderItemWithReview = ({ item, orderStatus }) => {
     return (
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-        <div className="flex items-center space-x-3 flex-1">
-          <div className="relative w-12 h-12 bg-neutral-200 rounded flex items-center justify-center">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg gap-3">
+        <div className="flex items-start space-x-3 flex-1 min-w-0">
+          <div className="relative w-12 h-12 bg-neutral-200 rounded flex items-center justify-center flex-shrink-0">
             {item.product?.images?.[0] ? (
               <img
                 src={getImageUrl(item.product?.images?.[0])}
@@ -517,35 +524,43 @@ const BuyerOrders = () => {
               </div>
             )}
           </div>
-          <div className="flex-1">
-            <h4 className="font-medium text-neutral-800">
-              {item.product?.name || "Product"}
-              {item.appliedTier && (
-                <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                  Bulk Purchase
-                </span>
-              )}
-            </h4>
-            <div className="flex items-center space-x-4 mt-1">
-              <p className="text-sm text-neutral-600">
-                Quantity: {item.quantity}
-              </p>
-              {item.appliedTier && (
-                <p className="text-xs text-blue-600">
-                  {item.appliedTier.minQuantity}+ units tier
-                </p>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-1 mb-1">
+                  <h4 className="font-medium text-neutral-800 truncate">
+                    {item.product?.name || "Product"}
+                  </h4>
+                  {item.appliedTier && (
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full whitespace-nowrap">
+                      Bulk Purchase
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <p className="text-sm text-neutral-600">
+                    Quantity: {item.quantity}
+                  </p>
+                  {item.appliedTier && (
+                    <p className="text-xs text-blue-600">
+                      {item.appliedTier.minQuantity}+ units tier
+                    </p>
+                  )}
+                </div>
+                <BulkPricingBadge item={item} />
+              </div>
+
+              {orderStatus === "Delivered" && (
+                <div className="mt-2 sm:mt-0 sm:ml-4 flex-shrink-0">
+                  <ReviewButton product={item.product} />
+                </div>
               )}
             </div>
-            <BulkPricingBadge item={item} />
-
-            {orderStatus === "Delivered" && (
-              <div className="mt-2">
-                <ReviewButton product={item.product} />
-              </div>
-            )}
           </div>
         </div>
-        <ItemPriceDisplay item={item} />
+        <div className="self-end sm:self-center mt-2 sm:mt-0">
+          <ItemPriceDisplay item={item} />
+        </div>
       </div>
     );
   };
@@ -565,22 +580,24 @@ const BuyerOrders = () => {
     <div className="min-h-screen bg-background-light">
       <div className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-neutral-800">My Orders</h1>
-          <p className="mt-2 text-neutral-600">
+          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-800">
+            My Orders
+          </h1>
+          <p className="mt-2 text-neutral-600 text-sm sm:text-base">
             View and track your order history
           </p>
         </div>
 
         {orders.some((order) => calculateBulkSavings(order) > 0) && (
-          <div className="p-4 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <FaTag className="text-blue-600 mr-3 text-xl" />
+          <div className="p-3 sm:p-4 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-start sm:items-center">
+                <FaTag className="text-blue-600 mr-3 text-lg sm:text-xl mt-1 sm:mt-0 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-blue-800">
+                  <h3 className="font-semibold text-blue-800 text-sm sm:text-base">
                     Smart Bulk Shopping
                   </h3>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-xs sm:text-sm text-blue-700">
                     Total savings from bulk purchases: Rs{" "}
                     {orders.reduce(
                       (sum, order) => sum + calculateBulkSavings(order),
@@ -590,7 +607,7 @@ const BuyerOrders = () => {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full whitespace-nowrap">
                   {
                     orders.filter((order) => calculateBulkSavings(order) > 0)
                       .length
@@ -603,7 +620,7 @@ const BuyerOrders = () => {
         )}
 
         <div className="mb-6">
-          <div className="flex space-x-1 overflow-x-auto">
+          <div className="flex space-x-2 overflow-x-auto pb-2">
             {[
               "all",
               "pending",
@@ -615,7 +632,7 @@ const BuyerOrders = () => {
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium capitalize whitespace-nowrap ${
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize whitespace-nowrap flex-shrink-0 ${
                   activeFilter === filter
                     ? "bg-primary-600 text-white"
                     : "bg-white text-neutral-600 hover:bg-neutral-50"
@@ -627,16 +644,16 @@ const BuyerOrders = () => {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {filteredOrders.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg shadow">
-              <FaBox className="mx-auto text-4xl text-neutral-400 mb-4" />
-              <h3 className="text-lg font-semibold text-neutral-800 mb-2">
+            <div className="text-center py-8 sm:py-12 bg-white rounded-lg shadow">
+              <FaBox className="mx-auto text-3xl sm:text-4xl text-neutral-400 mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold text-neutral-800 mb-2">
                 {orders.length === 0
                   ? "No orders yet"
                   : "No orders match this filter"}
               </h3>
-              <p className="text-neutral-600 mb-4">
+              <p className="text-neutral-600 text-sm sm:text-base mb-4 px-4">
                 {orders.length === 0
                   ? "You haven't placed any orders yet."
                   : "Try selecting a different filter."}
@@ -644,7 +661,7 @@ const BuyerOrders = () => {
               {orders.length === 0 && (
                 <Link
                   to="/products"
-                  className="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                  className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm sm:text-base"
                 >
                   Start Shopping
                 </Link>
@@ -656,29 +673,31 @@ const BuyerOrders = () => {
                 key={order._id}
                 className="bg-white rounded-lg shadow overflow-hidden"
               >
-                <div className="px-6 py-4 border-b border-neutral-200">
+                <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-neutral-200">
                   <div className="flex flex-col justify-between md:flex-row md:items-center">
-                    <div className="flex items-center space-x-4">
-                      {getStatusIcon(order.status)}
-                      <div>
-                        <h3 className="font-semibold text-neutral-800">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0">
+                        {getStatusIcon(order.status)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-neutral-800 text-sm sm:text-base truncate">
                           Order #{order._id}
                         </h3>
-                        <p className="text-sm text-neutral-600">
+                        <p className="text-xs sm:text-sm text-neutral-600 truncate">
                           Placed on {formatDate(order.createdAt)}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4 mt-2 md:mt-0">
+                    <div className="flex items-center justify-between mt-2 md:mt-0 md:space-x-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                           order.status
-                        )}`}
+                        )} whitespace-nowrap`}
                       >
                         {order.status}
                       </span>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-primary-600">
+                      <div className="text-right ml-4">
+                        <div className="text-base sm:text-lg font-bold text-primary-600">
                           Rs {order.totalAmount}
                         </div>
                         {calculateBulkSavings(order) > 0 && (
@@ -691,10 +710,10 @@ const BuyerOrders = () => {
                   </div>
                 </div>
 
-                <div className="p-6">
+                <div className="p-3 sm:p-4 md:p-6">
                   <OrderSavings order={order} />
 
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {order.items.map((item, index) => (
                       <OrderItemWithReview
                         key={index}
@@ -704,25 +723,25 @@ const BuyerOrders = () => {
                     ))}
                   </div>
 
-                  <div className="flex flex-col justify-between pt-4 mt-4 border-t border-neutral-200 md:flex-row md:items-center">
-                    <div className="text-sm text-neutral-600">
-                      <p>
+                  <div className="flex flex-col justify-between pt-4 mt-4 border-t border-neutral-200 gap-4 md:flex-row md:items-center">
+                    <div className="text-xs sm:text-sm text-neutral-600 space-y-1">
+                      <p className="break-words">
                         Shipping:{" "}
                         {order.shippingAddress?.address ||
                           "Address not available"}
                       </p>
-                      <p className="mt-1">Payment: {order.paymentMethod}</p>
+                      <p>Payment: {order.paymentMethod}</p>
                       {calculateBulkSavings(order) > 0 && (
-                        <p className="mt-1 text-green-600">
+                        <p className="text-green-600">
                           <FaTag className="inline mr-1" />
                           Bulk discount applied on this order
                         </p>
                       )}
                     </div>
-                    <div className="flex space-x-3 mt-4 md:mt-0">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <button
                         onClick={() => handleViewDetails(order)}
-                        className="flex items-center px-4 py-2 text-primary-600 border border-primary-600 rounded-lg hover:bg-blue-50 hover:scale-105 transition-all"
+                        className="flex items-center justify-center px-3 sm:px-4 py-2 text-primary-600 border border-primary-600 rounded-lg hover:bg-blue-50 hover:scale-105 transition-all text-sm sm:text-base"
                       >
                         <FaEye className="mr-2" />
                         View Details
@@ -730,7 +749,7 @@ const BuyerOrders = () => {
                       {order.status === "Delivered" && (
                         <button
                           onClick={() => handleBuyAgain(order)}
-                          className="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
+                          className="px-3 sm:px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors text-sm sm:text-base"
                         >
                           Buy Again
                         </button>
@@ -744,10 +763,10 @@ const BuyerOrders = () => {
         </div>
 
         {filteredOrders.length > 0 && (
-          <div className="mt-8 text-center">
+          <div className="mt-6 sm:mt-8 text-center">
             <Link
               to="/products"
-              className="inline-flex items-center px-6 py-3 text-primary-600 hover:text-primary-700"
+              className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 text-primary-600 hover:text-primary-700 text-sm sm:text-base"
             >
               Continue Shopping
             </Link>
