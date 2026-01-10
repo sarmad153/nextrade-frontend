@@ -221,10 +221,12 @@ const AddProduct = () => {
   // Show loading state while fetching categories and user status
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background-light">
-        <div className="text-center">
-          <div className="w-12 h-12 mx-auto border-b-2 rounded-full animate-spin border-primary-600"></div>
-          <p className="mt-4 text-neutral-600">Loading product form...</p>
+      <div className="flex items-center justify-center min-h-screen bg-background-light px-4">
+        <div className="text-center max-w-xs sm:max-w-sm">
+          <div className="w-12 h-12 mx-auto border-b-2 rounded-full animate-spin border-primary-600 sm:w-14 sm:h-14"></div>
+          <p className="mt-4 text-sm text-neutral-600 sm:text-base">
+            Loading product form...
+          </p>
         </div>
       </div>
     );
@@ -233,17 +235,17 @@ const AddProduct = () => {
   // Show pending approval message
   if (userRole === "seller_pending") {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background-light">
-        <div className="max-w-md p-4 text-center bg-white rounded-lg shadow-lg md:p-6">
-          <FaUserClock className="mx-auto mb-4 text-4xl text-blue-600 md:text-5xl" />
-          <h2 className="mb-2 text-xl font-bold text-neutral-800 md:text-2xl">
+      <div className="flex items-center justify-center min-h-screen bg-background-light px-4">
+        <div className="w-full max-w-md p-6 text-center bg-white rounded-lg shadow-lg sm:p-8">
+          <FaUserClock className="mx-auto mb-4 text-4xl text-blue-600 sm:text-5xl" />
+          <h2 className="mb-2 text-xl font-bold text-neutral-800 sm:text-2xl">
             Approval Pending
           </h2>
-          <p className="mb-4 text-neutral-600 md:mb-6">
+          <p className="mb-4 text-sm text-neutral-600 sm:text-base sm:mb-6">
             Your seller application is under review. You need approved seller
             status to add products.
           </p>
-          <div className="p-3 mb-4 bg-blue-50 rounded-lg md:p-4">
+          <div className="p-3 mb-4 bg-blue-50 rounded-lg sm:p-4">
             <p className="text-sm text-blue-700">
               <strong>Status:</strong> Pending Review
             </p>
@@ -254,10 +256,10 @@ const AddProduct = () => {
               </p>
             )}
           </div>
-          <div className="flex flex-col gap-3 md:flex-row">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               to="/profile"
-              className="inline-flex items-center justify-center px-4 py-2 text-white rounded-lg bg-primary-600 hover:bg-primary-700"
+              className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-white rounded-lg bg-primary-600 hover:bg-primary-700 sm:text-base"
             >
               {profileComplete
                 ? "View Business Profile"
@@ -265,7 +267,7 @@ const AddProduct = () => {
             </Link>
             <button
               onClick={() => window.location.reload()}
-              className="inline-flex items-center justify-center px-4 py-2 text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50"
+              className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50 sm:text-base"
             >
               Check Approval Status
             </button>
@@ -278,17 +280,17 @@ const AddProduct = () => {
   // Show profile incomplete message for approved sellers
   if (userRole === "seller_approved" && !profileComplete) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background-light">
-        <div className="max-w-md p-4 text-center bg-white rounded-lg shadow-lg md:p-6">
-          <FaExclamationTriangle className="mx-auto mb-4 text-4xl text-orange-500 md:text-5xl" />
-          <h2 className="mb-2 text-xl font-bold text-neutral-800 md:text-2xl">
+      <div className="flex items-center justify-center min-h-screen bg-background-light px-4">
+        <div className="w-full max-w-md p-6 text-center bg-white rounded-lg shadow-lg sm:p-8">
+          <FaExclamationTriangle className="mx-auto mb-4 text-4xl text-orange-500 sm:text-5xl" />
+          <h2 className="mb-2 text-xl font-bold text-neutral-800 sm:text-2xl">
             Complete Your Business Profile
           </h2>
-          <p className="mb-4 text-neutral-600 md:mb-6">
+          <p className="mb-4 text-sm text-neutral-600 sm:text-base sm:mb-6">
             Your seller account is approved! Please complete your business
             profile to start adding products and access all seller features.
           </p>
-          <div className="p-3 mb-4 bg-orange-50 rounded-lg md:p-4">
+          <div className="p-3 mb-4 bg-orange-50 rounded-lg sm:p-4">
             <p className="text-sm text-orange-700">
               <strong>Required:</strong> Business details, CNIC verification,
               and contact information
@@ -296,7 +298,7 @@ const AddProduct = () => {
           </div>
           <Link
             to="/profile"
-            className="inline-flex items-center justify-center px-4 py-2 text-white rounded-lg bg-primary-600 hover:bg-primary-700"
+            className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-white rounded-lg bg-primary-600 hover:bg-primary-700 sm:text-base"
           >
             Complete Business Profile
           </Link>
@@ -308,18 +310,18 @@ const AddProduct = () => {
   // Show access denied if not an approved seller
   if (userRole !== "seller_approved") {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background-light">
-        <div className="max-w-md p-4 text-center bg-white rounded-lg shadow-lg md:p-6">
-          <FaExclamationTriangle className="mx-auto mb-4 text-4xl text-red-500 md:text-5xl" />
-          <h2 className="mb-2 text-xl font-bold text-neutral-800 md:text-2xl">
+      <div className="flex items-center justify-center min-h-screen bg-background-light px-4">
+        <div className="w-full max-w-md p-6 text-center bg-white rounded-lg shadow-lg sm:p-8">
+          <FaExclamationTriangle className="mx-auto mb-4 text-4xl text-red-500 sm:text-5xl" />
+          <h2 className="mb-2 text-xl font-bold text-neutral-800 sm:text-2xl">
             Access Denied
           </h2>
-          <p className="mb-4 text-neutral-600 md:mb-6">
+          <p className="mb-4 text-sm text-neutral-600 sm:text-base sm:mb-6">
             You need approved seller privileges to add products.
           </p>
           <Link
             to="/profile"
-            className="inline-flex items-center justify-center px-4 py-2 text-white rounded-lg bg-primary-600 hover:bg-primary-700"
+            className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-white rounded-lg bg-primary-600 hover:bg-primary-700 sm:text-base"
           >
             Apply as Seller
           </Link>
@@ -590,7 +592,6 @@ const AddProduct = () => {
           category: "",
           tags: "",
           salePrice: "",
-
           featured: false,
           status: "active",
         });
@@ -617,49 +618,50 @@ const AddProduct = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background-light font-inter overflow-y-auto overflow-x-hidden">
-      <div className="container p-6 mx-auto h-full">
+    <div className="min-h-screen bg-background-light font-inter">
+      <div className="container p-4 mx-auto sm:p-6">
         {/* Header with Status Indicator */}
-        <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-center">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center text-neutral-600 hover:text-neutral-800"
+              className="flex items-center text-sm text-neutral-600 hover:text-neutral-800 sm:text-base"
             >
               <FaArrowLeft className="mr-2" />
               Back
             </button>
-            <div className="ml-4">
-              <h1 className="text-2xl font-bold text-neutral-800">
+            <div className="ml-3 sm:ml-4">
+              <h1 className="text-xl font-bold text-neutral-800 sm:text-2xl">
                 Add New Product
               </h1>
-              <p className="text-neutral-600">
+              <p className="text-xs text-neutral-600 sm:text-sm">
                 Add a new product to your store
               </p>
             </div>
           </div>
 
-          {/* Status Indicator - Small and subtle when everything is OK */}
-          <div className="flex items-center px-3 py-2 bg-green-50 border border-green-100 rounded-lg md:px-4 md:py-2.5">
-            <FaCheckCircle className="text-green-600 mr-2" />
-            <span className="text-sm font-medium text-green-700 md:text-base">
+          {/* Status Indicator */}
+          <div className="flex items-center self-start px-3 py-2 bg-green-50 border border-green-100 rounded-lg sm:px-4 sm:py-2.5">
+            <FaCheckCircle className="text-green-600 mr-2 text-sm sm:text-base" />
+            <span className="text-xs font-medium text-green-700 sm:text-sm">
               Account Active
             </span>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg">
-          <div className="p-6 border-b border-neutral-300">
-            <h2 className="text-xl font-semibold text-neutral-800">
+          {/* Form Header */}
+          <div className="p-4 border-b border-neutral-300 sm:p-6">
+            <h2 className="text-lg font-semibold text-neutral-800 sm:text-xl">
               Product Information
             </h2>
-            <p className="text-sm text-neutral-600">
+            <p className="text-xs text-neutral-600 sm:text-sm">
               Fill in the details of your product
             </p>
           </div>
 
-          <div className="p-6">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
               {/* Product Name */}
               <div className="md:col-span-2">
                 <label className="block mb-2 text-sm font-medium text-neutral-700">
@@ -667,12 +669,12 @@ const AddProduct = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <FaTag className="text-neutral-400" />
+                    <FaTag className="text-neutral-400 text-sm sm:text-base" />
                   </div>
                   <input
                     name="name"
                     type="text"
-                    className="w-full py-3 pl-10 pr-4 border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full py-2 pl-10 pr-4 text-sm border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent sm:py-3 sm:text-base"
                     placeholder="Enter product name"
                     value={formData.name}
                     onChange={handleChange}
@@ -688,11 +690,11 @@ const AddProduct = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <FaBox className="text-neutral-400" />
+                    <FaBox className="text-neutral-400 text-sm sm:text-base" />
                   </div>
                   <select
                     name="category"
-                    className="w-full py-3 pl-10 pr-10 border rounded-lg appearance-none border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full py-2 pl-10 pr-10 text-sm border rounded-lg appearance-none border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent sm:py-3 sm:text-base"
                     value={formData.category}
                     onChange={handleChange}
                     required
@@ -706,6 +708,7 @@ const AddProduct = () => {
                   </select>
                 </div>
               </div>
+
               {/* Regular Price */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-neutral-700">
@@ -713,14 +716,16 @@ const AddProduct = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <span className="text-neutral-400">Rs</span>
+                    <span className="text-sm text-neutral-400 sm:text-base">
+                      Rs
+                    </span>
                   </div>
                   <input
                     name="price"
                     type="number"
                     step="0.01"
                     min="0.01"
-                    className="w-full py-3 pl-10 pr-4 border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full py-2 pl-10 pr-4 text-sm border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent sm:py-3 sm:text-base"
                     placeholder="0.00"
                     value={formData.price}
                     onChange={handleChange}
@@ -728,6 +733,7 @@ const AddProduct = () => {
                   />
                 </div>
               </div>
+
               {/* Sale Price */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-neutral-700">
@@ -735,14 +741,16 @@ const AddProduct = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <span className="text-neutral-400">Rs</span>
+                    <span className="text-sm text-neutral-400 sm:text-base">
+                      Rs
+                    </span>
                   </div>
                   <input
                     name="salePrice"
                     type="number"
                     step="0.01"
                     min="0.01"
-                    className="w-full py-3 pl-10 pr-4 border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full py-2 pl-10 pr-4 text-sm border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent sm:py-3 sm:text-base"
                     placeholder="0.00"
                     value={formData.salePrice}
                     onChange={handleChange}
@@ -752,6 +760,7 @@ const AddProduct = () => {
                   Discounted price for sales
                 </p>
               </div>
+
               {/* Stock Quantity */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-neutral-700">
@@ -759,13 +768,13 @@ const AddProduct = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <FaBox className="text-neutral-400" />
+                    <FaBox className="text-neutral-400 text-sm sm:text-base" />
                   </div>
                   <input
                     name="stock"
                     type="number"
                     min="0"
-                    className="w-full py-3 pl-10 pr-4 border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full py-2 pl-10 pr-4 text-sm border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent sm:py-3 sm:text-base"
                     placeholder="Enter quantity"
                     value={formData.stock}
                     onChange={handleChange}
@@ -773,6 +782,7 @@ const AddProduct = () => {
                   />
                 </div>
               </div>
+
               {/* Status */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-neutral-700">
@@ -780,7 +790,7 @@ const AddProduct = () => {
                 </label>
                 <select
                   name="status"
-                  className="w-full py-3 px-4 border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full py-2 px-3 text-sm border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent sm:py-3 sm:text-base"
                   value={formData.status}
                   onChange={handleChange}
                 >
@@ -789,6 +799,7 @@ const AddProduct = () => {
                   <option value="out-of-stock">Out of Stock</option>
                 </select>
               </div>
+
               {/* Tags */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-neutral-700">
@@ -797,7 +808,7 @@ const AddProduct = () => {
                 <input
                   name="tags"
                   type="text"
-                  className="w-full py-3 px-4 border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full py-2 px-3 text-sm border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent sm:py-3 sm:text-base"
                   placeholder="tag1, tag2, tag3 (comma separated)"
                   value={formData.tags}
                   onChange={handleChange}
@@ -806,6 +817,7 @@ const AddProduct = () => {
                   Separate tags with commas
                 </p>
               </div>
+
               {/* Featured Product Checkbox */}
               <div className="md:col-span-2">
                 <label className="flex items-center">
@@ -817,7 +829,7 @@ const AddProduct = () => {
                     className="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
                   />
                   <span className="flex items-center ml-2 text-sm text-neutral-700">
-                    <FaStar className="mr-1 text-yellow-500" />
+                    <FaStar className="mr-1 text-yellow-500 text-xs sm:text-sm" />
                     Feature this product on homepage
                   </span>
                 </label>
@@ -825,6 +837,7 @@ const AddProduct = () => {
                   Featured products will be highlighted on the homepage
                 </p>
               </div>
+
               {/* Description */}
               <div className="md:col-span-2">
                 <label className="block mb-2 text-sm font-medium text-neutral-700">
@@ -833,7 +846,7 @@ const AddProduct = () => {
                 <textarea
                   name="description"
                   rows="4"
-                  className="w-full p-3 border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 text-sm border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent sm:text-base"
                   placeholder="Describe your product in detail..."
                   value={formData.description}
                   onChange={handleChange}
@@ -843,10 +856,10 @@ const AddProduct = () => {
 
               {/* Bulk Pricing Section */}
               <div className="md:col-span-2">
-                <div className="p-6 border rounded-lg border-neutral-200 bg-background-subtle">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-neutral-800 flex items-center">
-                      <FaLayerGroup className="mr-2 text-primary-600" />
+                <div className="p-4 border rounded-lg border-neutral-200 bg-background-subtle sm:p-6">
+                  <div className="flex flex-col items-start justify-between mb-4 sm:flex-row sm:items-center">
+                    <h3 className="mb-3 text-lg font-semibold text-neutral-800 flex items-center sm:mb-0">
+                      <FaLayerGroup className="mr-2 text-primary-600 text-base sm:text-lg" />
                       Bulk Pricing
                     </h3>
                     <label className="flex items-center cursor-pointer">
@@ -891,10 +904,10 @@ const AddProduct = () => {
                           {bulkTiers.map((tier, index) => (
                             <div
                               key={index}
-                              className="p-4 border rounded-lg bg-white border-neutral-200"
+                              className="p-3 border rounded-lg bg-white border-neutral-200 sm:p-4"
                             >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-medium text-neutral-800">
+                                <h4 className="text-sm font-medium text-neutral-800 sm:text-base">
                                   Tier {index + 1}
                                 </h4>
                                 <button
@@ -905,7 +918,7 @@ const AddProduct = () => {
                                   <FaTimes size={14} />
                                 </button>
                               </div>
-                              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                 <div>
                                   <label className="block mb-1 text-xs font-medium text-neutral-700">
                                     Minimum Quantity *
@@ -946,7 +959,7 @@ const AddProduct = () => {
                                     <option value="fixed">Fixed Amount</option>
                                   </select>
                                 </div>
-                                <div>
+                                <div className="sm:col-span-2 lg:col-span-1">
                                   <label className="block mb-1 text-xs font-medium text-neutral-700">
                                     Discount Value *
                                   </label>
@@ -1007,14 +1020,14 @@ const AddProduct = () => {
                       <button
                         type="button"
                         onClick={addBulkTier}
-                        className="flex items-center px-4 py-2 text-sm text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50"
+                        className="flex items-center px-3 py-2 text-xs text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50 sm:text-sm"
                       >
-                        <FaPlus className="mr-2" size={12} />
+                        <FaPlus className="mr-2 text-xs" />
                         Add Bulk Tier
                       </button>
 
                       {bulkTiers.length > 0 && (
-                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="p-2 bg-blue-50 rounded-lg border border-blue-200 sm:p-3">
                           <p className="text-xs text-blue-700">
                             <strong>Note:</strong> Tiers will be automatically
                             sorted by quantity. Customers will get the best
@@ -1032,21 +1045,21 @@ const AddProduct = () => {
                 <label className="block mb-2 text-sm font-medium text-neutral-700">
                   Main Product Image *
                 </label>
-                <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg border-neutral-300">
+                <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-lg border-neutral-300 sm:p-6">
                   {mainImage ? (
                     <div className="relative w-full text-center">
                       <img
                         src={mainImage?.url}
                         alt="Main product"
-                        className="object-cover w-32 h-32 mx-auto rounded-lg"
+                        className="object-cover w-24 h-24 mx-auto rounded-lg sm:w-32 sm:h-32"
                       />
                       <button
                         type="button"
                         onClick={removeMainImage}
-                        className="absolute p-1 text-white transform -translate-y-1/2 bg-red-500 rounded-full top-1/2 right-4 hover:bg-red-600"
+                        className="absolute p-1 text-white transform -translate-y-1/2 bg-red-500 rounded-full top-1/2 right-2 hover:bg-red-600 sm:right-4"
                         title="Remove image"
                       >
-                        <FaTimes size={12} />
+                        <FaTimes size={10} className="sm:text-xs" />
                       </button>
                       <div className="mt-2 text-xs text-neutral-500">
                         Main product image
@@ -1054,8 +1067,8 @@ const AddProduct = () => {
                     </div>
                   ) : (
                     <>
-                      <FaImage className="mb-3 text-3xl text-neutral-400" />
-                      <p className="mb-2 text-sm text-neutral-600">
+                      <FaImage className="mb-2 text-2xl text-neutral-400 sm:mb-3 sm:text-3xl" />
+                      <p className="mb-1 text-sm text-neutral-600 sm:mb-2">
                         Set main product image
                       </p>
                       <p className="mb-2 text-xs text-neutral-500">
@@ -1071,7 +1084,7 @@ const AddProduct = () => {
                       />
                       <label
                         htmlFor="main-image-upload"
-                        className={`px-4 py-2 mt-2 text-sm font-medium text-white transition duration-300 rounded-lg cursor-pointer ${
+                        className={`px-3 py-2 mt-1 text-xs font-medium text-white transition duration-300 rounded-lg cursor-pointer sm:px-4 sm:py-2 sm:text-sm sm:mt-2 ${
                           uploading
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-primary-600 hover:bg-primary-700"
@@ -1079,7 +1092,7 @@ const AddProduct = () => {
                       >
                         {uploading ? (
                           <>
-                            <FaSpinner className="inline mr-2 animate-spin" />
+                            <FaSpinner className="inline mr-1 animate-spin sm:mr-2" />
                             Uploading...
                           </>
                         ) : (
@@ -1090,14 +1103,15 @@ const AddProduct = () => {
                   )}
                 </div>
               </div>
+
               {/* Gallery Images Upload */}
               <div className="md:col-span-2">
                 <label className="block mb-2 text-sm font-medium text-neutral-700">
                   Gallery Images (Optional)
                 </label>
-                <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg border-neutral-300">
-                  <FaUpload className="mb-3 text-3xl text-neutral-400" />
-                  <p className="mb-2 text-sm text-neutral-600">
+                <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-lg border-neutral-300 sm:p-6">
+                  <FaUpload className="mb-2 text-2xl text-neutral-400 sm:mb-3 sm:text-3xl" />
+                  <p className="mb-1 text-sm text-neutral-600 sm:mb-2">
                     Click to upload additional product images
                   </p>
                   <p className="text-xs text-neutral-500">
@@ -1114,7 +1128,7 @@ const AddProduct = () => {
                   />
                   <label
                     htmlFor="gallery-upload"
-                    className={`px-4 py-2 mt-4 text-sm font-medium text-white transition duration-300 rounded-lg cursor-pointer ${
+                    className={`px-3 py-2 mt-2 text-xs font-medium text-white transition duration-300 rounded-lg cursor-pointer sm:px-4 sm:py-2 sm:text-sm sm:mt-4 ${
                       uploading
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-primary-600 hover:bg-primary-700"
@@ -1122,7 +1136,7 @@ const AddProduct = () => {
                   >
                     {uploading ? (
                       <>
-                        <FaSpinner className="inline mr-2 animate-spin" />
+                        <FaSpinner className="inline mr-1 animate-spin sm:mr-2" />
                         Uploading...
                       </>
                     ) : (
@@ -1137,13 +1151,13 @@ const AddProduct = () => {
                     <h4 className="mb-2 text-sm font-medium text-neutral-700">
                       Gallery Images ({galleryImages.length}/10):
                     </h4>
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                       {galleryImages.map((imageUrl, index) => (
                         <div key={index} className="relative group">
                           <img
                             src={imageUrl?.url}
                             alt={`Gallery ${index + 1}`}
-                            className="object-cover w-full h-24 rounded-lg"
+                            className="object-cover w-full h-20 rounded-lg sm:h-24"
                           />
                           <button
                             type="button"
@@ -1151,7 +1165,7 @@ const AddProduct = () => {
                             className="absolute p-1 text-white transition-opacity bg-red-500 rounded-full opacity-0 top-1 right-1 group-hover:opacity-100 hover:bg-red-600"
                             title="Remove image"
                           >
-                            <FaTimes size={10} />
+                            <FaTimes size={8} className="sm:text-xs" />
                           </button>
                         </div>
                       ))}
@@ -1162,11 +1176,11 @@ const AddProduct = () => {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end mt-8 space-x-4">
+            <div className="flex flex-col justify-end gap-3 mt-6 sm:flex-row sm:space-x-4 sm:gap-0">
               <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="px-6 py-3 transition duration-300 border rounded-lg border-neutral-300 text-neutral-700 hover:bg-neutral-100"
+                className="px-4 py-2 text-sm transition duration-300 border rounded-lg border-neutral-300 text-neutral-700 hover:bg-neutral-100 sm:px-6 sm:py-3 sm:text-base"
                 disabled={isLoading}
               >
                 Cancel
@@ -1174,16 +1188,16 @@ const AddProduct = () => {
               <button
                 type="submit"
                 disabled={isLoading || uploading || !mainImage}
-                className="flex items-center px-6 py-3 font-medium text-white transition duration-300 rounded-lg bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition duration-300 rounded-lg bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed sm:px-6 sm:py-3 sm:text-base"
               >
                 {isLoading ? (
                   <>
-                    <FaSpinner className="w-4 h-4 mr-2 animate-spin" />
+                    <FaSpinner className="w-3 h-3 mr-2 animate-spin sm:w-4 sm:h-4" />
                     Adding Product...
                   </>
                 ) : (
                   <>
-                    <FaPlus className="mr-2" />
+                    <FaPlus className="mr-2 text-xs sm:text-sm" />
                     Add Product
                   </>
                 )}
