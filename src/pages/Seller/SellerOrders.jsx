@@ -15,6 +15,7 @@ import {
   FaMapMarkerAlt,
   FaUserClock,
   FaExclamationTriangle,
+  FaShoppingCart,
 } from "react-icons/fa";
 import { useLocation, Link } from "react-router-dom";
 import API from "../../api/axiosInstance";
@@ -28,6 +29,7 @@ const SellerOrders = () => {
   // State management
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [checkingUserStatus, setCheckingUserStatus] = useState(true);
   const [userRole, setUserRole] = useState("");
   const [profileComplete, setProfileComplete] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(null);
@@ -38,6 +40,7 @@ const SellerOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [viewOrderModal, setViewOrderModal] = useState(false);
   const [editOrderModal, setEditOrderModal] = useState(false);
+  const [sellerProducts, setSellerProducts] = useState([]); // To store seller's product IDs
 
   // Stats state
   const [stats, setStats] = useState({
@@ -67,59 +70,123 @@ const SellerOrders = () => {
         }
       } catch (error) {
         console.error("User status check error:", error);
+      } finally {
+        setCheckingUserStatus(false);
       }
     };
 
     checkUserStatus();
   }, []);
 
+  // Fetch seller's products to know which products belong to this seller
+  const fetchSellerProducts = async () => {
+    try {
+      const response = await API.get("/products/seller/products");
+      const products = response.data.products || response.data || [];
+      const productIds = products.map((product) => product._id);
+      setSellerProducts(productIds);
+      return productIds;
+    } catch (error) {
+      console.error("Failed to fetch seller products:", error);
+      return [];
+    }
+  };
+
+  // Filter order items to only show seller's products
+  const filterSellerItems = (orderItems, sellerProductIds) => {
+    if (!orderItems || !Array.isArray(orderItems)) return [];
+    return orderItems.filter(
+      (item) =>
+        item.product && sellerProductIds.includes(item.product._id.toString())
+    );
+  };
+
+  // Calculate seller's total from filtered items
+  const calculateSellerTotal = (filteredItems) => {
+    return filteredItems.reduce((sum, item) => sum + (item.finalPrice || 0), 0);
+  };
+
+  // Calculate seller's total quantity from filtered items
+  const calculateSellerQuantity = (filteredItems) => {
+    return filteredItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  };
+
   // Fetch orders from backend
   const fetchOrders = async () => {
     try {
       setLoading(true);
 
-      if (userRole === "seller_approved" && profileComplete) {
-        const response = await API.get("/orders/seller/orders");
-        const ordersData = Array.isArray(response.data)
-          ? response.data
-          : response.data.orders || [];
+      // Get seller's product IDs first
+      const sellerProductIds = await fetchSellerProducts();
 
-        const transformedOrders = ordersData.map((order) => ({
-          id: order._id,
-          orderId: order._id,
-          customer: order.user?.name || "Unknown Customer",
-          customerEmail: order.user?.email || "No email",
-          customerPhone: order.shippingAddress?.phone || "No phone", // Get from shippingAddress
-          product: order.items?.[0]?.product?.name || "Multiple Products",
-          date: new Date(order.createdAt).toLocaleDateString(),
-          status: order.status,
-          quantity:
-            order.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) ||
-            0,
-          total: order.totalAmount || 0,
-          payment: order.paymentMethod || "Cash on Delivery",
-          // Format shipping address properly
-          shippingAddress: order.shippingAddress
-            ? `${order.shippingAddress.address}, ${order.shippingAddress.city}${
-                order.shippingAddress.postalCode
-                  ? `, ${order.shippingAddress.postalCode}`
-                  : ""
-              }`
-            : "Address not provided",
-          // shippingAddress object for details modal
-          shippingAddressObj: order.shippingAddress,
-          items:
-            order.items?.map((item) => ({
-              name: item.product?.name || "Unknown Product",
-              price: item.product?.price || 0,
-              quantity: item.quantity || 0,
-              productId: item.product?._id,
-            })) || [],
-          originalData: order,
-        }));
-
-        setOrders(transformedOrders);
+      if (sellerProductIds.length === 0) {
+        setOrders([]);
+        setLoading(false);
+        return;
       }
+
+      const response = await API.get("/orders/seller/orders");
+      const ordersData = Array.isArray(response.data)
+        ? response.data
+        : response.data.orders || [];
+
+      // Transform and filter orders
+      const transformedOrders = ordersData
+        .map((order) => {
+          // Filter items to only show seller's products
+          const sellerItems = filterSellerItems(order.items, sellerProductIds);
+
+          // If no seller items, skip this order
+          if (sellerItems.length === 0) return null;
+
+          const sellerTotal = calculateSellerTotal(sellerItems);
+          const sellerQuantity = calculateSellerQuantity(sellerItems);
+
+          // Get product names for display
+          const productNames = sellerItems.map(
+            (item) => item.product?.name || "Unknown Product"
+          );
+          const primaryProduct = productNames[0] || "Multiple Products";
+          const additionalProducts =
+            productNames.length > 1 ? ` + ${productNames.length - 1} more` : "";
+
+          return {
+            id: order._id,
+            orderId: order._id,
+            customer: order.user?.name || "Unknown Customer",
+            customerEmail: order.user?.email || "No email",
+            customerPhone: order.shippingAddress?.phone || "No phone",
+            // Show first product + count of additional products
+            product:
+              productNames.length > 1
+                ? `${primaryProduct}${additionalProducts}`
+                : primaryProduct,
+            date: new Date(order.createdAt).toLocaleDateString(),
+            status: order.status,
+            // Show seller's total quantity and amount
+            quantity: sellerQuantity,
+            total: sellerTotal,
+            payment: order.paymentMethod || "Cash on Delivery",
+            // Format shipping address
+            shippingAddress: order.shippingAddress
+              ? `${order.shippingAddress.address}, ${
+                  order.shippingAddress.city
+                }${
+                  order.shippingAddress.postalCode
+                    ? `, ${order.shippingAddress.postalCode}`
+                    : ""
+                }`
+              : "Address not provided",
+            // Keep original data and filtered items
+            sellerItems: sellerItems,
+            allItems: order.items || [],
+            shippingAddressObj: order.shippingAddress,
+            originalData: order,
+          };
+        })
+        .filter((order) => order !== null);
+
+      setOrders(transformedOrders);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
       toast.error(error.response?.data?.message || "Failed to load orders");
@@ -132,12 +199,37 @@ const SellerOrders = () => {
   const fetchSellerStats = async () => {
     try {
       if (userRole === "seller_approved" && profileComplete) {
-        const response = await API.get("/admin/seller/stats");
+        // Calculate stats from orders
+        const sellerProductIds =
+          sellerProducts.length > 0
+            ? sellerProducts
+            : await fetchSellerProducts();
+
+        const allOrders = await API.get("/orders/seller/orders");
+        const ordersData = Array.isArray(allOrders.data)
+          ? allOrders.data
+          : allOrders.data.orders || [];
+
+        let totalRevenue = 0;
+        let pendingOrdersCount = 0;
+        let totalOrdersCount = 0;
+
+        ordersData.forEach((order) => {
+          const sellerItems = filterSellerItems(order.items, sellerProductIds);
+          if (sellerItems.length > 0) {
+            totalOrdersCount++;
+            totalRevenue += calculateSellerTotal(sellerItems);
+            if (order.status === "Pending") {
+              pendingOrdersCount++;
+            }
+          }
+        });
+
         setStats({
-          totalOrders: response.data.totalOrders || 0,
-          totalProducts: response.data.totalProducts || 0,
-          totalRevenue: response.data.totalRevenue || 0,
-          pendingOrders: response.data.pendingOrders || 0,
+          totalOrders: totalOrdersCount,
+          totalProducts: sellerProductIds.length,
+          totalRevenue: totalRevenue,
+          pendingOrders: pendingOrdersCount,
         });
       }
     } catch (error) {
@@ -150,8 +242,6 @@ const SellerOrders = () => {
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       setUpdatingStatus(orderId);
-
-      // API endpoint and data structure
       await API.put(`/orders/${orderId}/status`, { status: newStatus });
 
       // Update local state
@@ -182,13 +272,11 @@ const SellerOrders = () => {
     const { name, value } = e.target;
 
     if (name === "shippingAddress") {
-      // If it's the shipping address text field
       setSelectedOrder((prev) => ({
         ...prev,
         shippingAddress: value,
       }));
     } else {
-      // For all other fields
       setSelectedOrder((prev) => ({
         ...prev,
         [name]: value,
@@ -198,9 +286,17 @@ const SellerOrders = () => {
 
   // Initial data fetch
   useEffect(() => {
-    fetchOrders();
-    fetchSellerStats();
-  }, [userRole, profileComplete]);
+    if (
+      !checkingUserStatus &&
+      userRole === "seller_approved" &&
+      profileComplete
+    ) {
+      fetchOrders();
+      fetchSellerStats();
+    } else if (!checkingUserStatus) {
+      setLoading(false);
+    }
+  }, [checkingUserStatus, userRole, profileComplete]);
 
   // Filter orders based on search and status
   const filteredOrders = orders.filter((order) => {
@@ -283,7 +379,18 @@ const SellerOrders = () => {
     }
   };
 
-  // Show loading state while fetching user status and orders
+  if (checkingUserStatus) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background-light">
+        <div className="text-center">
+          <div className="w-12 h-12 mx-auto border-b-2 rounded-full animate-spin border-primary-600"></div>
+          <p className="mt-4 text-neutral-600">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background-light">
@@ -332,7 +439,7 @@ const SellerOrders = () => {
     );
   }
 
-  // Show profile incomplete message for approved sellers
+  // Show profile incomplete message
   if (userRole === "seller_approved" && !profileComplete) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background-light">
@@ -362,7 +469,7 @@ const SellerOrders = () => {
     );
   }
 
-  // Show access denied if not an approved seller with complete profile
+  // Show access denied
   if (userRole !== "seller_approved") {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background-light">
@@ -394,7 +501,7 @@ const SellerOrders = () => {
             Order Management
           </h1>
           <p className="text-neutral-600">
-            Manage and track your customer orders
+            Manage and track orders for your products
           </p>
         </div>
 
@@ -469,14 +576,14 @@ const SellerOrders = () => {
           <div className="p-3 bg-white rounded-lg shadow md:p-4">
             <div className="flex items-center">
               <div className="p-2 text-blue-600 bg-blue-100 rounded-full md:p-3">
-                <FaTruck className="text-sm md:text-lg" />
+                <FaShoppingCart className="text-sm md:text-lg" />
               </div>
               <div className="ml-3">
                 <h3 className="text-xs font-medium text-neutral-600 md:text-sm">
-                  Processing
+                  My Products
                 </h3>
                 <p className="text-lg font-bold text-neutral-800 md:text-2xl">
-                  {statusCounts.Processing}
+                  {stats.totalProducts}
                 </p>
               </div>
             </div>
@@ -596,11 +703,7 @@ const SellerOrders = () => {
                             #{order.id.slice(-8).toUpperCase()}
                           </div>
                           <div className="text-sm text-neutral-900 line-clamp-1">
-                            {order.items.length > 1
-                              ? `${order.items[0].name} + ${
-                                  order.items.length - 1
-                                } more`
-                              : order.items[0]?.name || "Unknown Product"}
+                            {order.product}
                           </div>
                           <div className="text-xs text-neutral-500 md:hidden">
                             {order.customer} • {order.date}
@@ -689,18 +792,26 @@ const SellerOrders = () => {
             <div className="py-12 text-center">
               <FaBox className="w-16 h-16 mx-auto text-neutral-400 mb-4" />
               <h3 className="text-lg font-medium text-neutral-900 mb-2">
-                No orders found
+                {orders.length === 0 ? "No orders yet" : "No matching orders"}
               </h3>
-              <p className="text-neutral-600 max-w-md mx-auto">
+              <p className="text-neutral-600 max-w-md mx-auto mb-4">
                 {orders.length === 0
-                  ? "You haven't received any orders yet. Orders will appear here once customers start purchasing your products."
-                  : "No orders match your current search criteria. Try adjusting your filters."}
+                  ? "Orders will appear here once customers start purchasing your products."
+                  : "Try adjusting your search or filter criteria."}
               </p>
+              {orders.length === 0 && (
+                <Link
+                  to="/seller/manage-products"
+                  className="inline-flex items-center justify-center px-4 py-2 text-white rounded-lg bg-primary-600 hover:bg-primary-700"
+                >
+                  Manage Your Products
+                </Link>
+              )}
             </div>
           )}
         </div>
 
-        {/* Order Details Modal */}
+        {/* Order Details Modal - UPDATED */}
         {viewOrderModal && selectedOrder && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
             <div className="w-full max-w-4xl max-h-screen overflow-y-auto bg-white rounded-lg shadow-xl">
@@ -750,7 +861,7 @@ const SellerOrders = () => {
                       Order Information
                     </h3>
                     <div className="space-y-2">
-                      <p>
+                      <div className="flex items-center">
                         <strong>Status:</strong>
                         <span
                           className={`ml-2 px-2 py-1 text-sm font-semibold rounded-full ${getStatusColor(
@@ -759,8 +870,8 @@ const SellerOrders = () => {
                         >
                           {selectedOrder.status}
                         </span>
-                      </p>
-                      <p>
+                      </div>
+                      <div className="flex items-center">
                         <strong>Payment:</strong>
                         <span
                           className={`ml-2 px-2 py-1 text-sm font-semibold rounded-full ${getPaymentColor(
@@ -769,9 +880,13 @@ const SellerOrders = () => {
                         >
                           {selectedOrder.payment}
                         </span>
+                      </div>
+                      <p>
+                        <strong>Your Items:</strong> {selectedOrder.quantity}
                       </p>
                       <p>
-                        <strong>Items:</strong> {selectedOrder.quantity}
+                        <strong>Your Total:</strong> Rs{" "}
+                        {selectedOrder.total.toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -809,33 +924,52 @@ const SellerOrders = () => {
                   )}
                 </div>
 
-                {/* Order Items */}
+                {/* Order Items - UPDATED to show only seller's products */}
                 <div className="mb-8">
                   <h3 className="mb-4 text-lg font-semibold text-neutral-800">
-                    Order Items
+                    Your Products in this Order (
+                    {selectedOrder.sellerItems.length})
                   </h3>
                   <div className="space-y-3">
-                    {selectedOrder.items.map((item, index) => (
+                    {selectedOrder.sellerItems.map((item, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-3 border-none rounded-lg bg-secondary-200"
+                        className="flex items-center justify-between p-3 border rounded-lg bg-secondary-200 border-primary-200"
                       >
                         <div className="flex-1">
                           <p className="font-medium text-neutral-900">
-                            {item.name}
+                            {item.product?.name || "Unknown Product"}
                           </p>
-                          <p className="text-sm text-neutral-600">
-                            Qty: {item.quantity} × Rs {item.price.toFixed(2)}
-                          </p>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            <p className="text-sm text-neutral-600">
+                              Qty: {item.quantity}
+                            </p>
+                            <p className="text-sm text-neutral-600">
+                              Unit Price: Rs{" "}
+                              {item.unitPrice?.toFixed(2) || "0.00"}
+                            </p>
+                            {item.appliedTier && (
+                              <p className="text-xs text-green-700 bg-green-100 px-2 py-1 rounded">
+                                Bulk Discount Applied
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <p className="font-semibold text-neutral-900">
-                          Rs {(item.price * item.quantity).toFixed(2)}
-                        </p>
+                        <div className="text-right">
+                          <p className="font-semibold text-neutral-900">
+                            Rs {item.finalPrice?.toFixed(2) || "0.00"}
+                          </p>
+                          {item.discountAmount > 0 && (
+                            <p className="text-xs text-green-700">
+                              Saved: Rs {item.discountAmount?.toFixed(2)}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ))}
                     <div className="flex justify-between pt-3 mt-3 border-t border-neutral-200">
                       <p className="text-lg font-bold text-neutral-900">
-                        Total Amount
+                        Your Total Amount
                       </p>
                       <p className="text-lg font-bold text-primary-600">
                         Rs {selectedOrder.total.toFixed(2)}
@@ -986,8 +1120,7 @@ const SellerOrders = () => {
                       </select>
                       {selectedOrder.payment === "Card Payment" && (
                         <p className="mt-1 text-xs text-orange-600">
-                          Note: Online payments are coming soon. Currently all
-                          orders are Cash on Delivery.
+                          Note: Online payments are coming soon.
                         </p>
                       )}
                     </div>
@@ -1006,8 +1139,29 @@ const SellerOrders = () => {
                       />
                       <p className="mt-1 text-xs text-neutral-500">
                         Shipping address cannot be modified from order
-                        management. Contact support for address changes.
+                        management.
                       </p>
+                    </div>
+
+                    {/* Show seller's products in this order */}
+                    <div className="md:col-span-2">
+                      <label className="block mb-2 text-sm font-medium text-neutral-700">
+                        Your Products in this Order
+                      </label>
+                      <div className="space-y-2">
+                        {selectedOrder.sellerItems?.map((item, index) => (
+                          <div
+                            key={index}
+                            className="p-2 bg-neutral-50 rounded"
+                          >
+                            <p className="font-medium">{item.product?.name}</p>
+                            <div className="flex justify-between text-sm text-neutral-600">
+                              <span>Qty: {item.quantity}</span>
+                              <span>Rs {item.finalPrice?.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 

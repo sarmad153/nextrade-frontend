@@ -37,7 +37,8 @@ const ManageProducts = () => {
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState("");
+  const [userRole, setUserRole] = useState(null);
+  const [checkingUserStatus, setCheckingUserStatus] = useState(true);
   const [profileComplete, setProfileComplete] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -67,8 +68,16 @@ const ManageProducts = () => {
   useEffect(() => {
     const checkUserStatus = async () => {
       try {
+        // Synchronous check first
         const user = JSON.parse(localStorage.getItem("user"));
-        const currentRole = user?.role;
+        const currentRole = user?.role || null;
+
+        if (!currentRole) {
+          setUserRole(null);
+          setCheckingUserStatus(false);
+          return;
+        }
+
         setUserRole(currentRole);
 
         // Fetch profile data to get profile completion status
@@ -79,10 +88,14 @@ const ManageProducts = () => {
             setProfileComplete(profileData.isProfileComplete || false);
           } catch (profileError) {
             console.error("Profile fetch error:", profileError);
+            setProfileComplete(false);
           }
         }
       } catch (error) {
         console.error("User status check error:", error);
+        setUserRole(null);
+      } finally {
+        setCheckingUserStatus(false);
       }
     };
 
@@ -92,6 +105,13 @@ const ManageProducts = () => {
   // Fetch seller's products and categories
   useEffect(() => {
     const fetchData = async () => {
+      if (
+        checkingUserStatus ||
+        userRole !== "seller_approved" ||
+        !profileComplete
+      ) {
+        return;
+      }
       try {
         setLoading(true);
 
@@ -146,7 +166,7 @@ const ManageProducts = () => {
     };
 
     fetchData();
-  }, [userRole, profileComplete]);
+  }, [userRole, profileComplete, checkingUserStatus]);
 
   // Check if the URL contains the Low Stock filter parameter
   useEffect(() => {
@@ -561,6 +581,40 @@ const ManageProducts = () => {
     setSelectedCategory("All");
     setSelectedStatus("All");
   };
+
+  // Show checking user status state
+  if (checkingUserStatus) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background-light">
+        <div className="text-center">
+          <div className="w-12 h-12 mx-auto border-b-2 rounded-full animate-spin border-primary-600"></div>
+          <p className="mt-4 text-neutral-600">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background-light">
+        <div className="max-w-md p-6 text-center bg-white rounded-lg shadow-md">
+          <FaExclamationTriangle className="mx-auto mb-4 text-5xl text-red-500" />
+          <h2 className="mb-3 text-2xl font-bold text-neutral-800">
+            Access Denied
+          </h2>
+          <p className="mb-4 text-neutral-600">
+            You need to be logged in as a seller to access this page.
+          </p>
+          <Link
+            to="/login"
+            className="inline-flex items-center justify-center px-4 py-2 text-white rounded-lg bg-primary-600 hover:bg-primary-700"
+          >
+            Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading state while fetching categories and user status
   if (loading) {

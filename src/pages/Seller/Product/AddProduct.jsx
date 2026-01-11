@@ -34,11 +34,12 @@ const AddProduct = () => {
     featured: false,
     status: "active",
   });
-  const [userRole, setUserRole] = useState("");
+  const [userRole, setUserRole] = useState(null);
   const [approvalStatus, setApprovalStatus] = useState("");
   const [profileComplete, setProfileComplete] = useState(false);
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [checkingUserStatus, setCheckingUserStatus] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [mainImage, setMainImage] = useState(null);
   const [galleryImages, setGalleryImages] = useState([]);
@@ -53,37 +54,37 @@ const AddProduct = () => {
     const checkUserStatus = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
-        const currentRole = user?.role;
+        const currentRole = user?.role || null;
         setUserRole(currentRole);
 
-        // Fetch profile data to get approval status and profile completion
+        if (!currentRole) {
+          setCheckingUserStatus(false);
+          return;
+        }
+
+        // Only check profile if user is a seller
         if (["seller_pending", "seller_approved"].includes(currentRole)) {
           try {
             const profileResponse = await API.get("/profile/me");
             const profileData = profileResponse.data;
 
-            // Set approval status based on role
             if (currentRole === "seller_approved") {
               setApprovalStatus("approved");
             } else if (currentRole === "seller_pending") {
               setApprovalStatus("pending");
             }
 
-            // Check if profile is complete for sellers
             setProfileComplete(profileData.isProfileComplete || false);
-
-            console.log("Profile status:", {
-              role: currentRole,
-              profileComplete: profileData.isProfileComplete,
-              approvalStatus:
-                currentRole === "seller_approved" ? "approved" : "pending",
-            });
           } catch (profileError) {
             console.error("Profile fetch error:", profileError);
+            setProfileComplete(false);
           }
         }
       } catch (error) {
         console.error("User status check error:", error);
+        setUserRole(null);
+      } finally {
+        setCheckingUserStatus(false);
       }
     };
 
@@ -217,6 +218,41 @@ const AddProduct = () => {
 
     return true;
   };
+
+  if (checkingUserStatus) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background-light px-4">
+        <div className="text-center max-w-xs sm:max-w-sm">
+          <div className="w-12 h-12 mx-auto border-b-2 rounded-full animate-spin border-primary-600 sm:w-14 sm:h-14"></div>
+          <p className="mt-4 text-sm text-neutral-600 sm:text-base">
+            Checking permissions...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background-light px-4">
+        <div className="w-full max-w-md p-6 text-center bg-white rounded-lg shadow-lg sm:p-8">
+          <FaExclamationTriangle className="mx-auto mb-4 text-4xl text-red-500 sm:text-5xl" />
+          <h2 className="mb-2 text-xl font-bold text-neutral-800 sm:text-2xl">
+            Access Denied
+          </h2>
+          <p className="mb-4 text-sm text-neutral-600 sm:text-base sm:mb-6">
+            You need to be logged in as a seller to add products.
+          </p>
+          <Link
+            to="/login"
+            className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-white rounded-lg bg-primary-600 hover:bg-primary-700 sm:text-base"
+          >
+            Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading state while fetching categories and user status
   if (loading) {

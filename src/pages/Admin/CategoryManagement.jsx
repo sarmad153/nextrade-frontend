@@ -22,6 +22,7 @@ const CategoryManagement = () => {
   const [currentView, setCurrentView] = useState("list");
   const [currentCategory, setCurrentCategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [removeImage, setRemoveImage] = useState(false);
 
   // Form state
   const [name, setName] = useState("");
@@ -161,23 +162,33 @@ const CategoryManagement = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("description", description);
-      formData.append("icon", icon);
-      formData.append("isFeatured", isFeatured);
+      let imageUrl = "";
 
-      // Append image if selected
+      // Upload image first if selected
       if (selectedFile) {
-        formData.append("image", selectedFile);
+        const uploadFormData = new FormData();
+        uploadFormData.append("image", selectedFile);
+
+        const uploadResponse = await API.post(
+          "/upload/categories/single",
+          uploadFormData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+
+        imageUrl = uploadResponse.data.imageUrl;
       }
 
       setUploading(true);
 
-      await API.post("/categories", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      // Now create category with image URL
+      await API.post("/categories", {
+        name,
+        description,
+        icon,
+        isFeatured,
+        image: imageUrl, // Send as URL string
       });
 
       await fetchCategories();
@@ -194,24 +205,35 @@ const CategoryManagement = () => {
   // Handle edit category
   const handleEdit = async (e) => {
     e.preventDefault();
-    try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("description", description);
-      formData.append("icon", icon);
-      formData.append("isFeatured", isFeatured);
 
-      // Append new image if selected
-      if (selectedFile) {
-        formData.append("image", selectedFile);
+    try {
+      let imageUrl = currentCategory?.image || "";
+
+      // ONLY upload if user selected a NEW file
+      if (removeImage) {
+        imageUrl = ""; // Remove image
+      } else if (selectedFile instanceof File) {
+        const uploadFormData = new FormData();
+        uploadFormData.append("image", selectedFile);
+
+        const uploadResponse = await API.post(
+          "/upload/categories/single",
+          uploadFormData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+
+        imageUrl = uploadResponse.data.imageUrl;
       }
 
       setUploading(true);
 
-      await API.put(`/categories/${currentCategory._id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      await API.put(`/categories/${currentCategory._id}`, {
+        name,
+        description,
+        icon,
+        isFeatured,
+        image: imageUrl,
+        removeImage,
       });
 
       await fetchCategories();
@@ -276,13 +298,39 @@ const CategoryManagement = () => {
   };
 
   // Set up edit form
-  const setupEditForm = (category) => {
-    setCurrentCategory(category);
-    setName(category.name);
-    setDescription(category.description || "");
-    setIcon(category.icon || "FaShoppingBag");
-    setIsFeatured(category.isFeatured || false);
-    setCurrentView("edit");
+  const setupEditForm = async (category) => {
+    try {
+      setIsLoading(true);
+      // Fetch the full category data from API
+      const response = await API.get(`/categories/${category._id}`);
+      const fullCategory = response.data;
+
+      setCurrentCategory(fullCategory);
+      setName(fullCategory.name);
+      setDescription(fullCategory.description || "");
+      setIcon(fullCategory.icon || "FaShoppingBag");
+      setIsFeatured(fullCategory.isFeatured || false);
+
+      // Set image preview if exists
+      const imageUrl = extractImageFromResponse(fullCategory);
+      if (imageUrl) {
+        setImagePreview(imageUrl);
+      }
+
+      setCurrentView("edit");
+    } catch (err) {
+      console.error("Error fetching category for edit:", err);
+      toast.error("Failed to load category data");
+      // Fallback to existing data
+      setCurrentCategory(category);
+      setName(category.name);
+      setDescription(category.description || "");
+      setIcon(category.icon || "FaShoppingBag");
+      setIsFeatured(category.isFeatured || false);
+      setCurrentView("edit");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Reset form
@@ -582,9 +630,9 @@ const CategoryManagement = () => {
                     <label className="flex items-center space-x-3">
                       <input
                         type="checkbox"
-                        className="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
                         checked={isFeatured}
                         onChange={(e) => setIsFeatured(e.target.checked)}
+                        className="w-4 h-4 mr-2 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
                       />
                       <span className="text-sm font-medium text-neutral-700">
                         Featured Category
@@ -632,6 +680,28 @@ const CategoryManagement = () => {
                         </div>
                       )}
                     </div>
+
+                    {imagePreview || currentCategory?.image ? (
+                      <div className="mt-2">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={removeImage}
+                            onChange={(e) => {
+                              setRemoveImage(e.target.checked);
+                              if (e.target.checked) {
+                                setSelectedFile(null);
+                                setImagePreview("");
+                              }
+                            }}
+                            className="w-4 h-4 mr-2 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
+                          />
+                          <span className="text-sm text-neutral-600">
+                            Remove current image
+                          </span>
+                        </label>
+                      </div>
+                    ) : null}
 
                     {(imagePreview ||
                       (currentView === "edit" && currentCategory?.image)) && (

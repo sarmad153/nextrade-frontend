@@ -39,6 +39,7 @@ const SellerAds = () => {
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState("");
   const [profileComplete, setProfileComplete] = useState(false);
+  const [checkingUserStatus, setCheckingUserStatus] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showCreateAd, setShowCreateAd] = useState(false);
@@ -65,7 +66,11 @@ const SellerAds = () => {
     const checkUserStatus = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) return;
+        if (!token) {
+          setUserRole(null);
+          setCheckingUserStatus(false);
+          return;
+        }
 
         // Decode token to get role
         const payload = token.split(".")[1];
@@ -81,7 +86,6 @@ const SellerAds = () => {
             const profileData = profileResponse.data;
             const isComplete = profileData.isProfileComplete || false;
             setProfileComplete(isComplete);
-
             console.log("Profile complete status:", isComplete);
           } catch (profileError) {
             console.error("Profile fetch error:", profileError);
@@ -90,6 +94,9 @@ const SellerAds = () => {
         }
       } catch (error) {
         console.error("User status check error:", error);
+        setUserRole(null);
+      } finally {
+        setCheckingUserStatus(false);
       }
     };
 
@@ -243,10 +250,18 @@ const SellerAds = () => {
   };
 
   useEffect(() => {
-    if (userRole && profileComplete) {
+    // Only fetch ads if user check is done AND user is approved seller with complete profile
+    if (
+      !checkingUserStatus &&
+      userRole === "seller_approved" &&
+      profileComplete
+    ) {
       fetchAds();
+    } else if (!checkingUserStatus) {
+      // If user check is done but user is not eligible, stop loading
+      setLoading(false);
     }
-  }, [userRole, profileComplete]);
+  }, [checkingUserStatus, userRole, profileComplete]);
 
   // Fetch detailed analytics for a specific ad
   const fetchAdAnalytics = async (adId) => {
@@ -573,6 +588,7 @@ const SellerAds = () => {
 
   // Check if user can create ad
   const canCreateAd = () => {
+    if (checkingUserStatus) return false;
     if (!userRole) return false;
     if (userRole === "seller_pending") {
       toast.error("Your seller application is pending approval");
@@ -614,6 +630,17 @@ const SellerAds = () => {
 
     return isPaid && !hasEnded;
   };
+
+  if (checkingUserStatus) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background-light">
+        <div className="text-center">
+          <div className="w-12 h-12 mx-auto border-b-2 rounded-full animate-spin border-primary-600"></div>
+          <p className="mt-4 text-neutral-600">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Loading state
   if (loading && ads.length === 0) {
