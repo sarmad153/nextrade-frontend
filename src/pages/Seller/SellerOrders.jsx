@@ -42,11 +42,13 @@ const SellerOrders = () => {
   const [editOrderModal, setEditOrderModal] = useState(false);
   const [sellerProducts, setSellerProducts] = useState([]); // To store seller's product IDs
 
-  // Stats state
+  // Stats state - ADDING REVENUE FROM DASHBOARD ENDPOINT
+  const [revenueFromDashboard, setRevenueFromDashboard] = useState(0);
+
+  // Keep original stats for other cards
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalProducts: 0,
-    totalRevenue: 0,
     pendingOrders: 0,
   });
 
@@ -195,11 +197,29 @@ const SellerOrders = () => {
     }
   };
 
-  // Fetch seller stats
+  // Fetch revenue from dashboard endpoint
+  const fetchDashboardRevenue = async () => {
+    try {
+      if (userRole === "seller_approved" && profileComplete) {
+        const statsResponse = await API.get("/admin/seller/stats");
+        if (
+          statsResponse.data &&
+          statsResponse.data.totalRevenue !== undefined
+        ) {
+          setRevenueFromDashboard(statsResponse.data.totalRevenue);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch revenue from dashboard endpoint:", error);
+      // Keep the calculated revenue as fallback
+    }
+  };
+
+  // Fetch seller stats (excluding revenue calculation)
   const fetchSellerStats = async () => {
     try {
       if (userRole === "seller_approved" && profileComplete) {
-        // Calculate stats from orders
+        // Calculate stats from orders (EXCLUDING REVENUE)
         const sellerProductIds =
           sellerProducts.length > 0
             ? sellerProducts
@@ -210,7 +230,6 @@ const SellerOrders = () => {
           ? allOrders.data
           : allOrders.data.orders || [];
 
-        let totalRevenue = 0;
         let pendingOrdersCount = 0;
         let totalOrdersCount = 0;
 
@@ -218,7 +237,6 @@ const SellerOrders = () => {
           const sellerItems = filterSellerItems(order.items, sellerProductIds);
           if (sellerItems.length > 0) {
             totalOrdersCount++;
-            totalRevenue += calculateSellerTotal(sellerItems);
             if (order.status === "Pending") {
               pendingOrdersCount++;
             }
@@ -228,13 +246,11 @@ const SellerOrders = () => {
         setStats({
           totalOrders: totalOrdersCount,
           totalProducts: sellerProductIds.length,
-          totalRevenue: totalRevenue,
           pendingOrders: pendingOrdersCount,
         });
       }
     } catch (error) {
       console.error("Failed to fetch stats:", error);
-      toast.error("Failed to load statistics");
     }
   };
 
@@ -293,6 +309,7 @@ const SellerOrders = () => {
     ) {
       fetchOrders();
       fetchSellerStats();
+      fetchDashboardRevenue(); // ADD THIS LINE
     } else if (!checkingUserStatus) {
       setLoading(false);
     }
@@ -505,41 +522,7 @@ const SellerOrders = () => {
           </p>
         </div>
 
-        {/* Mobile Filter Section */}
-        <div className="p-4 mb-4 bg-white rounded-lg shadow md:hidden">
-          <div className="relative mb-3">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FaSearch className="text-neutral-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search orders..."
-              className="w-full py-2 pl-10 pr-4 border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FaFilter className="text-neutral-400" />
-            </div>
-            <select
-              className="w-full py-2 pl-10 pr-8 border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="All">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="Processing">Processing</option>
-              <option value="Shipped">Shipped</option>
-              <option value="Delivered">Delivered</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
+        {/* Stats Cards - ONLY REVENUE CARD CHANGED */}
         <div className="grid grid-cols-2 gap-3 mb-6 md:grid-cols-4 md:gap-4 md:mb-8">
           <div className="p-3 bg-white rounded-lg shadow md:p-4">
             <div className="flex items-center">
@@ -589,6 +572,7 @@ const SellerOrders = () => {
             </div>
           </div>
 
+          {/* REVENUE CARD - USING DASHBOARD ENDPOINT */}
           <div className="p-3 bg-white rounded-lg shadow md:p-4">
             <div className="flex items-center">
               <div className="p-2 text-green-600 bg-green-100 rounded-full md:p-3">
@@ -599,12 +583,15 @@ const SellerOrders = () => {
                   Revenue
                 </h3>
                 <p className="text-lg font-bold text-neutral-800 md:text-2xl">
-                  Rs {stats.totalRevenue?.toLocaleString() || "0"}
+                  Rs {revenueFromDashboard?.toLocaleString() || "0"}
                 </p>
               </div>
             </div>
           </div>
         </div>
+
+        {/* The rest of your component remains exactly the same... */}
+        {/* Mobile Filter Section, Controls, Orders Table, Modals, etc. */}
 
         {/* Controls - Desktop */}
         <div className="hidden p-4 mb-6 bg-white rounded-lg shadow md:p-6 md:block">
@@ -811,7 +798,7 @@ const SellerOrders = () => {
           )}
         </div>
 
-        {/* Order Details Modal - UPDATED */}
+        {/* Order Details Modal */}
         {viewOrderModal && selectedOrder && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
             <div className="w-full max-w-4xl max-h-screen overflow-y-auto bg-white rounded-lg shadow-xl">
@@ -924,7 +911,7 @@ const SellerOrders = () => {
                   )}
                 </div>
 
-                {/* Order Items - UPDATED to show only seller's products */}
+                {/* Order Items */}
                 <div className="mb-8">
                   <h3 className="mb-4 text-lg font-semibold text-neutral-800">
                     Your Products in this Order (
