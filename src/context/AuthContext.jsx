@@ -27,6 +27,10 @@ export const AuthProvider = ({ children }) => {
     // If we have both token and user data, restore the session
     if (token && userData) {
       const parsedUser = JSON.parse(userData);
+
+      // Normalize role if needed
+      const role = parsedUser.role;
+
       setUser(parsedUser);
 
       // Make sure all required user info is in localStorage
@@ -34,9 +38,13 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("userId", parsedUser._id || parsedUser.id);
       }
       if (!localStorage.getItem("userRole")) {
-        localStorage.setItem("userRole", parsedUser.role);
+        localStorage.setItem("userRole", role);
       }
+
+      // **Redirect automatically based on role on app load**
+      redirectBasedOnRole(role, parsedUser.approvalStatus);
     }
+
     setLoading(false);
   }, []);
 
