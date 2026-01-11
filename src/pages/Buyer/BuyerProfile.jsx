@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   FaUser,
   FaEnvelope,
@@ -15,17 +15,16 @@ import {
   FaCheckCircle,
   FaClock,
 } from "react-icons/fa";
-import API from "../../api/axiosInstance";
 import { toast } from "react-toastify";
+import API from "../../api/axiosInstance";
 
-const BuyerProfile = () => {
+export default function BuyerProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
-  const [imageLoadError, setImageLoadError] = useState(false);
-  const [imageVersion, setImageVersion] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
   const [orderStats, setOrderStats] = useState({
     total: 0,
@@ -37,7 +36,6 @@ const BuyerProfile = () => {
   });
 
   const [statsLoading, setStatsLoading] = useState(true);
-  const [retryCount, setRetryCount] = useState(0);
 
   const [profileData, setProfileData] = useState({
     name: "",
@@ -57,19 +55,48 @@ const BuyerProfile = () => {
   const [tempData, setTempData] = useState({ ...profileData });
   const fileInputRef = useRef(null);
 
-  // Simple image URL construction
-  const getProfileImageUrl = useCallback((imagePath) => {
+  // Trigger file input click
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // NEW: Clean URL helper that handles both old and new formats
+  const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
 
+    // Check if it's already a valid URL
     if (imagePath.startsWith("http")) {
       return imagePath;
-    } else if (imagePath.startsWith("/uploads")) {
-      return `https://nextrade-backend-production-a486.up.railway.app/${imagePath}`;
-    } else {
-      // Default case
-      return `https://nextrade-backend-production-a486.up.railway.app//uploads/profiles/${imagePath}`;
     }
-  }, []);
+
+    // Check if it's a Cloudinary URL without protocol
+    if (imagePath.startsWith("//res.cloudinary.com")) {
+      return `https:${imagePath}`;
+    }
+
+    // Check if it's a Cloudinary public ID or partial URL
+    if (
+      imagePath.includes("cloudinary.com") ||
+      imagePath.includes("/image/upload/")
+    ) {
+      // Try to construct full Cloudinary URL
+      if (!imagePath.startsWith("http")) {
+        return `https://res.cloudinary.com/${imagePath
+          .replace(/^\/\//, "")
+          .replace(/^res\.cloudinary\.com\//, "")}`;
+      }
+    }
+
+    // If it's an old local path (which doesn't exist), return null
+    if (imagePath.startsWith("/uploads")) {
+      console.warn("Old local path detected, ignoring:", imagePath);
+      return null;
+    }
+
+    return imagePath;
+  };
 
   const formatJoinDate = () => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -86,107 +113,20 @@ const BuyerProfile = () => {
     }
   };
 
-  // validateForm to check if all the entery are valid
-  const validateForm = () => {
-    const errors = [];
-
-    if (!tempData.name.trim()) {
-      errors.push("Name is required");
-    }
-
-    if (tempData.phone && !/^[\+]?[0-9\s\-\(\)]{10,}$/.test(tempData.phone)) {
-      errors.push("Invalid phone number format");
-    }
-
-    return errors;
-  };
-
-  // handleChange
-  const handleChange = (field, value) => {
-    setTempData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  // handlePasswordChange
-  const handlePasswordChange = (field, value) => {
-    setPasswordData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  // handleCancel
-  const handleCancel = () => {
-    setTempData({ ...profileData });
-    setIsEditing(false);
-  };
-
-  // triggerFileInput
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      const user = JSON.parse(localStorage.getItem("user"));
-
-      if (user?.role && !["buyer", "admin"].includes(user.role)) {
-        toast.error("This page is for buyers only");
-        window.location.href = "/seller/dashboard";
-        return;
-      }
-
-      if (!user) {
-        toast.error("User not found");
-        return;
-      }
-
-      const response = await API.get("/profile/me");
-      const profile = response.data;
-
-      const transformedData = {
-        name: user.name || "Buyer Name",
-        email: user.email || "No email",
-        phone: profile?.phone || "Not provided",
-        city: profile?.city || "Not provided",
-        address: profile?.address || "Address not provided",
-        profileImage: profile?.profileImage || "",
-      };
-
-      setProfileData(transformedData);
-      setTempData(transformedData);
-      setImageLoadError(false);
-    } catch (error) {
-      console.error("Failed to fetch profile:", error);
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (user) {
-        const basicData = {
-          name: user.name || "Buyer Name",
-          email: user.email || "No email",
-          phone: "Not provided",
-          city: "Not provided",
-          address: "Address not provided",
-          profileImage: "",
-        };
-        setProfileData(basicData);
-        setTempData(basicData);
-        setImageLoadError(false);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchOrderStats = async () => {
     try {
       setStatsLoading(true);
       const response = await API.get("/orders/buyer/stats");
-      setOrderStats(response.data);
+      setOrderStats({
+        total: response.data.total || 0,
+        completed: response.data.completed || 0,
+        pending: response.data.pending || 0,
+        processing: response.data.processing || 0,
+        shipped: response.data.shipped || 0,
+        cancelled: response.data.cancelled || 0,
+      });
     } catch (error) {
-      console.error("Failed to fetch order stats:", error);
+      console.error("Failed to fetch stats:", error);
       setOrderStats({
         total: 0,
         completed: 0,
@@ -201,95 +141,91 @@ const BuyerProfile = () => {
   };
 
   useEffect(() => {
-    let isMounted = true;
+    fetchProfile();
+  }, []);
 
-    const fetchData = async () => {
-      if (!isMounted) return;
-
-      const token = localStorage.getItem("token");
-      if (!token) {
-        toast.error("Please login first");
-        window.location.href = "/login";
-        return;
-      }
-
-      await fetchProfile();
-      if (!isMounted) return;
-      await fetchOrderStats();
-    };
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
+  useEffect(() => {
+    fetchOrderStats();
   }, []);
 
   const handleEdit = () => {
     setTempData({ ...profileData });
     setIsEditing(true);
+    setImageError(false);
   };
 
   const handleSave = async () => {
-    const errors = validateForm();
-    if (errors.length > 0) {
-      errors.forEach((error) => toast.error(error));
-      return;
-    }
-
     try {
       setUpdating(true);
 
-      const profileUpdateData = {
-        name: tempData.name,
+      const updateData = {
         phone: tempData.phone === "Not provided" ? "" : tempData.phone,
         city: tempData.city === "Not provided" ? "" : tempData.city,
         address:
           tempData.address === "Address not provided" ? "" : tempData.address,
-        profileImage: tempData.profileImage,
       };
 
-      const { data } = await API.put("/profile/me", profileUpdateData);
+      console.log("Saving profile data:", updateData);
 
-      // Update local storage
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (user && tempData.name !== user.name) {
-        const updatedUser = {
-          ...user,
-          name: tempData.name,
+      const response = await API.put("/profile/me", updateData);
+      console.log("Save response:", response.data);
+
+      if (response.data.profile) {
+        const updatedProfile = {
+          ...profileData,
+          ...response.data.profile,
         };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setProfileData(updatedProfile);
+        setTempData(updatedProfile);
       }
 
-      const updatedProfile = {
-        name: data.name || tempData.name,
-        email: profileData.email,
-        phone: data.phone || tempData.phone,
-        city: data.city || tempData.city,
-        address: data.address || tempData.address,
-        profileImage: data.profileImage || tempData.profileImage,
-      };
+      // Update name separately if changed
+      if (tempData.name !== profileData.name) {
+        const user = JSON.parse(localStorage.getItem("user"));
+        const nameUpdateResponse = await API.put("/auth/update-profile", {
+          name: tempData.name,
+        });
 
-      setProfileData(updatedProfile);
+        if (nameUpdateResponse.data) {
+          const updatedUser = { ...user, name: tempData.name };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+
+          setProfileData((prev) => ({ ...prev, name: tempData.name }));
+          setTempData((prev) => ({ ...prev, name: tempData.name }));
+        }
+      }
+
       setIsEditing(false);
       toast.success("Profile updated successfully!");
+
+      await fetchProfile();
     } catch (error) {
-      console.error("Update error:", error);
-      if (error.response?.status === 400) {
-        toast.error(
-          error.response.data.message ||
-            "Validation error. Please check your input."
-        );
-      } else if (error.response?.status === 401) {
-        toast.error("Session expired. Please login again.");
-      } else {
-        toast.error(
-          error.response?.data?.message || "Failed to update profile"
-        );
-      }
+      console.error("Failed to update profile:", error);
+      console.error("Error details:", error.response?.data);
+      toast.error(error.response?.data?.message || "Failed to update profile");
     } finally {
       setUpdating(false);
     }
+  };
+
+  const handleCancel = () => {
+    setTempData({ ...profileData });
+    setIsEditing(false);
+    setImageError(false);
+  };
+
+  const handleChange = (field, value) => {
+    setTempData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handlePasswordChange = (field, value) => {
+    setPasswordData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   const handlePasswordReset = async () => {
@@ -338,6 +274,7 @@ const BuyerProfile = () => {
     }
   };
 
+  // FIXED: Simple image upload using /upload/profile
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -354,33 +291,51 @@ const BuyerProfile = () => {
 
     try {
       setUpdating(true);
-      const uploadFormData = new FormData();
-      uploadFormData.append("image", file);
+      const formData = new FormData();
+      formData.append("image", file);
 
-      const response = await API.post("/upload/profile", uploadFormData, {
+      console.log("Uploading image...");
+
+      // Just upload to Cloudinary
+      const uploadResponse = await API.post("/upload/profile", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      if (response.data.imageUrl) {
-        const newImageUrl = response.data.imageUrl;
+      console.log("Upload response:", uploadResponse.data);
 
-        setProfileData((prev) => ({
-          ...prev,
-          profileImage: newImageUrl,
-        }));
+      if (uploadResponse.data.imageUrl) {
+        const cloudinaryUrl = uploadResponse.data.imageUrl;
+        console.log("Cloudinary URL:", cloudinaryUrl);
 
-        setTempData((prev) => ({
-          ...prev,
-          profileImage: newImageUrl,
-        }));
+        // Now update the profile with the Cloudinary URL
+        const updateResponse = await API.put("/profile/me", {
+          profileImage: cloudinaryUrl,
+        });
 
-        setImageVersion((prev) => prev + 1);
-        toast.success("Profile image uploaded successfully");
+        console.log("Profile update response:", updateResponse.data);
+
+        // Update local state with the Cloudinary URL
+        const newProfileData = {
+          ...profileData,
+          profileImage: cloudinaryUrl,
+        };
+
+        setProfileData(newProfileData);
+        setTempData(newProfileData);
+
+        setImageError(false);
+        toast.success("Profile image uploaded successfully!");
+
+        // Force refresh to get updated data
+        setTimeout(() => {
+          fetchProfile();
+        }, 500);
       }
     } catch (error) {
       console.error("Failed to upload image:", error);
+      console.error("Error details:", error.response?.data);
       toast.error(error.response?.data?.message || "Failed to upload image");
     } finally {
       setUpdating(false);
@@ -390,77 +345,179 @@ const BuyerProfile = () => {
     }
   };
 
+  // FIXED: Remove profile image
   const removeProfileImage = async () => {
     try {
+      setUpdating(true);
+
+      // Clear the profile image
+      const response = await API.put("/profile/me", {
+        profileImage: "",
+      });
+
+      // Update local state
       setProfileData((prev) => ({
         ...prev,
         profileImage: "",
       }));
-
       setTempData((prev) => ({
         ...prev,
         profileImage: "",
       }));
 
-      setImageLoadError(false);
-      await API.put("/profile/me", { profileImage: "" });
       toast.success("Profile image removed");
     } catch (error) {
       console.error("Failed to remove profile image:", error);
       toast.error("Failed to remove profile image");
+    } finally {
+      setUpdating(false);
     }
   };
 
-  // rofileImageDisplay component
-  const ProfileImageDisplay = React.memo(
-    ({ imageUrl, isEditing, onRemove, version }) => {
-      const [imgError, setImgError] = useState(false);
-
-      // Only reset error when imageUrl actually changes
-      useEffect(() => {
-        setImgError(false);
-      }, [imageUrl]);
-
-      if (imageUrl && !imgError) {
-        return (
-          <div className="relative">
-            <img
-              src={imageUrl}
-              alt="Profile"
-              className="object-cover w-32 h-32 border-4 border-white rounded-full shadow-lg"
-              onError={() => setImgError(true)}
-              loading="lazy"
-              key={version} // Use version as key to control re-renders
-            />
-            {isEditing && (
-              <button
-                onClick={onRemove}
-                className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-600"
-                type="button"
-                aria-label="Remove profile image"
-              >
-                <FaTimes className="text-xs" />
-              </button>
-            )}
-          </div>
-        );
+  // FIXED: fetchProfile function
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) {
+        toast.error("User not found");
+        return;
       }
 
+      const response = await API.get("/profile/me");
+      const profile = response.data;
+
+      console.log("Raw profile data:", profile);
+
+      // Extract profile image - handle different formats
+      let profileImage = "";
+
+      // Check if profileImage exists in response
+      if (profile.profileImage) {
+        console.log("profileImage found:", profile.profileImage);
+        console.log("Type:", typeof profile.profileImage);
+
+        if (typeof profile.profileImage === "string") {
+          profileImage = profile.profileImage;
+        } else if (
+          profile.profileImage &&
+          typeof profile.profileImage === "object"
+        ) {
+          // Handle object format
+          if (profile.profileImage.url) {
+            profileImage = profile.profileImage.url;
+          } else if (profile.profileImage.secure_url) {
+            profileImage = profile.profileImage.secure_url;
+          }
+        }
+      }
+
+      console.log("Extracted profileImage:", profileImage);
+
+      const transformedData = {
+        name: profile.name || user.name || "Buyer Name",
+        email: profile.email || user.email || "No email",
+        phone: profile.phone || "Not provided",
+        city: profile.city || "Not provided",
+        address: profile.address || "Address not provided",
+        profileImage: profileImage, // This should be Cloudinary URL or empty
+      };
+
+      console.log("Transformed data:", transformedData);
+
+      setProfileData(transformedData);
+      setTempData(transformedData);
+      setImageError(false);
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+      console.error("Fetch error details:", error.response?.data);
+
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+      } else {
+        toast.error("Failed to load profile data");
+      }
+
+      // Set basic data from localStorage
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user) {
+        const basicData = {
+          name: user.name || "Buyer Name",
+          email: user.email || "No email",
+          phone: "Not provided",
+          city: "Not provided",
+          address: "Address not provided",
+          profileImage: "",
+        };
+        setProfileData(basicData);
+        setTempData(basicData);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // SIMPLE ProfileImageDisplay component
+  const ProfileImageDisplay = ({ imageUrl, isEditing, onRemove }) => {
+    const [imgError, setImgError] = useState(false);
+
+    console.log("ProfileImageDisplay - imageUrl:", imageUrl);
+
+    // Get cleaned image URL
+    const displayUrl = getImageUrl(imageUrl);
+    console.log("ProfileImageDisplay - displayUrl:", displayUrl);
+
+    // If we have a valid URL and no error, show the image
+    if (displayUrl && !imgError) {
       return (
-        <div className="flex items-center justify-center w-32 h-32 border-4 border-white rounded-full shadow-lg bg-secondary-200">
-          <FaUser className="text-6xl text-primary-600" />
+        <div className="relative">
+          <img
+            src={displayUrl}
+            alt="Profile"
+            className="object-cover w-32 h-32 border-4 border-white rounded-full shadow-lg"
+            onError={() => {
+              console.error("Image failed to load:", displayUrl);
+              setImgError(true);
+            }}
+            onLoad={() => {
+              console.log("Image loaded successfully:", displayUrl);
+              setImgError(false);
+            }}
+            loading="lazy"
+          />
+          {isEditing && (
+            <button
+              onClick={onRemove}
+              className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-600"
+              type="button"
+              disabled={updating}
+            >
+              <FaTimes className="text-xs" />
+            </button>
+          )}
         </div>
       );
     }
-  );
 
-  ProfileImageDisplay.displayName = "ProfileImageDisplay";
+    // Default avatar (no image or error)
+    return (
+      <div className="flex items-center justify-center w-32 h-32 border-4 border-white rounded-full shadow-lg bg-secondary-200">
+        <FaUser className="text-6xl text-primary-600" />
+        {isEditing && onRemove && (
+          <button
+            onClick={onRemove}
+            className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-600"
+            type="button"
+            disabled={updating}
+          >
+            <FaTimes className="text-xs" />
+          </button>
+        )}
+      </div>
+    );
+  };
 
-  const currentImageUrl = getProfileImageUrl(
-    isEditing ? tempData.profileImage : profileData.profileImage
-  );
-
-  // StatsCards
+  // StatsCards component
   const StatsCards = () => {
     if (statsLoading) {
       return (
@@ -552,16 +609,19 @@ const BuyerProfile = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          {/* Left Column - Profile Card */}
           <div className="lg:col-span-1">
             <div className="sticky p-6 bg-white rounded-lg shadow-lg top-6">
               <div className="flex flex-col items-center mb-6">
                 <div className="relative">
                   <ProfileImageDisplay
-                    key={`${currentImageUrl}-${imageVersion}`}
-                    imageUrl={currentImageUrl}
+                    imageUrl={
+                      isEditing
+                        ? tempData.profileImage
+                        : profileData.profileImage
+                    }
                     isEditing={isEditing}
                     onRemove={removeProfileImage}
-                    version={imageVersion}
                   />
 
                   {isEditing && (
@@ -571,7 +631,6 @@ const BuyerProfile = () => {
                         className="absolute p-2 text-white transition-colors rounded-full shadow-lg bottom-2 right-2 bg-primary-600 hover:bg-primary-700"
                         disabled={updating}
                         type="button"
-                        aria-label="Change profile picture"
                       >
                         {updating ? (
                           <FaSpinner className="text-sm animate-spin" />
@@ -586,7 +645,6 @@ const BuyerProfile = () => {
                         accept="image/*"
                         className="hidden"
                         disabled={updating}
-                        id="profile-image-input"
                       />
                     </>
                   )}
@@ -625,24 +683,7 @@ const BuyerProfile = () => {
                 </div>
               </div>
 
-              {!isEditing ? (
-                <div className="space-y-3">
-                  <button
-                    onClick={handleEdit}
-                    className="flex items-center justify-center w-full gap-2 py-3 font-medium text-white transition-colors rounded-lg bg-primary-600 hover:bg-primary-700"
-                  >
-                    <FaEdit />
-                    Edit Profile
-                  </button>
-                  <button
-                    onClick={() => setShowPasswordReset(true)}
-                    className="flex items-center justify-center w-full gap-2 py-3 font-medium transition-colors border rounded-lg text-primary-600 border-primary-600 hover:bg-primary-50"
-                  >
-                    <FaLock />
-                    Change Password
-                  </button>
-                </div>
-              ) : (
+              {isEditing ? (
                 <div className="flex gap-2">
                   <button
                     onClick={handleSave}
@@ -665,10 +706,28 @@ const BuyerProfile = () => {
                     Cancel
                   </button>
                 </div>
+              ) : (
+                <div className="space-y-3">
+                  <button
+                    onClick={handleEdit}
+                    className="flex items-center justify-center w-full gap-2 py-3 font-medium text-white transition-colors rounded-lg bg-primary-600 hover:bg-primary-700"
+                  >
+                    <FaEdit />
+                    Edit Profile
+                  </button>
+                  <button
+                    onClick={() => setShowPasswordReset(true)}
+                    className="flex items-center justify-center w-full gap-2 py-3 font-medium transition-colors border rounded-lg text-primary-600 border-primary-600 hover:bg-primary-50"
+                  >
+                    <FaLock />
+                    Change Password
+                  </button>
+                </div>
               )}
             </div>
           </div>
 
+          {/* Right Column - Form and Stats */}
           <div className="lg:col-span-2">
             {showPasswordReset && (
               <div className="p-6 mb-6 bg-white rounded-lg shadow-lg">
@@ -688,7 +747,6 @@ const BuyerProfile = () => {
                       }
                       className="w-full p-3 bg-white border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder="Enter current password"
-                      disabled={resettingPassword}
                     />
                   </div>
                   <div>
@@ -876,6 +934,4 @@ const BuyerProfile = () => {
       </div>
     </div>
   );
-};
-
-export default BuyerProfile;
+}

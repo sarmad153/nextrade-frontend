@@ -1,10 +1,15 @@
 import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
 
 export default function Navbar({ showSidebar, setShowSidebar }) {
   const location = useLocation().pathname;
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Close dropdown when clicking outside
+  const handleLinkClick = () => {
+    setDropdownOpen(false);
+  };
 
   return (
     <nav className="px-6 py-4 bg-white shadow-xs relative z-30 md:z-50">
@@ -54,13 +59,26 @@ export default function Navbar({ showSidebar, setShowSidebar }) {
                 <p className="text-xs text-neutral-500">seller@nextrade.com</p>
               </div>
 
-              <a
-                href="/seller/profile"
+              <Link
+                to="/seller/profile"
+                onClick={(e) => {
+                  e.preventDefault(); // Prevent default first
+                  console.log(
+                    "Link clicked, navigating to:",
+                    "/seller/profile"
+                  );
+                  console.log("Current location:", location);
+                  handleLinkClick();
+                  // Manually navigate
+                  window.history.pushState({}, "", "/seller/profile");
+                  // Force a re-render if needed
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                }}
                 className="flex items-center px-4 py-2 text-sm transition-colors duration-200 text-neutral-700 hover:bg-background-subtle"
               >
                 <FaUserCircle className="mr-3 text-neutral-500" />
                 My Profile
-              </a>
+              </Link>
             </div>
           )}
         </div>

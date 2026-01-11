@@ -371,7 +371,7 @@ const BuyerAdCarousel = () => {
     <>
       <style>{descriptionStyles}</style>
       <div
-        className="w-full bg-gradient-to-br from-white/80 to-blue-50/30 backdrop-blur-sm rounded-2xl border border-gray-300/50 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden"
+        className="w-auto bg-gradient-to-br from-white/80 to-blue-50/30 backdrop-blur-sm rounded-2xl border border-gray-300/50 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden"
         ref={carouselRef}
       >
         {/* Main Content */}
@@ -401,28 +401,42 @@ const BuyerAdCarousel = () => {
           </div>
 
           <div
-            className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 bg-gradient-to-br from-blue-900 to-purple-900 overflow-hidden cursor-pointer group"
+            className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 overflow-hidden cursor-pointer group"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={() => handleAdClick(currentAd)}
           >
-            {/* Add this wrapper div for better image control */}
-            <div className="absolute inset-0 overflow-hidden">
-              <img
-                src={getAdImage(currentAd)}
-                alt={currentAd.title}
-                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                onError={(e) => {
-                  e.target.src =
-                    "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=400&fit=crop";
-                }}
-              />
+            {/* Blurred background image - Fixed brightness */}
+            <div
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url(${getAdImage(currentAd)})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "blur(20px) brightness(1)",
+                transform: "scale(1.1)",
+              }}
+            >
+              {/* Lighter overlay for better readability */}
+              <div className="absolute inset-0 bg-black/20"></div>
             </div>
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+            {/* Main image container */}
+
+            <div className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96  overflow-hidden cursor-pointer group">
+              <div className="absolute inset-0  flex items-center justify-center">
+                <div className="relative w-full overflow-hidden flex items-center justify-center">
+                  <img
+                    src={getAdImage(currentAd)}
+                    alt={currentAd.title}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+              </div>
+            </div>
 
             {/* Top Left Metrics */}
-            <div className="absolute top-2 left-2 md:top-4 md:left-4">
+            <div className="absolute top-2 left-2 md:top-4 md:left-4 z-20">
               <div className="bg-black/60 backdrop-blur-md rounded-xl md:rounded-2xl px-2 py-1 md:px-4 md:py-3 border border-white/20 shadow-2xl">
                 <div className="grid grid-cols-3 gap-1 md:gap-4 text-center">
                   <div className="flex flex-col items-center">

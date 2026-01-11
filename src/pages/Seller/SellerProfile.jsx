@@ -68,7 +68,14 @@ export default function SellerProfile() {
     totalRevenue: 0,
   });
 
-  // image URL construction
+  // Trigger file input click
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Image URL construction helper
   const getProfileImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith("http")) return imagePath;
@@ -90,76 +97,6 @@ export default function SellerProfile() {
       });
     } catch (error) {
       return "Unknown";
-    }
-  };
-
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (!user) {
-        toast.error("User not found");
-        return;
-      }
-
-      setUserRole(user.role);
-      setApprovalStatus(user.approvalStatus);
-
-      const response = await API.get("/profile/me");
-      const profile = response.data;
-
-      console.log("Fetched profile:", profile);
-
-      const transformedData = {
-        name: profile.name || user.name || "Seller Name",
-        email: profile.email || user.email || "No email",
-        phone: profile.phone || "Not provided",
-        address: profile.address || "Address not provided",
-        profileImage: profile.profileImage || "",
-        businessType: profile.businessType || "",
-        businessAddress: profile.businessAddress || "",
-        city: profile.city || "",
-        cnicNumber: profile.cnicNumber || "",
-        businessPhone: profile.businessPhone || "",
-        yearsInBusiness: profile.yearsInBusiness || 0,
-        mainProducts: profile.mainProducts || [],
-        businessDescription:
-          profile.businessDescription ||
-          "Tell customers about your business...",
-        shopName: profile.shopName || user.storeName || "My Store",
-        shopDescription:
-          profile.shopDescription ||
-          user.storeDescription ||
-          "Tell customers about your business...",
-        isProfileComplete: profile.isProfileComplete || false,
-        userRole: user.role,
-      };
-
-      setProfileData(transformedData);
-      setTempData(transformedData);
-      setImageError(false);
-    } catch (error) {
-      console.error("Failed to fetch profile:", error);
-      console.error("Fetch error details:", error.response?.data);
-
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (user) {
-        const basicData = {
-          name: user.name || "Seller Name",
-          email: user.email || "No email",
-          phone: "Not provided",
-          address: "Address not provided",
-          profileImage: "",
-          shopName: user.storeName || "My Store",
-          shopDescription:
-            user.storeDescription || "Tell customers about your business...",
-          userRole: user.role,
-        };
-        setProfileData(basicData);
-        setTempData(basicData);
-      }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -197,6 +134,7 @@ export default function SellerProfile() {
     try {
       setUpdating(true);
 
+      // Prepare update data
       const updateData = {
         phone: tempData.phone === "Not provided" ? "" : tempData.phone,
         address:
@@ -206,34 +144,39 @@ export default function SellerProfile() {
           tempData.shopDescription === "Tell customers about your business..."
             ? ""
             : tempData.shopDescription,
-        profileImage: tempData.profileImage,
         businessType: tempData.businessType,
         businessAddress: tempData.businessAddress,
         city: tempData.city,
         cnicNumber: tempData.cnicNumber,
         businessPhone: tempData.businessPhone,
         yearsInBusiness: tempData.yearsInBusiness,
-        mainProducts: tempData.mainProducts,
+        mainProducts: Array.isArray(tempData.mainProducts)
+          ? tempData.mainProducts
+          : [tempData.mainProducts],
         businessDescription: tempData.businessDescription,
       };
 
-      console.log("Saving profile data:", updateData);
-
+      // Check if business profile is complete
       const isBusinessComplete =
         updateData.businessType && updateData.cnicNumber && updateData.city;
+
       if (isBusinessComplete) {
         updateData.isProfileComplete = true;
       }
+
+      console.log("Saving profile data:", updateData);
 
       const response = await API.put("/profile/me", updateData);
       console.log("Save response:", response.data);
 
       // Update profile data with the response
       if (response.data.profile) {
-        setProfileData((prev) => ({
-          ...prev,
+        const updatedProfile = {
+          ...profileData,
           ...response.data.profile,
-        }));
+        };
+        setProfileData(updatedProfile);
+        setTempData(updatedProfile);
       }
 
       setIsEditing(false);
@@ -242,6 +185,9 @@ export default function SellerProfile() {
           ? "Business profile completed successfully!"
           : "Profile updated successfully!"
       );
+
+      // Refresh profile to get latest data
+      await fetchProfile();
     } catch (error) {
       console.error("Failed to update profile:", error);
       console.error("Error details:", error.response?.data);
@@ -317,10 +263,12 @@ export default function SellerProfile() {
     }
   };
 
+  // Image upload function
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Validate file
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
@@ -333,43 +281,53 @@ export default function SellerProfile() {
 
     try {
       setUpdating(true);
-      const uploadFormData = new FormData();
-      uploadFormData.append("image", file);
+      const formData = new FormData();
+      formData.append("image", file);
 
-      let response;
-      try {
-        //  profile image upload endpoint
-        response = await API.post("/upload/profile", uploadFormData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+      // Use the correct upload endpoint for profile images
+      const uploadResponse = await API.post("/upload/profile", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("Image upload response:", uploadResponse.data);
+
+      if (uploadResponse.data.imageUrl) {
+        const imageUrl = uploadResponse.data.imageUrl;
+
+        // Update the profile with the new image URL
+        const profileResponse = await API.put("/profile/me", {
+          profileImage: imageUrl,
         });
-      } catch (uploadError) {
-        console.log(
-          "Profile image upload failed, trying upload route:",
-          uploadError
-        );
-      }
 
-      console.log("Image upload response:", response.data);
-
-      if (response.data.imageUrl) {
-        const imageUrl = response.data.imageUrl;
-
-        // Update both tempData and profileData immediately
-        setTempData((prev) => ({ ...prev, profileImage: imageUrl }));
-        setProfileData((prev) => ({ ...prev, profileImage: imageUrl }));
-        setImageError(false);
-
-        toast.success("Profile image uploaded successfully");
-
-        // If not in edit mode, refresh the profile to get updated data
-        if (!isEditing) {
-          await fetchProfile();
+        // Update local state with the complete profile response
+        if (profileResponse.data.profile) {
+          const updatedProfile = {
+            ...profileData,
+            ...profileResponse.data.profile,
+            profileImage: imageUrl,
+          };
+          setProfileData(updatedProfile);
+          setTempData(updatedProfile);
+        } else {
+          // Fallback: just update the image
+          setProfileData((prev) => ({
+            ...prev,
+            profileImage: imageUrl,
+          }));
+          setTempData((prev) => ({
+            ...prev,
+            profileImage: imageUrl,
+          }));
         }
+
+        setImageError(false);
+        toast.success("Profile image uploaded successfully");
       }
     } catch (error) {
       console.error("Failed to upload image:", error);
+      console.error("Error details:", error.response?.data);
       toast.error(error.response?.data?.message || "Failed to upload image");
     } finally {
       setUpdating(false);
@@ -379,56 +337,184 @@ export default function SellerProfile() {
     }
   };
 
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
+  // Remove profile image function
   const removeProfileImage = async () => {
     try {
-      // Set profile image to empty string in both states
-      setTempData((prev) => ({ ...prev, profileImage: "" }));
-      setProfileData((prev) => ({ ...prev, profileImage: "" }));
+      setUpdating(true);
 
-      if (isEditing) {
-        await API.put("/profile/me", { profileImage: "" });
+      // Update the profile to remove the image reference
+      const response = await API.put("/profile/me", {
+        profileImage: "",
+      });
+
+      // Update local state
+      if (response.data.profile) {
+        const updatedProfile = {
+          ...profileData,
+          ...response.data.profile,
+          profileImage: "",
+        };
+        setProfileData(updatedProfile);
+        setTempData(updatedProfile);
+      } else {
+        // Fallback
+        setProfileData((prev) => ({
+          ...prev,
+          profileImage: "",
+        }));
+        setTempData((prev) => ({
+          ...prev,
+          profileImage: "",
+        }));
       }
 
       toast.success("Profile image removed");
     } catch (error) {
       console.error("Failed to remove profile image:", error);
       toast.error("Failed to remove profile image");
+    } finally {
+      setUpdating(false);
     }
   };
 
-  // Improved ProfileImageDisplay component
-  const ProfileImageDisplay = ({ imageData, isEditing, onRemove }) => {
-    const imageUrl = getProfileImageUrl(imageData);
+  // fetchProfile function with proper image handling
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) {
+        toast.error("User not found");
+        return;
+      }
+
+      setUserRole(user.role);
+      setApprovalStatus(user.approvalStatus || "");
+
+      const response = await API.get("/profile/me");
+      const profile = response.data;
+
+      console.log("Fetched profile:", profile);
+
+      // Extract profile image URL properly
+      let profileImage = "";
+      if (profile.profileImage) {
+        if (typeof profile.profileImage === "string") {
+          profileImage = profile.profileImage;
+        } else if (profile.profileImage.url) {
+          profileImage = profile.profileImage.url;
+        } else if (profile.profileImage.secure_url) {
+          profileImage = profile.profileImage.secure_url;
+        }
+      }
+
+      // Transform data with proper defaults
+      const transformedData = {
+        name: profile.name || user.name || "Seller Name",
+        email: profile.email || user.email || "No email",
+        phone: profile.phone || "Not provided",
+        address: profile.address || "Address not provided",
+        profileImage: profileImage,
+        businessType: profile.businessType || "",
+        businessAddress: profile.businessAddress || "",
+        city: profile.city || "",
+        cnicNumber: profile.cnicNumber || "",
+        businessPhone: profile.businessPhone || "",
+        yearsInBusiness: profile.yearsInBusiness || 0,
+        mainProducts: Array.isArray(profile.mainProducts)
+          ? profile.mainProducts
+          : [],
+        businessDescription:
+          profile.businessDescription ||
+          "Tell customers about your business...",
+        shopName: profile.shopName || user.storeName || "My Store",
+        shopDescription:
+          profile.shopDescription ||
+          user.storeDescription ||
+          "Tell customers about your business...",
+        isProfileComplete: profile.isProfileComplete || false,
+        userRole: user.role,
+      };
+
+      setProfileData(transformedData);
+      setTempData(transformedData);
+      setImageError(false);
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+      console.error("Fetch error details:", error.response?.data);
+
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+      } else {
+        toast.error("Failed to load profile data");
+      }
+
+      // Set basic data from localStorage
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user) {
+        const basicData = {
+          name: user.name || "Seller Name",
+          email: user.email || "No email",
+          phone: "Not provided",
+          address: "Address not provided",
+          profileImage: "",
+          shopName: user.storeName || "My Store",
+          shopDescription:
+            user.storeDescription || "Tell customers about your business...",
+          userRole: user.role,
+          isProfileComplete: false,
+        };
+        setProfileData(basicData);
+        setTempData(basicData);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ProfileImageDisplay component
+  const ProfileImageDisplay = ({ imageUrl, isEditing, onRemove }) => {
     const [imgError, setImgError] = useState(false);
 
-    const handleImageError = () => {
-      console.log("Image failed to load:", imageUrl);
-      setImgError(true);
+    // Get proper image URL
+    const getImageUrl = () => {
+      if (!imageUrl) return null;
+
+      // If it's already a full URL
+      if (imageUrl.startsWith("http")) return imageUrl;
+
+      // If it's a Cloudinary URL without protocol
+      if (imageUrl.startsWith("//res.cloudinary.com")) {
+        return `https:${imageUrl}`;
+      }
+
+      // If it's a relative path
+      if (imageUrl.startsWith("/uploads")) {
+        return `${process.env.REACT_APP_API_URL || ""}${imageUrl}`;
+      }
+
+      // Return as-is (might be Cloudinary public ID)
+      return imageUrl;
     };
 
-    const handleImageLoad = () => {
-      setImgError(false);
-    };
+    const finalImageUrl = getImageUrl();
 
-    if (imageUrl && !imgError) {
+    if (finalImageUrl && !imgError) {
       return (
         <div className="relative">
           <img
-            src={imageUrl}
+            src={finalImageUrl}
             alt="Profile"
             className="object-cover w-32 h-32 border-4 border-white rounded-full shadow-lg"
-            onError={handleImageError}
-            onLoad={handleImageLoad}
+            onError={() => setImgError(true)}
+            onLoad={() => setImgError(false)}
+            loading="lazy"
           />
           {isEditing && (
             <button
               onClick={onRemove}
               className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-600"
               type="button"
+              disabled={updating}
             >
               <FaTimes className="text-xs" />
             </button>
@@ -443,27 +529,29 @@ export default function SellerProfile() {
       </div>
     );
   };
+
+  // Complete business profile function
   const completeBusinessProfile = async () => {
     try {
       setUpdating(true);
+
+      // Gather required data
       const businessData = {
         phone: profileData.phone === "Not provided" ? "" : profileData.phone,
         address:
           profileData.address === "Address not provided"
             ? ""
             : profileData.address,
-        businessType: "individual",
-        city: "Lahore",
-        cnicNumber: "",
-        businessPhone:
-          profileData.phone === "Not provided" ? "" : profileData.phone,
-        yearsInBusiness: 1,
-        mainProducts: ["General Products"],
+        businessType: profileData.businessType || "individual",
+        city: profileData.city || "",
+        cnicNumber: profileData.cnicNumber || "",
+        businessPhone: profileData.businessPhone || profileData.phone || "",
+        yearsInBusiness: profileData.yearsInBusiness || 1,
+        mainProducts: Array.isArray(profileData.mainProducts)
+          ? profileData.mainProducts
+          : ["General Products"],
         businessDescription:
-          profileData.shopDescription ===
-          "Tell customers about your business..."
-            ? ""
-            : profileData.shopDescription,
+          profileData.businessDescription || profileData.shopDescription || "",
         shopName:
           profileData.shopName === "My Store" ? "" : profileData.shopName,
         shopDescription:
@@ -473,13 +561,33 @@ export default function SellerProfile() {
             : profileData.shopDescription,
       };
 
-      await API.post("/profile/business-profile", businessData);
+      // Validate required fields
+      if (
+        !businessData.businessType ||
+        !businessData.cnicNumber ||
+        !businessData.city
+      ) {
+        toast.error("Business type, CNIC number, and city are required");
+        return;
+      }
+
+      const response = await API.post(
+        "/profile/business-profile",
+        businessData
+      );
+
       toast.success("Business profile submitted for approval!");
-      fetchProfile();
+
+      // Refresh profile data
+      await fetchProfile();
+
+      return response.data;
     } catch (error) {
+      console.error("Business profile error:", error);
       toast.error(
         error.response?.data?.message || "Failed to complete business profile"
       );
+      throw error;
     } finally {
       setUpdating(false);
     }
@@ -613,12 +721,13 @@ export default function SellerProfile() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          {/* Left Column - Profile Card */}
           <div className="lg:col-span-1">
             <div className="sticky p-6 bg-white rounded-lg shadow-lg top-6">
               <div className="flex flex-col items-center mb-6">
                 <div className="relative">
                   <ProfileImageDisplay
-                    imageData={
+                    imageUrl={
                       isEditing
                         ? tempData.profileImage
                         : profileData.profileImage
@@ -702,7 +811,10 @@ export default function SellerProfile() {
               {renderActionButtons()}
             </div>
           </div>
+
+          {/* Right Column - Form and Stats */}
           <div className="lg:col-span-2">
+            {/* Password Reset Section */}
             {showPasswordReset && (
               <div className="p-6 mb-6 bg-white rounded-lg shadow-lg">
                 <h3 className="mb-6 text-xl font-bold text-neutral-800">
@@ -785,6 +897,7 @@ export default function SellerProfile() {
               </div>
             )}
 
+            {/* Store Information Form */}
             <div className="p-6 mb-4 bg-white rounded-lg shadow-lg">
               <h3 className="mb-6 text-xl font-bold text-neutral-800">
                 Store Information
@@ -873,6 +986,7 @@ export default function SellerProfile() {
                   )}
                 </div>
 
+                {/* Business Verification Details (for sellers) */}
                 {(userRole === "seller_pending" ||
                   userRole === "seller_approved") && (
                   <>
@@ -970,6 +1084,7 @@ export default function SellerProfile() {
                               }
                               className="w-full p-3 bg-white border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
                               placeholder="0"
+                              min="0"
                             />
                           ) : (
                             <div className="p-3 rounded-lg bg-background-subtle">
@@ -987,13 +1102,14 @@ export default function SellerProfile() {
             </div>
           </div>
         </div>
+
+        {/* Store Statistics (for approved sellers) */}
         {userRole === "seller_approved" && (
           <div className="p-6 bg-white rounded-lg shadow-lg">
             <h3 className="mb-6 text-xl font-bold text-neutral-800">
               Store Statistics
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              {/* Total Products Card */}
               <div className="p-6 text-center rounded-lg shadow-lg transition-all duration-300 hover:scale-105 bg-blue-50">
                 <FaShoppingBag className="text-2xl text-blue-600 mx-auto mb-3" />
                 <div className="text-2xl font-bold text-blue-600">
@@ -1004,7 +1120,6 @@ export default function SellerProfile() {
                 </div>
               </div>
 
-              {/* Total Orders Card */}
               <div className="p-6 text-center rounded-lg shadow-lg transition-all duration-300 hover:scale-105 bg-green-50">
                 <FaCheckCircle className="text-2xl text-green-600 mx-auto mb-3" />
                 <div className="text-2xl font-bold text-green-600">
@@ -1015,7 +1130,6 @@ export default function SellerProfile() {
                 </div>
               </div>
 
-              {/* Total Revenue Card */}
               <div className="p-6 text-center rounded-lg shadow-lg transition-all duration-300 hover:scale-105 bg-yellow-50">
                 <FaMoneyBillWave className="text-2xl text-yellow-600 mx-auto mb-3" />
                 <div className="text-2xl font-bold text-yellow-600">

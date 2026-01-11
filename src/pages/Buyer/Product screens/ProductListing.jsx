@@ -354,6 +354,16 @@ const ProductsGrid = ({
 const ProductListing = () => {
   const [searchParams] = useSearchParams();
 
+  useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  useEffect(() => {
+    // Scroll to top when filters change (optional)
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [searchParams]);
+
   // Initialize filters directly from URL params
   const [filters, setFilters] = useState(() => {
     const urlCategory = searchParams.get("category");

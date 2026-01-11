@@ -27,6 +27,7 @@ export default function AdminProfile() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [imageVersion, setImageVersion] = useState(0);
 
   const [profileData, setProfileData] = useState({
     name: "",
@@ -49,14 +50,37 @@ export default function AdminProfile() {
   const [tempData, setTempData] = useState({ ...profileData });
   const fileInputRef = useRef(null);
 
-  //  Proper image URL construction
-  const getProfileImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith("http")) return imagePath;
-    if (imagePath.startsWith("/uploads")) {
-      return `https://nextrade-backend-production-a486.up.railway.app/${imagePath}`;
+  // FIXED: Better image URL construction
+  const getProfileImageUrl = (imageData) => {
+    if (!imageData) return null;
+
+    console.log("Admin profile image data:", imageData);
+
+    // If it's already a full URL
+    if (typeof imageData === "string") {
+      if (imageData.startsWith("http")) {
+        return imageData;
+      }
+      if (imageData.startsWith("/uploads")) {
+        return `${
+          process.env.REACT_APP_API_URL?.replace("/api", "") ||
+          "https://nextrade-backend-production-a486.up.railway.app"
+        }${imageData}`;
+      }
+      return imageData;
     }
-    return `https://nextrade-backend-production-a486.up.railway.app//uploads/profiles/${imagePath}`;
+
+    // If it's an object with url property (from Cloudinary)
+    if (imageData && typeof imageData === "object") {
+      if (imageData.url) {
+        return imageData.url;
+      }
+      if (imageData.secure_url) {
+        return imageData.secure_url;
+      }
+    }
+
+    return null;
   };
 
   const formatJoinDate = () => {
@@ -85,6 +109,7 @@ export default function AdminProfile() {
 
       const response = await API.get("/profile/me");
       const profile = response.data;
+      console.log("Admin profile API response:", profile);
 
       const transformedData = {
         name: user.name || "Administrator",
@@ -98,10 +123,18 @@ export default function AdminProfile() {
         profileImage: profile?.profileImage || "",
       };
 
+      console.log("Transformed admin data:", transformedData);
+      console.log(
+        "Admin image URL:",
+        getProfileImageUrl(transformedData.profileImage)
+      );
+
       setProfileData(transformedData);
       setTempData(transformedData);
     } catch (error) {
       console.error("Failed to fetch admin profile:", error);
+      console.error("Error details:", error.response?.data);
+
       const user = JSON.parse(localStorage.getItem("user"));
       if (user) {
         const basicData = {
@@ -172,12 +205,22 @@ export default function AdminProfile() {
         profileImage: tempData.profileImage,
       };
 
-      const response = await API.put("/profile/me", updateData);
+      console.log("Admin profile update data:", updateData);
 
-      if (
-        tempData.department !== profileData.department ||
-        tempData.bio !== profileData.bio
-      ) {
+      const response = await API.put("/profile/me", updateData);
+      console.log("Admin profile update response:", response.data);
+
+      // Update local storage with new data
+      if (response.data.profile) {
+        const updatedUser = {
+          ...user,
+          name: response.data.profile.name || user.name,
+          department: tempData.department,
+          bio: tempData.bio,
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      } else {
+        // Fallback update
         const updatedUser = {
           ...user,
           department: tempData.department,
@@ -186,7 +229,18 @@ export default function AdminProfile() {
         localStorage.setItem("user", JSON.stringify(updatedUser));
       }
 
-      setProfileData({ ...tempData });
+      // Update profile data with response
+      if (response.data.profile) {
+        setProfileData((prev) => ({
+          ...prev,
+          ...response.data.profile,
+          department: tempData.department,
+          bio: tempData.bio,
+        }));
+      } else {
+        setProfileData({ ...tempData });
+      }
+
       setIsEditing(false);
       toast.success("Admin profile updated successfully!");
     } catch (error) {
@@ -262,7 +316,7 @@ export default function AdminProfile() {
     }
   };
 
-  // Image upload function
+  // FIXED: Image upload function
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -282,22 +336,70 @@ export default function AdminProfile() {
       const uploadFormData = new FormData();
       uploadFormData.append("image", file);
 
-      // Use the correct upload endpoint
-      const response = await API.post("/upload/profile", uploadFormData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      console.log("Attempting admin profile image upload...");
+
+      // Try multiple endpoints
+      let response;
+      try {
+        // First try profile-specific endpoint
+        response = await API.post("/profile/image", uploadFormData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        console.log(
+          "Admin profile image upload via /profile/image:",
+          response.data
+        );
+      } catch (profileError) {
+        console.log(
+          "Profile endpoint failed, trying /upload/image:",
+          profileError
+        );
+
+        // Try general upload endpoint
+        response = await API.post("/upload/image", uploadFormData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        console.log(
+          "Admin profile image upload via /upload/image:",
+          response.data
+        );
+      }
 
       if (response.data.imageUrl) {
+        const newImageUrl = response.data.imageUrl;
+
+        // Update tempData if editing, and profileData
         setTempData((prev) => ({
           ...prev,
-          profileImage: response.data.imageUrl,
+          profileImage: newImageUrl,
         }));
+
+        setProfileData((prev) => ({
+          ...prev,
+          profileImage: newImageUrl,
+        }));
+
+        setImageVersion((prev) => prev + 1);
+
+        // Also update the profile in backend
+        try {
+          await API.put("/profile/me", { profileImage: newImageUrl });
+        } catch (updateError) {
+          console.log("Profile update after image upload failed:", updateError);
+        }
+
         toast.success("Profile image uploaded successfully");
+
+        // Refresh profile to ensure consistency
+        await fetchAdminProfile();
       }
     } catch (error) {
-      console.error("Failed to upload image:", error);
+      console.error("Failed to upload admin image:", error);
+      console.error("Error response:", error.response?.data);
       toast.error(error.response?.data?.message || "Failed to upload image");
     } finally {
       setUpdating(false);
@@ -313,26 +415,45 @@ export default function AdminProfile() {
 
   const removeProfileImage = async () => {
     try {
+      setUpdating(true);
+
+      // Update backend
+      await API.put("/profile/me", { profileImage: "" });
+
+      // Update local state
       setTempData((prev) => ({
         ...prev,
         profileImage: "",
       }));
 
-      if (isEditing) {
-        await API.put("/profile/me", { profileImage: "" });
-      }
+      setProfileData((prev) => ({
+        ...prev,
+        profileImage: "",
+      }));
 
+      setImageVersion((prev) => prev + 1);
       toast.success("Profile image removed");
     } catch (error) {
       console.error("Failed to remove profile image:", error);
       toast.error("Failed to remove profile image");
+    } finally {
+      setUpdating(false);
     }
   };
 
-  // Profile image display component
-  const ProfileImageDisplay = ({ imageData, isEditing, onRemove }) => {
-    const imageUrl = getProfileImageUrl(imageData);
+  // FIXED: Profile image display component
+  const ProfileImageDisplay = ({ imageData, isEditing, onRemove, version }) => {
     const [imgError, setImgError] = useState(false);
+    const imageUrl = getProfileImageUrl(imageData);
+
+    useEffect(() => {
+      setImgError(false);
+    }, [imageUrl, version]);
+
+    const handleImageError = () => {
+      console.log("Admin profile image failed to load:", imageUrl);
+      setImgError(true);
+    };
 
     if (imageUrl && !imgError) {
       return (
@@ -341,13 +462,16 @@ export default function AdminProfile() {
             src={imageUrl}
             alt="Profile"
             className="object-cover w-32 h-32 border-4 border-white rounded-full shadow-lg"
-            onError={() => setImgError(true)}
+            onError={handleImageError}
+            loading="lazy"
+            key={`${imageUrl}-${version}`}
           />
           {isEditing && (
             <button
               onClick={onRemove}
               className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-600"
               type="button"
+              disabled={updating}
             >
               <FaTimes className="text-xs" />
             </button>
@@ -363,6 +487,15 @@ export default function AdminProfile() {
     );
   };
 
+  // Debug image state
+  useEffect(() => {
+    console.log("Admin profile image state:", {
+      profileData: profileData.profileImage,
+      tempData: tempData.profileImage,
+      currentImageUrl: getProfileImageUrl(profileData.profileImage),
+    });
+  }, [profileData.profileImage, tempData.profileImage]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background-light">
@@ -373,6 +506,11 @@ export default function AdminProfile() {
       </div>
     );
   }
+
+  // Get current image URL for display
+  const currentImageUrl = getProfileImageUrl(
+    isEditing ? tempData.profileImage : profileData.profileImage
+  );
 
   return (
     <div className="min-h-screen bg-background-light">
@@ -397,6 +535,7 @@ export default function AdminProfile() {
                     }
                     isEditing={isEditing}
                     onRemove={removeProfileImage}
+                    version={imageVersion}
                   />
 
                   {isEditing && (
@@ -432,6 +571,7 @@ export default function AdminProfile() {
                       onChange={(e) => handleChange("name", e.target.value)}
                       className="px-2 py-1 text-center border rounded bg-background-subtle border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder="Admin Name"
+                      disabled={updating}
                     />
                   ) : (
                     profileData.name
@@ -458,6 +598,7 @@ export default function AdminProfile() {
                         }
                         className="w-full px-2 py-1 border rounded bg-background-subtle border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
                         placeholder="Department"
+                        disabled={updating}
                       />
                     ) : (
                       profileData.department

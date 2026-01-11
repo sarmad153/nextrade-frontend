@@ -474,18 +474,6 @@ const AIRecommendations = ({
                 Browse All Products
                 <FaArrowRight className="ml-2" />
               </Link>
-              {user && (
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="inline-flex items-center px-6 py-3 border border-primary-600 text-primary-600 rounded-lg font-semibold hover:bg-primary-50 transition-all duration-300 disabled:opacity-50"
-                >
-                  <FaSync
-                    className={`mr-2 ${refreshing ? "animate-spin" : ""}`}
-                  />
-                  {refreshing ? "Refreshing..." : "Refresh"}
-                </button>
-              )}
             </div>
           </div>
         </div>
