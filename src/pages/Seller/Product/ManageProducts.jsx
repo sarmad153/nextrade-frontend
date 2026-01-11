@@ -47,6 +47,7 @@ const ManageProducts = () => {
   const [productToDelete, setProductToDelete] = useState(null);
   const [categories, setCategories] = useState(["All"]);
   const [categoryOptions, setCategoryOptions] = useState([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   // View Product Details State
   const [viewProductModal, setViewProductModal] = useState(false);
@@ -57,6 +58,10 @@ const ManageProducts = () => {
   const [selectedProductForBulk, setSelectedProductForBulk] = useState(null);
   const [bulkTiers, setBulkTiers] = useState([]);
   const [bulkPricingEnabled, setBulkPricingEnabled] = useState(false);
+
+  // Image upload states
+  const [mainImageUploading, setMainImageUploading] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
 
   // Check user role and profile status on component mount
   useEffect(() => {
@@ -171,8 +176,7 @@ const ManageProducts = () => {
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (product.category?.name || "")
         .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (product.sku || "").toLowerCase().includes(searchTerm.toLowerCase());
+        .includes(searchTerm.toLowerCase());
 
     const matchesCategory =
       selectedCategory === "All" || product.category?.name === selectedCategory;
@@ -198,29 +202,130 @@ const ManageProducts = () => {
       ...product,
       category: product.category?._id || product.category,
       salePrice: product.salePrice || "",
-      sku: product.sku || "",
       featured: product.featured || false,
       status: product.status || "active",
+      tags: product.tags || [],
+      images: product.images || [], // Ensure images array exists
     });
+  };
+
+  // Handle image upload (single)
+  const handleImageUpload = async (file, type = "main") => {
+    try {
+      if (type === "main") {
+        setMainImageUploading(true);
+      } else {
+        setGalleryUploading(true);
+      }
+
+      const formData = new FormData();
+      formData.append(type === "main" ? "image" : "images", file);
+
+      const endpoint =
+        type === "main"
+          ? "/upload/products/single"
+          : "/upload/products/multiple";
+
+      const response = await API.post(endpoint, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (type === "main") {
+        // For main image, replace the first image
+        const uploadedImage = response.data.imageUrl
+          ? { url: response.data.imageUrl, publicId: response.data.publicId }
+          : {
+              url: response.data.images[0].url,
+              publicId: response.data.images[0].publicId,
+            };
+
+        const updatedImages = [
+          uploadedImage,
+          ...(editingProduct.images || []).slice(1),
+        ];
+        setEditingProduct({
+          ...editingProduct,
+          images: updatedImages,
+        });
+      } else {
+        // For gallery, add to existing images
+        const uploadedImages = response.data.images || [
+          { url: response.data.imageUrl, publicId: response.data.publicId },
+        ];
+
+        const updatedImages = [
+          ...(editingProduct.images || []),
+          ...uploadedImages,
+        ];
+        setEditingProduct({
+          ...editingProduct,
+          images: updatedImages,
+        });
+      }
+
+      toast.success("Image uploaded successfully!");
+    } catch (error) {
+      toast.error("Failed to upload image");
+      console.error("Upload error:", error);
+    } finally {
+      if (type === "main") {
+        setMainImageUploading(false);
+      } else {
+        setGalleryUploading(false);
+      }
+    }
+  };
+
+  // Handle image removal
+  const handleRemoveImage = (index) => {
+    const updatedImages = [...editingProduct.images];
+    const removedImage = updatedImages[index];
+
+    // Remove from array
+    updatedImages.splice(index, 1);
+
+    setEditingProduct({
+      ...editingProduct,
+      images: updatedImages,
+    });
+
+    // Optional: Delete from Cloudinary (you might want to implement this)
+    // if (removedImage.publicId) {
+    //   API.delete(`/upload/images/${removedImage.publicId}`);
+    // }
   };
 
   // Handle save edited product with ALL fields
   const handleSaveEdit = async () => {
     if (editingProduct) {
       try {
+        // Prepare images array - ensure proper structure
+        const formattedImages = editingProduct.images.map((img) => {
+          if (typeof img === "string") {
+            // If it's just a URL string, convert to object
+            return { url: img, publicId: null };
+          }
+          return img; // Already in correct format
+        });
+
         const productData = {
           name: editingProduct.name,
           description: editingProduct.description,
           price: parseFloat(editingProduct.price),
           stock: parseInt(editingProduct.stock),
           category: editingProduct.category,
+          images: formattedImages, // Send properly formatted images
           salePrice: editingProduct.salePrice
             ? parseFloat(editingProduct.salePrice)
             : undefined,
-          sku: editingProduct.sku || undefined,
           featured: editingProduct.featured,
           status: editingProduct.status,
-          tags: editingProduct.tags || [],
+          tags: Array.isArray(editingProduct.tags)
+            ? editingProduct.tags
+            : (editingProduct.tags || "")
+                .split(",")
+                .map((t) => t.trim())
+                .filter((t) => t),
         };
 
         const response = await API.put(
@@ -233,7 +338,11 @@ const ManageProducts = () => {
           setProducts(
             products.map((product) =>
               product._id === editingProduct._id
-                ? response.data.product
+                ? {
+                    ...response.data.product,
+                    bulkPricingEnabled: product.bulkPricingEnabled,
+                    bulkTiers: product.bulkTiers,
+                  }
                 : product
             )
           );
@@ -241,6 +350,7 @@ const ManageProducts = () => {
           toast.success("Product updated successfully!");
         }
       } catch (error) {
+        console.error("Update error:", error.response?.data || error);
         toast.error(
           error.response?.data?.message || "Failed to update product"
         );
@@ -398,6 +508,7 @@ const ManageProducts = () => {
       );
     }
   };
+
   // Status badge color with all statuses
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -768,7 +879,7 @@ const ManageProducts = () => {
                   <th
                     scope="col"
                     className="px-4 py-3 text-xs font-medium tracking-wider text-left uppercase text-neutral-500 md:px-6"
-                    style={{ minWidth: "250px" }} // Add minimum width
+                    style={{ minWidth: "250px" }}
                   >
                     Product Details
                   </th>
@@ -819,7 +930,11 @@ const ManageProducts = () => {
                           {product.images && product.images.length > 0 ? (
                             <img
                               className="object-cover w-12 h-12 rounded-lg"
-                              src={product.images[0]?.url || ""}
+                              src={
+                                product.images[0]?.url ||
+                                product.images[0] ||
+                                ""
+                              }
                               alt={product.name}
                             />
                           ) : (
@@ -997,6 +1112,7 @@ const ManageProducts = () => {
           )}
         </div>
 
+        {/* View Product Details Modal (SKU removed) */}
         {viewProductModal && selectedProduct && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
             <div className="w-full max-w-4xl max-h-screen overflow-y-auto bg-white rounded-lg shadow-xl">
@@ -1045,12 +1161,6 @@ const ManageProducts = () => {
                         <strong className="text-neutral-700">Category:</strong>
                         <p className="mt-1 text-neutral-900">
                           {selectedProduct.category?.name || "Uncategorized"}
-                        </p>
-                      </div>
-                      <div>
-                        <strong className="text-neutral-700">SKU:</strong>
-                        <p className="mt-1 text-neutral-900">
-                          {selectedProduct.sku || "Not specified"}
                         </p>
                       </div>
                       <div>
@@ -1178,10 +1288,18 @@ const ManageProducts = () => {
                   selectedProduct.images.length > 0 ? (
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                       {selectedProduct.images.map((image, index) => (
-                        <img
-                          src={image.url}
-                          alt={`${selectedProduct.name} - ${index + 1}`}
-                        />
+                        <div key={index} className="relative">
+                          <img
+                            src={image.url || image}
+                            alt={`${selectedProduct.name} - ${index + 1}`}
+                            className="object-cover w-full h-32 rounded-lg"
+                          />
+                          {index === 0 && (
+                            <span className="absolute px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded top-2 left-2">
+                              Main
+                            </span>
+                          )}
+                        </div>
                       ))}
                     </div>
                   ) : (
@@ -1311,14 +1429,14 @@ const ManageProducts = () => {
           </div>
         )}
 
-        {/* Edit Modal*/}
+        {/* Edit Modal with Fixed Image Upload */}
         {editingProduct && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="w-full max-w-2xl max-h-screen overflow-y-auto bg-white rounded-lg shadow-xl">
+            <div className="w-full max-w-4xl max-h-screen overflow-y-auto bg-white rounded-lg shadow-xl">
               <div className="p-6 border-b border-neutral-200">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-neutral-800">
-                    Edit Product
+                    Edit Product - {editingProduct.name}
                   </h2>
                   <button
                     onClick={() => setEditingProduct(null)}
@@ -1330,89 +1448,141 @@ const ManageProducts = () => {
               </div>
 
               <div className="p-6">
-                {/* Image Upload Section */}
-                <div className="mb-6">
-                  <label className="block mb-2 text-sm font-medium text-neutral-700">
+                {/* Image Management Section */}
+                <div className="mb-8">
+                  <h3 className="flex items-center mb-4 text-lg font-semibold text-neutral-800">
+                    <FaImage className="mr-2 text-primary-600" />
                     Product Images
-                  </label>
-                  <div className="grid grid-cols-3 gap-4 mb-4">
-                    {editingProduct.images?.map((image, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={image.url || image}
-                          alt={`Product ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updatedImages = [...editingProduct.images];
-                            updatedImages.splice(index, 1);
-                            setEditingProduct({
-                              ...editingProduct,
-                              images: updatedImages,
-                            });
-                          }}
-                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                        >
-                          <FaTimes className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                    {/* Upload new image button */}
-                    <label className="cursor-pointer">
-                      <div className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-neutral-300 rounded-lg hover:border-primary-400">
-                        <FaPlus className="w-8 h-8 text-neutral-400 mb-2" />
-                        <span className="text-xs text-neutral-500">
-                          Add Image
-                        </span>
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            try {
-                              const formData = new FormData();
-                              formData.append("image", file);
+                  </h3>
 
-                              const response = await API.post(
-                                "/upload/products/single",
-                                formData,
-                                {
-                                  headers: {
-                                    "Content-Type": "multipart/form-data",
-                                  },
-                                }
-                              );
-
-                              const newImageUrl = response.data.imageUrl;
-                              setEditingProduct({
-                                ...editingProduct,
-                                images: [
-                                  ...(editingProduct.images || []),
-                                  newImageUrl,
-                                ],
-                              });
-
-                              toast.success("Image uploaded successfully");
-                            } catch (error) {
-                              toast.error("Failed to upload image");
-                            }
-                          }
-                        }}
-                      />
-                    </label>
+                  {/* Current Images */}
+                  <div className="mb-6">
+                    <h4 className="mb-3 text-sm font-medium text-neutral-700">
+                      Current Images ({editingProduct.images?.length || 0})
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                      {editingProduct.images?.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={image.url || image}
+                            alt={`Product ${index + 1}`}
+                            className="object-cover w-full h-32 rounded-lg"
+                          />
+                          {index === 0 && (
+                            <span className="absolute px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded top-2 left-2">
+                              Main
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                            title="Remove image"
+                          >
+                            <FaTimes className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <p className="text-xs text-neutral-500">
-                    Upload product images (JPG, PNG, max 5MB each)
+
+                  {/* Upload New Images */}
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {/* Upload Main Image */}
+                    <div className="p-4 border-2 border-dashed border-neutral-300 rounded-lg hover:border-primary-400 transition-colors">
+                      <h4 className="flex items-center mb-3 text-sm font-medium text-neutral-700">
+                        <FaImage className="mr-2 text-primary-600" />
+                        Set Main Product Image
+                      </h4>
+                      <label className="block cursor-pointer">
+                        <div className="flex flex-col items-center justify-center p-4 text-center bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors">
+                          {mainImageUploading ? (
+                            <>
+                              <FaSpinner className="w-8 h-8 mb-2 text-primary-600 animate-spin" />
+                              <p className="text-sm text-neutral-600">
+                                Uploading...
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <FaPlus className="w-8 h-8 mb-2 text-neutral-400" />
+                              <p className="text-sm font-medium text-neutral-700 mb-1">
+                                Upload Main Image
+                              </p>
+                              <p className="text-xs text-neutral-500">
+                                This will be the primary display image
+                              </p>
+                            </>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              handleImageUpload(file, "main");
+                            }
+                          }}
+                          disabled={mainImageUploading}
+                        />
+                      </label>
+                    </div>
+
+                    {/* Upload Gallery Images */}
+                    <div className="p-4 border-2 border-dashed border-neutral-300 rounded-lg hover:border-primary-400 transition-colors">
+                      <h4 className="flex items-center mb-3 text-sm font-medium text-neutral-700">
+                        <FaImage className="mr-2 text-primary-600" />
+                        Add Gallery Images
+                      </h4>
+                      <label className="block cursor-pointer">
+                        <div className="flex flex-col items-center justify-center p-4 text-center bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors">
+                          {galleryUploading ? (
+                            <>
+                              <FaSpinner className="w-8 h-8 mb-2 text-primary-600 animate-spin" />
+                              <p className="text-sm text-neutral-600">
+                                Uploading...
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <FaPlus className="w-8 h-8 mb-2 text-neutral-400" />
+                              <p className="text-sm font-medium text-neutral-700 mb-1">
+                                Add Gallery Images
+                              </p>
+                              <p className="text-xs text-neutral-500">
+                                Multiple images allowed
+                              </p>
+                            </>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          className="hidden"
+                          multiple
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files);
+                            if (files.length > 0) {
+                              files.forEach((file) =>
+                                handleImageUpload(file, "gallery")
+                              );
+                            }
+                          }}
+                          disabled={galleryUploading}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <p className="mt-3 text-xs text-neutral-500">
+                    Supported formats: JPG, PNG, WebP. Max 10MB per image.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2 md:gap-6">
-                  {/* Existing form fields remain the same... */}
+                {/* Product Details Form */}
+                <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2">
                   <div>
                     <label className="block mb-2 text-sm font-medium text-neutral-700">
                       Product Name *
@@ -1532,7 +1702,7 @@ const ManageProducts = () => {
                     />
                   </div>
 
-                  <div className="flex items-center">
+                  <div className="flex items-center md:col-span-2">
                     <label className="flex items-center">
                       <input
                         type="checkbox"
@@ -1550,6 +1720,28 @@ const ManageProducts = () => {
                         Featured Product
                       </span>
                     </label>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block mb-2 text-sm font-medium text-neutral-700">
+                      Tags
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border rounded-lg border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                      value={
+                        Array.isArray(editingProduct.tags)
+                          ? editingProduct.tags.join(", ")
+                          : editingProduct.tags || ""
+                      }
+                      onChange={(e) =>
+                        setEditingProduct({
+                          ...editingProduct,
+                          tags: e.target.value,
+                        })
+                      }
+                      placeholder="tag1, tag2, tag3 (comma separated)"
+                    />
                   </div>
 
                   <div className="md:col-span-2">
@@ -1579,9 +1771,21 @@ const ManageProducts = () => {
                   </button>
                   <button
                     onClick={handleSaveEdit}
-                    className="px-6 py-2 text-white rounded-lg bg-primary-600 hover:bg-primary-700"
+                    disabled={mainImageUploading || galleryUploading}
+                    className={`px-6 py-2 text-white rounded-lg ${
+                      mainImageUploading || galleryUploading
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-primary-600 hover:bg-primary-700"
+                    }`}
                   >
-                    Save Changes
+                    {mainImageUploading || galleryUploading ? (
+                      <span className="flex items-center">
+                        <FaSpinner className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </span>
+                    ) : (
+                      "Save Changes"
+                    )}
                   </button>
                 </div>
               </div>
