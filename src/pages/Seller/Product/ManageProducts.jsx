@@ -1231,15 +1231,19 @@ const ManageProducts = () => {
                           {selectedProduct.stock} units
                         </p>
                       </div>
-                      <div>
-                        <strong className="text-neutral-700">Status:</strong>
+                      <div className="flex items-center">
+                        <strong className="text-neutral-700 whitespace-nowrap">
+                          Status:
+                        </strong>
                         <span
                           className={`ml-2 px-2 py-1 text-sm font-semibold rounded-full ${getStatusColor(
                             getProductStatus(selectedProduct)
-                          )}`}
+                          )} whitespace-nowrap`}
                         >
-                          {getStatusIcon(getProductStatus(selectedProduct))}
-                          {getProductStatus(selectedProduct)}
+                          <span className="inline-flex items-center">
+                            {getStatusIcon(getProductStatus(selectedProduct))}
+                            {getProductStatus(selectedProduct)}
+                          </span>
                         </span>
                       </div>
                       <div>
