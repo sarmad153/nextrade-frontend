@@ -722,7 +722,7 @@ const AdminDashboard = () => {
                 Rs {quickStats.monthlyRevenue?.toLocaleString() || "0"}
               </div>
               <div className="mt-1 text-sm font-medium text-neutral-700">
-                Monthly Revenue
+                Total Revenue
               </div>
             </div>
             <div className="p-6 text-center rounded-lg shadow-lg transition-all duration-300 hover:scale-105 bg-cyan-50">
