@@ -412,14 +412,6 @@ const BuyerAdCarousel = () => {
                 src={getAdImage(currentAd)}
                 alt={currentAd.title}
                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "100%",
-                  width: "auto",
-                  height: "auto",
-                  margin: "auto",
-                  display: "block",
-                }}
                 onError={(e) => {
                   e.target.src =
                     "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=400&fit=crop";
