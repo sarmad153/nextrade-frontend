@@ -406,15 +406,26 @@ const BuyerAdCarousel = () => {
             onMouseLeave={() => setIsHovered(false)}
             onClick={() => handleAdClick(currentAd)}
           >
-            <img
-              src={getAdImage(currentAd)}
-              alt={currentAd.title}
-              className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-              onError={(e) => {
-                e.target.src =
-                  "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=400&fit=crop";
-              }}
-            />
+            {/* Add this wrapper div for better image control */}
+            <div className="absolute inset-0 overflow-hidden">
+              <img
+                src={getAdImage(currentAd)}
+                alt={currentAd.title}
+                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  width: "auto",
+                  height: "auto",
+                  margin: "auto",
+                  display: "block",
+                }}
+                onError={(e) => {
+                  e.target.src =
+                    "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=400&fit=crop";
+                }}
+              />
+            </div>
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
 
