@@ -378,7 +378,16 @@ const AdminAdsManagement = () => {
 
       if (response.data) {
         toast.success(`Ad ${isActive ? "activated" : "paused"} successfully`);
-        await fetchAds();
+
+        // Update local state immediately
+        setAds((prevAds) =>
+          prevAds.map((ad) => (ad._id === adId ? { ...ad, isActive } : ad))
+        );
+
+        // Also update the selectedAd if it's open
+        if (selectedAd && selectedAd._id === adId) {
+          setSelectedAd((prev) => ({ ...prev, isActive }));
+        }
       }
 
       hideConfirmationModal();
@@ -482,10 +491,10 @@ const AdminAdsManagement = () => {
           await updateAdStatus(adId, "rejected", rejectionReason);
           break;
         case "activate":
-          await toggleAdActive(adId, true);
+          await toggleAdActive(adId, true); // Pass true to activate
           break;
         case "pause":
-          await toggleAdActive(adId, false);
+          await toggleAdActive(adId, false); // Pass false to pause
           break;
         default:
           hideConfirmationModal();
