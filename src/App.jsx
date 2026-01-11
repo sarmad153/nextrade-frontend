@@ -153,7 +153,7 @@ function App() {
       {/* Toast Notifications */}
       <ToastContainer
         position="top-right"
-        autoClose={3000}
+        autoClose={2000}
         toastStyle={{
           backgroundColor: "#4f46e5",
           color: "white",

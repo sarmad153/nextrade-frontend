@@ -31,9 +31,43 @@ const SellerDashboard = () => {
     lowStockProducts: 0,
     outOfStockProducts: 0,
   });
+  const [revenueBreakdown, setRevenueBreakdown] = useState({
+    pending: 0,
+    processing: 0,
+    delivered: 0,
+    cancelled: 0,
+  });
 
   const [recentOrders, setRecentOrders] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
+
+  const calculateRevenueBreakdown = async () => {
+    const orders = await API.get("/orders/seller/orders");
+    const sellerProducts = await API.get("/products/seller/products");
+    const productIds = sellerProducts.data.map((p) => p._id);
+
+    const breakdown = {
+      pending: 0,
+      processing: 0,
+      shipped: 0,
+      delivered: 0,
+      cancelled: 0,
+    };
+
+    orders.data.forEach((order) => {
+      const sellerItems = order.items.filter((item) =>
+        productIds.includes(item.product?._id)
+      );
+      const sellerTotal = sellerItems.reduce(
+        (sum, item) => sum + (item.finalPrice || 0),
+        0
+      );
+
+      breakdown[order.status.toLowerCase()] += sellerTotal;
+    });
+
+    setRevenueBreakdown(breakdown);
+  };
 
   useEffect(() => {
     const fetchSellerData = async () => {
@@ -84,12 +118,29 @@ const SellerDashboard = () => {
     const fetchStats = async () => {
       try {
         const statsResponse = await API.get("/admin/seller/stats");
-        if (statsResponse.data) {
-          setStats(statsResponse.data);
-        }
-      } catch (statsError) {
-        console.error("Stats fetch error:", statsError);
-        toast.error("Failed to load statistics");
+        const ordersResponse = await API.get("/orders/seller/orders");
+
+        // Calculate seller-specific revenue from orders
+        const sellerProductIds = sellerProducts.map((p) => p._id);
+        let sellerRevenue = 0;
+
+        ordersResponse.data.forEach((order) => {
+          const sellerItems = order.items.filter((item) =>
+            sellerProductIds.includes(item.product?._id)
+          );
+          sellerRevenue += sellerItems.reduce(
+            (sum, item) =>
+              sum + (item.finalPrice || item.price * item.quantity),
+            0
+          );
+        });
+
+        setStats({
+          ...statsResponse.data,
+          totalRevenue: sellerRevenue, // Use calculated revenue
+        });
+      } catch (error) {
+        console.error("Stats fetch error:", error);
       }
     };
 
